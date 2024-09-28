@@ -36,10 +36,8 @@
 
         <div class="card">
             <div class="card-body">
-                <h2> Agregar Trabajador </h2>
-                <a href="{% url 'gestiondetrabajadores' %}">
-                    <button class="btn btn-success">Volver Atrás</button>
-                </a>
+                <h3> Agregar Trabajador </h3>
+                <button class="btn btn-success" onclick="window.history.back();">Volver Atrás</button>
                 <form id="trabajador-form" action="" class="formularioproceso" method="post" enctype="multipart/form-data">
 
                     {% csrf_token %}
@@ -67,9 +65,7 @@
             </div>
             <br>
             
-            <a href="{% url 'gestiondetrabajadores' %}">
-                <button class="btn btn-success">Volver Atrás</button>
-            </a>
+            <button class="btn btn-success" onclick="window.history.back();">Volver Atrás</button>
         </div>
     </div>
 </div>

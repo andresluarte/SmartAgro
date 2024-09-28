@@ -1,14 +1,15 @@
 from django.contrib import admin
 from import_export import resources
-from .models import Procesos,SensorData,Contacto,Trabajador,Jornada,Sector,Huerto,Lote
+from .models import Procesos,Contacto,Trabajador,Jornada,Sector,Huerto,Lote,CustomUser
 from import_export.fields import Field
 
 
 admin.site.register(Procesos)
-admin.site.register(SensorData)
+
 admin.site.register(Contacto)
 admin.site.register(Trabajador)
 admin.site.register(Jornada)
+admin.site.register(CustomUser)
 
 admin.site.register(Sector)
 admin.site.register(Huerto)

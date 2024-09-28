@@ -1,0 +1,46 @@
+{% extends 'agrosmart/base.html' %}
+
+{% block contenido %}
+{% load static %}
+{% load crispy_forms_tags %}
+<br>
+<br>
+<br>
+
+
+
+<div class="row">
+
+    <hr>
+
+    <div class="col-12 col-md-6 offset-md-3">
+
+        <div class="card">
+            <div class="card-body">
+                <h3>Agregar Empresa o Fundo</h3>
+                <a href="{% url 'gestiondetareas' %}">
+                    <button class="btn btn-success">Volver Atrás</button>
+                </a>
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    {{ form.as_p }}
+                    <button type="submit" class="btn btn-primary">Guardar Empresa</button>
+                  </form>
+                
+                
+            </div>
+            <br>
+            
+            <a href="{% url 'gestiondetareas' %}">
+                <button class="btn btn-success">Volver Atrás</button>
+            </a>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+</div>
+{% endblock %}

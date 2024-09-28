@@ -1,27 +1,18 @@
 from typing import Any, Dict
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Procesos ,Trabajador,Jornada,Sector,Huerto,Lote
+from .models import Procesos ,Trabajador,Jornada,Sector,Huerto,Lote,JornadaPorTrato
 from .forms import ContactoForm,ProcesoForm,ProcesoModificarForm,TrabajadorForm,FormatoForm,TrabajadorModificarForm,JornadaModificarForm,SectorModificarForm,HuertoModificarForm,LoteModificarForm
 from django.contrib import messages
-from django.http import Http404
-#api
 from .serializers import ProcesoSerializer
 from rest_framework.generics import ListAPIView
-from django_filters.rest_framework import DjangoFilterBackend
 from django.http import JsonResponse,HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.decorators import user_passes_test
-
-
-
 #llamada de filtros
-
 from .forms import FiltroEstado
-from .filters import ProcesoFilter,TrabajadorFilter,JornadaFilter
-
+from .filters import ProcesoFilter,TrabajadorFilter,JornadaFilter,JornadaPorTratoFilter
 #List view
-
 from django.views.generic.list import ListView
 from django.views import View
 #paginador 
@@ -32,22 +23,20 @@ from django.core.paginator import Paginator
 from .admin import ProcesosResource,JornadasResource,TrabajadorResource
 
 
-def home (request):
-    return render (request, 'agrosmart/home.html')
+from django.shortcuts import render
+from .models import EmpresaOFundo
 
-def informes(request):
+def home(request):
+    empresa = None
+    # Verificar si el usuario está autenticado
+    if request.user.is_authenticated:
+        empresa = EmpresaOFundo.objects.filter(created_by=request.user).first()
+    
+    # Renderizar el template con la empresa en el contexto
+    return render(request, 'agrosmart/home.html', {'empresa': empresa})
 
-    return render(request, 'agrosmart/informes.html')
 
-# def gestiondetareas(request):
-#     proceso_filter = ProcesoFilter(request.GET,queryset=Procesos.objects.all())
-#     data = {
-#         'form':proceso_filter.form,
-#         'procesos' : proceso_filter.qs
 
-#     }
-
-#     return render(request, 'agrosmart/gestiondetareas.html',data)
 
 class ProcesoListView(ListView):
     queryset = Procesos.objects.all()
@@ -64,6 +53,7 @@ class ProcesoListView(ListView):
         context = super().get_context_data(**kwargs)
         context['form'] = self.filterset.form
         return context
+    
 #exportar tarea (proceso)       
 class ExportToExcelViewProceso(View):
     def get(self, request):
@@ -96,6 +86,23 @@ class ExportToExcelViewJornada(View):
         response['Content-Disposition'] = 'attachment; filename="Jornada.xls"'
         return response
 
+class ExportToExcelViewJornadaporTrato(View):
+    def get(self, request):
+        queryset = JornadaPorTratoFilter(request.GET, queryset=JornadaPorTrato.objects.all()).qs
+        dataset = JornadasResource().export(queryset=queryset)
+        response = HttpResponse(dataset.xls, content_type='application/vnd.ms-excel')
+        response['Content-Disposition'] = 'attachment; filename="Jornada.xls"'
+        return response
+
+    def post(self, request):
+        queryset = JornadaPorTratoFilter(request.POST, queryset=JornadaPorTrato.objects.all()).qs
+        dataset = JornadasResource().export(queryset=queryset)
+        response = HttpResponse(dataset.xls, content_type='application/vnd.ms-excel')
+        response['Content-Disposition'] = 'attachment; filename="Jornada.xls"'
+        return response
+
+
+#exportar trabajador
 class ExportToExcelViewTrabajador(View):
     def get(self, request):
         queryset = TrabajadorFilter(request.GET, queryset=Trabajador.objects.all()).qs
@@ -117,13 +124,6 @@ class ProcesoListAPIView(ListAPIView):
     serializer_class = ProcesoSerializer
 
 
-
-        
-    
-
-
-
-
 def ayuda(request):
 
     contacto = {
@@ -132,45 +132,43 @@ def ayuda(request):
 
     return render(request, 'agrosmart/ayuda.html',contacto)
 
-def tiemporeal(request):
-
-    return render(request, 'agrosmart/tiemporeal.html')
-
-
+#Agregar tarea
+@login_required
 def agregartarea(request):
-
-    data = {
-        'form' : ProcesoForm()
-    }
-
-    if request.method =='POST':
-        formulario = ProcesoForm(data=request.POST, files=request.FILES)
+    if request.method == 'POST':
+        formulario = ProcesoForm(data=request.POST, files=request.FILES, user=request.user)
         if formulario.is_valid():
-            formulario.save()
-            messages.success(request,"Tarea Registrada")
+            tarea = formulario.save(commit=False) 
+            tarea.created_by = request.user  # Asignar el usuario logueado como creador
+            tarea.user = request.user  # Asignar el usuario logueado al campo 'user'
+            tarea.save()  # Guardar la tarea con el usuario asignado
+            messages.success(request, "Tarea Registrada")
+            return redirect('gestiondetareas')  # Redirige a la vista de gestión de tareas
         else:
-            data["form"] = formulario
+            data = {'form': formulario}
+    else:
+        data = {'form': ProcesoForm(user=request.user)}
+     
+    return render(request, 'agrosmart/agregartarea.html', data)
 
-        
-
-    return render(request, 'agrosmart/agregartarea.html',data)
-
-def modificartarea(request,id):
-    proceso = get_object_or_404(Procesos,id=id)
-    data ={
-        'form' : ProcesoModificarForm(instance=proceso)
+#Modificar Tarea (proceso)
+@login_required
+def modificartarea(request, id):
+    proceso = get_object_or_404(Procesos, id=id)
+    data = {
+        'form': ProcesoModificarForm(instance=proceso, user=request.user)
     }
 
     if request.method == 'POST':
-        formulario = ProcesoModificarForm(data=request.POST,instance=proceso,files=request.FILES)
+        formulario = ProcesoModificarForm(data=request.POST, instance=proceso, files=request.FILES, user=request.user)
         if formulario.is_valid():
             formulario.save()
-            messages.success(request,"Modificado Correctamente")
-            
+            messages.success(request, "Modificado Correctamente")
+            return redirect('gestiondetareas')  # Puedes redirigir a una vista después de modificar
         data["form"] = formulario
 
-    return render(request, 'agrosmart/modificartarea.html',data)
-
+    return render(request, 'agrosmart/modificartarea.html', data)
+#Modificar Trabajador
 def modificartrabajadores(request,id):
     trabajadores = get_object_or_404(Trabajador,id=id)
     data ={
@@ -186,7 +184,7 @@ def modificartrabajadores(request,id):
         data["form"] = formulario
 
     return render(request, 'agrosmart/trabajadores/modificartrabajadores.html',data)
-
+#Eliminar tarea (proceso)
 def eliminartarea(request, id):
     proceso = get_object_or_404(Procesos, id=id)
     proceso.delete()
@@ -200,20 +198,24 @@ def eliminartarea(request, id):
 #AGREGAR filtros
 #AGREGAR TRABAJADOR 
 
+@login_required(login_url="my_login")
 def agregartrabajador(request):
+    if request.method == "POST":
+        form = TrabajadorForm(request.POST)
+        if form.is_valid():
+            trabajador = form.save(commit=False)
+            trabajador.created_by = request.user  # Asignar el usuario logueado al campo 'created_by'
+            trabajador.user = request.user  # Asignar el usuario logueado al campo 'user'
+            trabajador.save()
+            return redirect('gestiondetrabajadores')  # Redirigir a la vista de gestión de trabajadores
+    else:
+        form = TrabajadorForm()
 
-    data = {
-        'form' : TrabajadorForm()
-    }
+    return render(request, 'agrosmart/trabajadores/agregartrabajador.html', {'form': form})
 
-    if request.method =='POST':
-        formulario = TrabajadorForm(data=request.POST, files=request.FILES)
-        if formulario.is_valid():
-            formulario.save()
-            messages.success(request,"Trabajador Registrado")
-        else:
-            data["form"] = formulario
-    return render(request, 'agrosmart/trabajadores/agregartrabajador.html',data)
+
+
+
 
 class TrabajadorListView(ListView):
     queryset = Trabajador.objects.all()
@@ -233,21 +235,30 @@ class TrabajadorListView(ListView):
         context['form']=self.filterset.form
         return context
     
-def modificarjornada(request,id):
-    trabajadores = get_object_or_404(Jornada,id=id)
-    data ={
-        'form' : JornadaModificarForm(instance=trabajadores)
-    }
+@login_required(login_url="my_login")
+def modificarjornada(request, id):
+    jornada = get_object_or_404(Jornada, id=id)
+    user = request.user
 
     if request.method == 'POST':
-        formulario = JornadaModificarForm(data=request.POST,instance=trabajadores,files=request.FILES)
+        formulario = JornadaModificarForm(data=request.POST, instance=jornada, files=request.FILES, user=user)
         if formulario.is_valid():
             formulario.save()
-            messages.success(request,"Jornada Modificada Correctamente")
-            
-        data["form"] = formulario
+            messages.success(request, "Jornada Modificada Correctamente")
+            return redirect('gestion_jornadas')
+    else:
+        formulario = JornadaModificarForm(instance=jornada, user=user)
 
-    return render(request, 'agrosmart/jornada/modificarjornada.html',data)
+    data = {
+        'form': formulario
+    }
+
+    return render(request, 'agrosmart/jornada/modificarjornada.html', data)
+
+def cargar_lotes(request):
+    huerto_id = request.GET.get('huerto_id')
+    lotes = Lote.objects.filter(huerto_id=huerto_id).values('id', 'nombre')
+    return JsonResponse(list(lotes), safe=False)
 
 def eliminarjornada(request, id):
     jornada = get_object_or_404(Jornada, id=id)
@@ -260,99 +271,150 @@ def eliminartrabajador(request, id):
     proceso = get_object_or_404(Trabajador, id=id)
     proceso.delete()
     messages.success(request, "Trabajador Eliminado Correctamente")
-    return redirect('TrabajadorList')
+    return redirect('gestiondetrabajadores')
 
 ##sensor
-
-
-
-from django.shortcuts import render
-from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
-
-
-
 #jornada
-
 from django.shortcuts import render, redirect
-from .forms import JornadaForm
+from .forms import JornadaForm,JornadaPorTratoForm
 
+@login_required(login_url="my_login")
 def agregar_jornada(request):
     if request.method == 'POST':
-        form = JornadaForm(request.POST)
+        form = JornadaForm(request.POST, user=request.user)
         if form.is_valid():
-            form = form.save()
+            jornada = form.save(commit=False)
+            jornada.user = request.user  # Asignar el usuario logueado al campo 'user'
+            jornada.created_by = request.user  # Asignar el usuario logueado al campo 'created_by'
+            jornada.save()  # Ahora sí guardar la jornada con el usuario asignado
             return redirect('gestion_jornadas')
     else:
-        form = JornadaForm()
+        form = JornadaForm(user=request.user)
     
     return render(request, 'agrosmart/jornada/crear_jornada.html', {'form': form})
 
-class JornadaListView(ListView):
-    queryset = Jornada.objects.all()
-    form_class = FormatoForm
-    paginate_by = 3
-    template_name = 'agrosmart/jornada/gestion_jornadas.html'
-    context_object_name = 'jornadas'
+@login_required(login_url="my_login")
+def agregar_jornada_por_trato(request):
+    if request.method == 'POST':
+        form = JornadaPorTratoForm(request.POST, user=request.user)
+        if form.is_valid():
+            jornada_por_trato = form.save(commit=False)
+            jornada_por_trato.user = request.user  # Asignar el usuario logueado al campo 'user'
+            jornada_por_trato.created_by = request.user  # Asignar el usuario logueado al campo 'created_by'
+            jornada_por_trato.save()  # Guardar la jornada por trato con el usuario asignado
+            return redirect('gestion_jornadas_por_trato')
+    else:
+        form = JornadaPorTratoForm(user=request.user)
+    
+    return render(request, 'agrosmart/jornada/crear_jornada_por_trato.html', {'form': form})
 
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        self.filterset = JornadaFilter(self.request.GET, queryset=queryset)
-        return self.filterset.qs
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['form'] = self.filterset.form
-        return context
 
 @login_required(login_url="my_login")
 def JornadaList(request):
-    context = { }
-   
-    filtered_jornadas = JornadaFilter(
-        request.GET,
-        queryset=Jornada.objects.all()
-
-    )
+    user = request.user
     
-    context['filtered_jornadas'] = filtered_jornadas
-    paginated_filtered_jornadas = Paginator(filtered_jornadas.qs,3)
+    if user.is_superuser:
+        queryset = Jornada.objects.all()
+    elif user.user_type == 'admin':
+        queryset = Jornada.objects.filter(user=user)
+    elif user.user_type == 'colaborador':
+        admin_user = user.created_by
+        queryset = Jornada.objects.filter(user__in=[user, admin_user])
+    elif user.user_type == 'agricultor':
+        colaborador_user = user.created_by
+        admin_user = colaborador_user.created_by if colaborador_user else None
+        queryset = Jornada.objects.filter(user__in=[user, colaborador_user, admin_user])
+    else:
+        queryset = Jornada.objects.none()
+
+    filtered_jornadas = JornadaFilter(request.GET, queryset=queryset, user=user)
+
+    context = {'filtered_jornadas': filtered_jornadas}
+    paginated_filtered_jornadas = Paginator(filtered_jornadas.qs, 3)
     page_number = request.GET.get('page')
     jornada_page_obj = paginated_filtered_jornadas.get_page(page_number)
-
     context['jornada_page_obj'] = jornada_page_obj
-    
-
 
     return render(request, 'agrosmart/jornada/gestion_jornadas.html', context=context)
 
 @login_required(login_url="my_login")
+def jornada_por_trato_list(request):
+    user = request.user
+
+    # Filtramos las jornadas según el tipo de usuario
+    if user.is_superuser:
+        queryset = JornadaPorTrato.objects.all()
+    elif user.user_type == 'admin':
+        queryset = JornadaPorTrato.objects.filter(user=user)
+    elif user.user_type == 'colaborador':
+        admin_user = user.created_by
+        queryset = JornadaPorTrato.objects.filter(user__in=[user, admin_user])
+    elif user.user_type == 'agricultor':
+        colaborador_user = user.created_by
+        admin_user = colaborador_user.created_by if colaborador_user else None
+        queryset = JornadaPorTrato.objects.filter(user__in=[user, colaborador_user, admin_user])
+    else:
+        queryset = JornadaPorTrato.objects.none()
+
+    # Aquí puedes aplicar cualquier filtrado adicional relacionado con 'trato'
+    filtered_jornadas = JornadaFilter(request.GET, queryset=queryset, user=user)
+
+    # Configuramos la paginación
+    paginated_filtered_jornadas = Paginator(filtered_jornadas.qs, 3)
+    page_number = request.GET.get('page')
+    jornada_page_obj = paginated_filtered_jornadas.get_page(page_number)
+
+    # Pasamos el contexto a la plantilla
+    context = {
+        'filtered_jornadas': filtered_jornadas,
+        'jornada_page_obj': jornada_page_obj,
+    }
+
+    return render(request, 'agrosmart/jornada/gestion_jornadas.html', context=context)
+
+
+
+@login_required(login_url="my_login")
 def TrabajadorList(request):
-    context ={}
+    if request.user.is_superuser:
+        queryset = Trabajador.objects.all()
+    elif request.user.user_type == 'admin':
+        queryset = Trabajador.objects.filter(created_by=request.user)
+    elif request.user.user_type == 'colaborador':
+        # Colaborador puede ver sus propios trabajadores y los de su admin
+        admin_user = request.user.created_by
+        queryset = Trabajador.objects.filter(created_by__in=[request.user, admin_user])
+    elif request.user.user_type == 'agricultor':
+        # Agricultor puede ver los trabajadores creados por su colaborador y su administrador
+        colaborador_user = request.user.created_by
+        admin_user = colaborador_user.created_by if colaborador_user else None
+        queryset = Trabajador.objects.filter(created_by__in=[colaborador_user, admin_user])
+    else:
+        queryset = Trabajador.objects.none()
 
-    filtered_trabajador = TrabajadorFilter(
-        request.GET,
-        queryset=Trabajador.objects.all()
+    filtered_trabajador = TrabajadorFilter(request.GET, queryset=queryset)
 
-    )
-    context ['filtered_trabajador'] = filtered_trabajador
-    paginated_filtered_trabajador = Paginator(filtered_trabajador.qs,8)
+    context = {
+        'filtered_trabajador': filtered_trabajador,
+    }
+
+    paginated_filtered_trabajador = Paginator(filtered_trabajador.qs, 8)
     page_number = request.GET.get('page')
     trabajador_page_obj = paginated_filtered_trabajador.get_page(page_number)
 
-    context['trabajador_page_obj']= trabajador_page_obj 
+    context['trabajador_page_obj'] = trabajador_page_obj
+
     return render(request, 'agrosmart/trabajadores/gestiondetrabajadores.html', context=context)
  
 def ProcesoList(request):
     context = { }
-   
     filtered_proceso = ProcesoFilter(
         request.GET,
         queryset=Procesos.objects.all()
 
-    )
-    
+    ) 
     context['filtered_proceso'] = filtered_proceso
     paginated_filtered_proceso = Paginator(filtered_proceso.qs,8)
     page_number = request.GET.get('page')
@@ -360,144 +422,183 @@ def ProcesoList(request):
 
     context['proceso_page_obj'] = proceso_page_obj
     
-
-
     return render(request, 'agrosmart/gestiondetareas.html', context=context)
 
+@login_required(login_url="my_login")
 def gestion_zona(request):
-    sectores = Sector.objects.all()
+    if request.user.is_superuser:
+        sectores = Sector.objects.all()
+    elif request.user.user_type == 'admin':
+        sectores = Sector.objects.filter(user=request.user)
+    elif request.user.user_type == 'colaborador':
+        # Colaborador puede ver sus propias zonas y las del admin que lo creó
+        admin_user = request.user.created_by
+        sectores = Sector.objects.filter(user__in=[request.user, admin_user])
+    elif request.user.user_type == 'agricultor':
+        # Agricultor puede ver sus propias zonas y las del colaborador y admin que lo creó
+        colaborador_user = request.user.created_by
+        admin_user = colaborador_user.created_by if colaborador_user else None
+        sectores = Sector.objects.filter(user__in=[request.user, colaborador_user, admin_user])
+    else:
+        sectores = Sector.objects.none()
 
-    context = {
-        'sectores': sectores
-    }
+    context = {'sectores': sectores}
 
     return render(request, "agrosmart/zona/gestion_zona.html", context)
-
 
 
 
 from django.shortcuts import render, redirect
 from .forms import SectorForm, HuertoForm, LoteForm
 
+@login_required(login_url="my_login")
 def agregar_sector(request):
     if request.method == "POST":
         form = SectorForm(request.POST)
         if form.is_valid():
-            sector = form.save()  # Obtén el sector recién creado
-            # Redirige al formulario de creación de Huerto y pasa el sector como contexto
-            return redirect('agregarhuerto', sector_id=sector.id)
-    else:
-        form = SectorForm()
-    return render(request, 'agrosmart/zona/agregarsector.html', {'form': form})
-
-def modificarsector(request,id):
-    sectores = get_object_or_404(Sector,id=id)
-    data ={
-        'form' : SectorModificarForm(instance=sectores)
-    }
-
-    if request.method == 'POST':
-        formulario = SectorModificarForm(data=request.POST,instance=sectores,files=request.FILES)
-        if formulario.is_valid():
-            formulario.save()
-            messages.success(request,"Modificado Correctamente")
-            
-        data["form"] = formulario
-
-    return render(request, 'agrosmart/zona/modificarsector.html',data)
-
-def modificarhuerto(request,id):
-    huertos = get_object_or_404(Huerto,id=id)
-    data = {
-        'form':HuertoModificarForm(instance=huertos)
-       
-    }
-    if request.method == 'POST':
-        formulario = HuertoModificarForm(data=request.POST,instance=huertos,files=request.FILES)
-        if formulario.is_valid():
-            formulario.save()
-            messages.success(request,"Huerto Modificado Correctamente")
-
-        data["form"] = formulario
-        return redirect("gestion_zona")
-
-    return render(request, 'agrosmart/zona/modificarhuerto.html',data)
-
-def modificarlote(request,id):
-    lotes = get_object_or_404(Lote,id=id)
-    data = {
-        'form':LoteModificarForm(instance=lotes)
-       
-    }
-    if request.method == 'POST':
-        formulario = LoteModificarForm(data=request.POST,instance=lotes,files=request.FILES)
-        if formulario.is_valid():
-            formulario.save()
-            messages.success(request,"Lote Modificado Correctamente")
-
-        data["form"] = formulario
-        return redirect("gestion_zona")
-
-    return render(request, 'agrosmart/zona/modificarlote.html',data)
-
-
-def agregar_sector(request):
-    if request.method == "POST":
-        form = SectorForm(request.POST)
-        if form.is_valid():
-            sector = form.save()  # Obtén el sector recién creado
-            # Redirige al formulario de creación de Huerto y pasa el sector como contexto
+            sector = form.save(commit=False)
+            sector.user = request.user  # Asigna el usuario logueado (admin)
+            sector.created_by = request.user
+            sector.save()
             return redirect('agregar_huerto', sector_id=sector.id)
     else:
         form = SectorForm()
     return render(request, 'agrosmart/zona/agregarsector.html', {'form': form})
 
+
+
+
+
+@login_required(login_url="my_login")
 def agregar_huerto_sin_sector(request):
     if request.method == 'POST':
-        form = HuertoForm(request.POST)
+        form = HuertoForm(request.POST, user=request.user)
         if form.is_valid():
-            form.save()
-            return redirect('agregarlote')
+            huerto = form.save(commit=False)
+            huerto.user = request.user
+            huerto.created_by = request.user
+            huerto.save()
+            return redirect('agregar_lote_sh')  # Redirige al agregar lote sin huerto
     else:
-        form = HuertoForm()
+        form = HuertoForm(user=request.user)
     return render(request, 'agrosmart/zona/agregarhuerto.html', {'form': form})
 
+@login_required(login_url="my_login")
 def agregar_huerto(request, sector_id):
-    sector = Sector.objects.get(id=sector_id)  # Obtiene el sector del contexto
+    sector = get_object_or_404(Sector, id=sector_id, user=request.user)
+    
     if request.method == "POST":
-        form = HuertoForm(request.POST)
+        form = HuertoForm(request.POST, user=request.user)
         if form.is_valid():
             huerto = form.save(commit=False)
             huerto.sector = sector  # Asigna el sector al huerto
+            huerto.user = request.user
+            huerto.created_by = request.user
             huerto.save()
-            # Realiza las acciones necesarias y redirige a donde desees
+            return redirect('agregar_lote')  # Redirige al agregar lote con huerto
     else:
-        form = HuertoForm(initial={'sector': sector})  # Establece el sector como valor predeterminado
+        form = HuertoForm(initial={'sector': sector}, user=request.user)
+    
     return render(request, 'agrosmart/zona/agregarhuerto.html', {'form': form})
 
-def agregar_lote(request):
-    if request.method == 'POST':
-        form = LoteForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('agregarlote')
+
+@login_required(login_url="my_login")
+def agregar_lote(request, huerto_id=None):
+    if huerto_id:
+        huerto = get_object_or_404(Huerto, id=huerto_id, user=request.user)
     else:
-        form = LoteForm()
+        huerto = None
+
+    if request.method == "POST":
+        form = LoteForm(request.POST, user=request.user)
+        if form.is_valid():
+            lote = form.save(commit=False)
+            if huerto:
+                lote.huerto = huerto
+            lote.user = request.user
+            lote.created_by = request.user
+            lote.save()
+            return redirect('gestion_zona')
+    else:
+        form = LoteForm(user=request.user, initial={'huerto': huerto})
+
     return render(request, 'agrosmart/zona/agregarlote.html', {'form': form})
 
+@login_required(login_url="my_login")
+def agregar_lote_sin_huerto(request):
+    if request.method == 'POST':
+        form = LoteForm(request.POST, user=request.user)
+        if form.is_valid():
+            lote = form.save(commit=False)
+            lote.user = request.user
+            lote.created_by = request.user
+            lote.save()
+            return redirect('gestion_zona')
+    else:
+        form = LoteForm(user=request.user)
+    return render(request, 'agrosmart/zona/agregarlote.html', {'form': form})
+
+
+
+@login_required(login_url="my_login")
+def cargar_lotes(request):
+    huerto_id = request.GET.get('huerto_id')
+    lotes = Lote.objects.filter(huerto_id=huerto_id, user=request.user)
+    lotes_data = [{'id': lote.id, 'nombre': lote.nombre} for lote in lotes]
+    return JsonResponse({'lotes': lotes_data})
+
+@login_required(login_url="my_login")
 def cargar_huertos(request):
     sector_id = request.GET.get('sector_id')
-    huertos = Huerto.objects.filter(sector_id=sector_id)
+    huertos = Huerto.objects.filter(sector_id=sector_id, user=request.user)
     huertos_data = [{'id': huerto.id, 'nombre': huerto.nombre} for huerto in huertos]
     return JsonResponse({'huertos': huertos_data})
 
-from django.http import JsonResponse
+@login_required(login_url="my_login")
+def modificarsector(request, id):
+    sector = get_object_or_404(Sector, id=id, user=request.user)
+    form = SectorModificarForm(instance=sector)
+    
+    if request.method == 'POST':
+        form = SectorModificarForm(data=request.POST, instance=sector, files=request.FILES)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Modificado Correctamente")
+            return redirect("gestion_zona")
 
-def cargar_lotes(request):
-    huerto_id = request.GET.get('huerto_id')
-    lotes = Lote.objects.filter(huerto_id=huerto_id)
-    lotes_data = [{'id': lote.id, 'nombre': lote.nombre} for lote in lotes]
-    return JsonResponse({'lotes': lotes_data})
+    return render(request, 'agrosmart/zona/modificarsector.html', {'form': form})
+
+@login_required(login_url="my_login")
+def modificarhuerto(request, id):
+    huerto = get_object_or_404(Huerto, id=id, user=request.user)
+    form = HuertoModificarForm(instance=huerto, user=request.user)
+    
+    if request.method == 'POST':
+        form = HuertoModificarForm(data=request.POST, instance=huerto, files=request.FILES, user=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Huerto Modificado Correctamente")
+            return redirect("gestion_zona")
+
+    return render(request, 'agrosmart/zona/modificarhuerto.html', {'form': form})
+
+@login_required(login_url="my_login")
+def modificarlote(request, id):
+    lote = get_object_or_404(Lote, id=id, user=request.user)
+    form = LoteModificarForm(instance=lote, user=request.user)
+    
+    if request.method == 'POST':
+        form = LoteModificarForm(data=request.POST, instance=lote, files=request.FILES, user=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Lote Modificado Correctamente")
+            return redirect("gestion_zona")
+
+    return render(request, 'agrosmart/zona/modificarlote.html', {'form': form})
+
+
+
+
 
 
 
@@ -523,21 +624,12 @@ def eliminarhuerto(request, id):
 #     messages.success(request, "Eliminado Correctamente")
 #     return redirect('gestiondetareas')
 # en views.py
-from django.http import JsonResponse
 
-def receive_data(request):
-    if request.method == 'POST':
-        temperature = request.POST.get('temperature')
-        humidity = request.POST.get('humidity')
-        
-        # Aquí puedes realizar cualquier procesamiento necesario con los datos
-        # Por ejemplo, guardarlos en la base de datos
 
-        # Retorna una respuesta exitosa al módulo SIM800L
-        return JsonResponse({'message': 'Data received successfully'}, status=200)
 
-    return JsonResponse({'message': 'Invalid request method'}, status=400)
-from django.http import JsonResponse
+
+
+
 
 def obtener_cobro_view(request):
     if request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest':
@@ -555,63 +647,198 @@ def obtener_cobro_view(request):
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .models import TemperatureHumidity
-from .serializers import TemperatureHumiditySerializer
-
-class TemperatureHumidityAPIView(APIView):
-    def post(self, request, format=None):
-        serializer = TemperatureHumiditySerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-def temperature_humidity_list(request):
-    data = TemperatureHumidity.objects.all()
-    return render(request, 'agrosmart/tiemporeal.html', {'data': data})
-
 #authentication 
 from django.contrib.auth.models import Group
-
 from django.contrib.auth.forms import AuthenticationForm    
 from django.contrib.auth.models import auth
 from django.contrib.auth import authenticate,login,logout
+from . forms import LoginForm
+from .forms import CreateUserForm, RegisterColaboradorForm
+from .models import CustomUser
 
-from . forms import CreateUserForm,LoginForm
-from django.contrib.auth.decorators import login_required
-
+@login_required(login_url="my_login")
+@user_passes_test(lambda u: u.user_type in ['superuser'])
 def register(request):
-    form =CreateUserForm()
+    
+    form = CreateUserForm()
     if request.method == 'POST':
         form = CreateUserForm(request.POST)
         if form.is_valid():
-            form.save()
-            return redirect("my_login")
-    context = {'registerform':form}
+            user = form.save(commit=False)
+            user.user_type = 'admin'
+            user.save()
+            return redirect('list_all_users')
+    context = {'registerform': form}
+    return render(request, 'agrosmart/registration/register.html', context=context)
 
-    return render (request,'agrosmart/registration/register.html',context=context )
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required, user_passes_test
+from .forms import RegisterColaboradorForm, TrabajadorForm
+
+@login_required(login_url="my_login")
+@user_passes_test(lambda u: u.user_type in ['superuser', 'admin'])
+def register_colaborador(request):
+    if request.method == 'POST':
+        form_colaborador = RegisterColaboradorForm(request.POST, user=request.user)
+        # Solo inicializamos el formulario de trabajador si el checkbox fue marcado
+        form_trabajador = TrabajadorForm(request.POST) if 'agregar_trabajador' in request.POST else None
+
+        if form_colaborador.is_valid() and (not form_trabajador or form_trabajador.is_valid()):
+            colaborador = form_colaborador.save(commit=False)
+            colaborador.created_by = request.user
+            colaborador.save()
+            return redirect('list_colaboradores')
+
+            # Si el usuario ha seleccionado agregar como trabajador
+            if form_trabajador:
+                trabajador = form_trabajador.save(commit=False)
+                trabajador.user = request.user
+                trabajador.save()
+
+            
+
+    else:
+        form_colaborador = RegisterColaboradorForm(user=request.user)
+        form_trabajador = TrabajadorForm()
+
+    context = {
+        'registerform': form_colaborador,
+        'trabajadorform': form_trabajador,
+    }
+    return render(request, 'agrosmart/registration/register_colaborador.html', context)
+
+
+
+
+
+
+
+from django.shortcuts import get_object_or_404, redirect
+from django.contrib.auth.decorators import user_passes_test
+from django.contrib import messages
+from .forms import EditColaboradorForm
+from .models import CustomUser
+@login_required(login_url="my_login")
+@user_passes_test(lambda u: u.user_type == 'admin')
+def edit_colaborador_view(request, user_id):
+    user_to_edit = get_object_or_404(CustomUser, id=user_id)
+    
+    if request.method == 'POST':
+        form = EditColaboradorForm(request.POST, instance=user_to_edit, user=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Colaborador editado correctamente.")
+            return redirect('list_colaboradores')
+            
+    else:
+        form = EditColaboradorForm(instance=user_to_edit, user=request.user)
+
+    return render(request, 'agrosmart/usuarios/modificar_colaborador.html', {'form': form})
+
+
+
+@login_required(login_url="my_login")
+@user_passes_test(lambda u: u.user_type == 'superuser')
+def list_all_users(request):
+    users = CustomUser.objects.all()
+    context = {'users': users}
+    return render(request, 'agrosmart/usuarios/user_list.html', context=context)
+
+@login_required(login_url="my_login")
+@user_passes_test(lambda u: u.user_type == 'admin')
+def list_colaboradores(request):
+    users = CustomUser.objects.filter(created_by=request.user)
+    context = {'users': users}
+    return render(request, 'agrosmart/usuarios/user_list.html', context=context)
+
+from django.contrib.auth import authenticate, login as auth_login
+from django.contrib.auth.forms import AuthenticationForm  # Usa el formulario estándar
+from django.contrib.auth.decorators import login_required
 
 def my_login(request):
-    form = LoginForm()  # Inicializa la variable form aquí
+    form = AuthenticationForm()  # Inicializa el formulario aquí
     if request.method == "POST":
-        form = LoginForm(request, data=request.POST)
+        form = AuthenticationForm(request, data=request.POST)
         if form.is_valid():
-            username = request.POST.get('username')
-            password = request.POST.get('password')
-
+            username = form.cleaned_data['username']
+            password = form.cleaned_data['password']
+            
             user = authenticate(request, username=username, password=password)
             if user is not None:
-                auth.login(request, user)
-                return redirect("home")
+                auth_login(request, user)
+                return redirect("home")  # Asegúrate de tener una vista con nombre 'home'
     context = {"form": form}
     return render(request, 'agrosmart/registration/my-login.html', context=context)
+
 
 
 def user_logout(request):
     auth.logout(request)
     return redirect ("home")
 
+@user_passes_test(lambda u: u.user_type in ['superuser', 'admin'])
+def delete_user(request, user_id):
+    user_to_delete = get_object_or_404(CustomUser, id=user_id)
+
+    if request.user == user_to_delete:
+        messages.error(request, "No puedes eliminar tu propio perfil.")
+    else:
+        user_to_delete.delete()
+        messages.success(request, "Colaborador eliminado correctamente.")
+
+        # Redirección basada en el tipo de usuario
+        if request.user.user_type == 'admin':
+            return redirect('list_colaboradores')
+        elif request.user.is_superuser:
+            return redirect('list_all_users')
+
+    return redirect('list_colaboradores')  # En c
 
 
 
  
+#crear empresa
+from django.contrib.auth.decorators import user_passes_test
+from django.shortcuts import render, redirect
+from .forms import EmpresaOFundoForm,EditColaboradorForm
+from .models import EmpresaOFundo
+
+# Decorador para verificar si el usuario es un administrador
+def is_admin(user):
+    return user.user_type == 'admin'
+
+@user_passes_test(is_admin)
+def agregar_empresa(request):
+     
+    if EmpresaOFundo.objects.filter(created_by=request.user).exists():
+        messages.error(request, "Ya tienes una empresa registrada.")
+        return redirect('lista_empresas')  # Redirige a la list
+
+
+    if request.method == 'POST':
+        form = EmpresaOFundoForm(request.POST, request.FILES)
+        if form.is_valid():
+            empresa = form.save(commit=False)
+            empresa.user = request.user
+            empresa.created_by = request.user  # El administrador que crea la empresa
+            empresa.save()
+            messages.success(request, "Empresa registrada con éxito.")
+            return redirect('lista_empresas')  # Redirigir a una página que muestre las empresas
+    else:
+        form = EmpresaOFundoForm()
+    
+    return render(request, 'agrosmart/empresa/agregar_empresa.html', {'form': form})
+
+from django.shortcuts import render
+from .models import EmpresaOFundo
+
+@login_required
+def lista_empresas(request):
+    empresas = EmpresaOFundo.objects.none()  # Iniciar como vacía
+
+    if request.user.user_type == 'admin':
+        # Asegurarte de que el usuario 'admin' tiene empresas
+        empresas = EmpresaOFundo.objects.filter(created_by=request.user)
+
+    return render(request, 'agrosmart/empresa/lista_empresas.html', {'empresas': empresas})
+

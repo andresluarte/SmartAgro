@@ -132,10 +132,15 @@ img {
 }
 
 .slider {
+    position: relative;
     width: 512px;
     height: 288px;
-    ;
+    z-index: 1; /* Asegura que el slider tenga un z-index menor que el sidenav */
+}
 
+/* Si los botones del slider tienen un z-index más alto, baja su valor */
+.slider .button {
+    z-index: 0; /* Ajusta el z-index de los botones del slider si es necesario */
 }
 
 input[type=text],
@@ -259,4 +264,32 @@ textarea {
 
 .bold-link {
     font-weight: bold;
+}
+
+
+.user-info {
+    display: flex;
+    flex-direction: column; /* Apila verticalmente */
+    align-items: center; /* Centra horizontalmente */
+    text-align: center; /* Centra el texto */
+    margin-bottom: 5px; /* Espacio más reducido debajo del bloque */
+}
+
+.empresa-info {
+    display: flex;
+    align-items: center; /* Centra verticalmente */
+    justify-content: center; /* Centra horizontalmente */
+    margin-top: 0px; /* Espacio entre el nombre de usuario y la empresa */
+}
+
+.logo-small {
+    width: 50px; /* Ajusta el tamaño del logo pequeño */
+    height: auto;
+    margin-right: 20px; /* Espacio entre el logo y el nombre */
+}
+
+.empresa-nombre {
+    font-size: 14px; /* Tamaño del texto del nombre de la empresa */
+    font-weight: bold;
+    color: #333;
 }

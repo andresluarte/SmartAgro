@@ -27,7 +27,7 @@ urlpatterns = [
 
 
 
-    path('informes/', views.informes, name = "informes"),
+
     path('agregartarea/', views.agregartarea, name = "agregartarea"),
     
     #zona especifica
@@ -35,7 +35,8 @@ urlpatterns = [
     path('agregarsector/', views.agregar_sector, name = "agregarsector"),
     path('agregar_huerto/<int:sector_id>/', views.agregar_huerto, name='agregar_huerto'),
     path('agregar_huerto_ss/', views.agregar_huerto_sin_sector, name='agregar_huerto_ss'),
-    path('agregarlote/', views.agregar_lote, name = "agregarlote"),
+    path('agregar_lote_sh/', views.agregar_lote_sin_huerto, name='agregar_lote_sh'),
+    path('agregar_lote/', views.agregar_lote, name='agregar_lote'),
     path('modificarsector/<id>', views.modificarsector, name = "modificarsector"),
     path('modificarhuerto/<id>', views.modificarhuerto, name = "modificarhuerto"),
     path('eliminarsector/<int:id>/', views.eliminarsector, name = "eliminarsector"),
@@ -53,12 +54,14 @@ urlpatterns = [
     path('gestiondetrabajadores/', views.TrabajadorList, name = "gestiondetrabajadores"),
     path('agregartrabajador/', views.agregartrabajador, name = "agregartrabajador"),
     path('modificartrabajadores/<id>', views.modificartrabajadores, name = "modificartrabajadores"),
-    path('eliminartrabajador/<int:id>/', views.eliminartrabajador, name = "eliminartrabajador"),
+    path('eliminarTrabajador/<int:id>/', views.eliminartrabajador, name = "eliminartrabajador"),
     
-
+    path('cargar-lotes/', views.cargar_lotes, name='cargar_lotes'),
     path('agregar_jornada/', views.agregar_jornada, name='agregar_jornada'),
-    path('gestion_jornadas2/', views.JornadaListView.as_view(), name = "gestion_jornadas2"),
+    path('agregar_jornada_por_trato/', views.agregar_jornada_por_trato, name='agregar_jornada_por_trato'),
+ 
     path('gestion_jornadas/', views.JornadaList, name='gestion_jornadas'),
+    path('gestion_jornadas_por_trato/', views.jornada_por_trato_list, name='gestion_jornadas_por_trato'),
     
     
     path('modificarjornada/<id>', views.modificarjornada, name = "modificarjornada"),
@@ -67,23 +70,38 @@ urlpatterns = [
     path('cargar_huertos/', views.cargar_huertos, name='cargar_huertos'),
     path('cargar_lotes/', views.cargar_lotes, name='cargar_lotes'),
   #sensor
-    path('receive-data/', views.receive_data, name='receive_data'),
+    
 
     path('obtener_cobro/', views.obtener_cobro_view, name='obtener_cobro'),
 
 
-    path('api/temperature-humidity/', views.  TemperatureHumidityAPIView.as_view(), name='temperature-humidity'),
-    path('tiemporeal/', views.temperature_humidity_list, name='tiemporeal'),
 
 
 
+    
     #registration
     path('obtener_cobro/', views.obtener_cobro_view, name='obtener_cobro'),
 
     #registration
     path('register/', views.register, name='register'),
-    path('my_login/', views.my_login, name='my_login'),
+    path('register_colaborador/', views.register_colaborador, name='register_colaborador'),
+    
+    path('accounts/login/', views.my_login, name='login'), 
     path('user_logout/', views.user_logout, name='user_logout'),
+    path('list_all_users/', views.list_all_users, name='list_all_users'),
+    path('list_colaboradores/', views.list_colaboradores, name='list_colaboradores'),
+
+    #deleteuser
+    path('delete_user/<int:user_id>/', views.delete_user, name='delete_user'),
+
+    #empresa
+    path('agregar_empresa/', views.agregar_empresa, name='agregar_empresa'),  # Para agregar una empresa o fundo
+
+    # Colaborador URLs
+    path('lista_empresas/', views.lista_empresas, name='lista_empresas'),
+
+    #edita colaborador 
+    path('edit_colaborador/<int:user_id>/', views.edit_colaborador_view, name='edit_colaborador'),
    
 
 

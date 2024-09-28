@@ -17,7 +17,7 @@
 
         <div class="card">
             <div class="card-body">
-                <h2> Agregar Huerto </h2>
+                <h3> Agregar Huerto </h3>
                 <form action=""  autocomplete="off" class="formularioproceso" method="post" enctype="multipart/form-data">
                     {% csrf_token %}
 
@@ -47,7 +47,7 @@
                 <button class="btn btn-success">Volver Atrás</button>
                 
             </a>
-            <a href="{% url 'agregarlote' %}">
+            <a href="{% url 'agregar_lote' %}">
                 <button class="btn btn-warning">Agregar Lote</button>
                 
             </a>

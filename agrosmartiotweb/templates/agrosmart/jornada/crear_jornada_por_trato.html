@@ -1,0 +1,308 @@
+{% extends 'agrosmart/base.html' %}
+
+{% block contenido %}
+{% load static %}
+{% load crispy_forms_tags %}
+<br>
+<br>
+<br>
+
+
+
+<div class="row">
+
+    <hr>
+
+    <div class="col-12 col-md-6 offset-md-3">
+
+        <div class="card">
+            <div class="card-body">
+                <h3> Crear Jornada Por Trato</h3>
+
+                <a href="{% url 'gestion_jornadas' %}">
+                    <button class="btn btn-success">Volver Atrás</button>
+                </a>
+                <form method="post" enctype="multipart/form-data">
+                    <input type="hidden" id="cobro_por_hora" value="{{ trabajador.cobro }}">
+
+                    {% csrf_token %}
+                    
+
+                    <label for="{{ form.asignado.id_for_label }}">Asignado</label>
+                    {{ form.asignado }}
+
+
+
+                    
+
+
+
+                    <label for="{{ form.sector.id_for_label }}">Sector</label>
+                    {{ form.sector }}
+
+                    <label for="{{ form.huerto.id_for_label }}">Huerto</label>
+                    {{ form.huerto }}
+
+                    <label for="{{ form.lote.id_for_label }}">Lote</label>
+                    {{ form.lote }}
+                    <br>
+                    <br>
+                    <label for="{{ form.fecha.id_for_label }}">Fecha</label>
+                    {{ form.fecha }}
+
+                    <!-- Tarea 1 -->
+                    <h3>Detalle de Tarea 1</h3>
+                    <label for="{{ form.nombre_tarea_1.id_for_label }}">Nombre de Tarea 1</label>
+                    {{ form.nombre_tarea_1 }}
+                    <br>
+                    <br>
+                    <label for="cobro_tarea_1">Cobro Tarea 1</label>
+                    <input type="text" id="cobro_tarea_1" name="cobro_tarea_1" value="0" >
+                    
+
+                    <br>
+
+
+
+
+
+                    <!-- Tarea 2 -->
+                    <h3>Detalle de Tarea 2</h3>
+                    <label for="{{ form.nombre_tarea_2.id_for_label }}">Nombre de Tarea 2</label>
+                    {{ form.nombre_tarea_2 }}
+                    <br>
+                    <br>
+                    
+                    <br>
+                    <label for="cobro_tarea_2">Cobro Tarea 2</label>
+                    <input type="text" id="cobro_tarea_2" name="cobro_tarea_2" value="0" >
+
+
+
+
+                    <br>
+                    <br>
+
+
+                    <!-- Botón para agregar tarea 3 y  -->
+                    <button type="button" class="btn btn-warning" id="agregar-tarea-btn">Agregar otra tarea</button>
+                    <button type="button" class="btn btn-secondary" id="agregar-extra-btn">Agregar Extras</button>
+                    <button type="button" class="btn btn-primary" id="agregar-observacion-btn">Agregar
+                        Observación</button>
+
+
+                    <!-- Tarea 3 (inicialmente oculta) -->
+                    <div id="tarea3-container" style="display: none;">
+                        <h3>Detalle de Tarea 3</h3>
+                        <label for="{{ form.nombre_tarea_3.id_for_label }}">Nombre de Tarea 3</label>
+                        {{ form.nombre_tarea_3 }}
+                        <br>
+                        <br>
+
+                        <label for="cobro_tarea_3">Cobro Tarea 2</label>
+                    <input type="text" id="cobro_tarea_3" name="cobro_tarea_3" value="0" >
+                        <br>
+                        <br>
+
+
+
+                        <br>
+
+                        
+                    </div>
+                    <div id="extra-container" style="display: none;">
+                        <br>
+
+                        <h3>Extras</h3>
+                        <label for="{{ form.nombre_extra_1.idfor_label }}">Nombre Extra 1</label>
+                        {{ form.nombre_extra_1 }}
+                        <label for="{{ form.gasto_extra_1.idfor_label }}">Gasto Extra 1</label>
+                        {{ form.gasto_extra_1 }}
+                        <label for="{{ form.nombre_extra_1.idfor_label }}">Nombre Extra 2</label>
+                        {{ form.nombre_extra_2 }}
+                        <label for="{{ form.gasto_extra_1.idfor_label }}">Gasto Extra 2</label>
+                        {{ form.gasto_extra_2 }}
+                        <label for="{{ form.nombre_extra_1.idfor_label }}">Nombre Extra 3</label>
+                        {{ form.nombre_extra_3 }}
+                        <label for="{{ form.gasto_extra_1.idfor_label }}">Gasto Extra 3</label>
+                        {{ form.gasto_extra_3 }}
+                    </div>
+
+                    <div id="observacion-container" style="display:none">
+                        <label for="{{ form.observacion.id_for_label }}">Observación</label>
+                        {{ form.observacion }}
+
+                    </div>
+
+                    <br>
+                    <br>
+
+
+                    <button class="btn btn-success" type="submit">Guardar</button>
+                </form>
+
+
+
+
+
+
+
+
+                <br>
+
+
+                <a href="{% url 'gestion_jornadas' %}">
+                    <button class="btn btn-success">Volver Atrás</button>
+                </a>
+
+
+            </div>
+            <br>
+
+
+        </div>
+    </div>
+</div>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const tarea3Container = document.getElementById("tarea3-container");
+        const agregarTareaBtn = document.getElementById("agregar-tarea-btn");
+        let tarea3Visible = false;
+
+        agregarTareaBtn.addEventListener("click", function () {
+            if (!tarea3Visible) {
+                tarea3Container.style.display = "block";
+                tarea3Visible = true;
+                agregarTareaBtn.textContent = "Quitar tarea 3";  // Cambiar el texto del botón
+            } else {
+                tarea3Container.style.display = "none";
+                tarea3Visible = false;
+                agregarTareaBtn.textContent = "Agregar otra tarea";  // Cambiar el texto del botón
+            }
+        });
+    });
+</script>
+</div>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const extraContainer = document.getElementById("extra-container");
+        const agregarExtraBtn = document.getElementById("agregar-extra-btn");
+        let extraVisible = false;
+        const extraInputs = document.querySelectorAll("#extra-container input");
+
+        agregarExtraBtn.addEventListener("click", function () {
+            if (!extraVisible) {
+                extraContainer.style.display = "block";
+                extraVisible = true;
+                agregarExtraBtn.textContent = "Quitar Extras";
+            } else {
+                extraContainer.style.display = "none";
+                extraVisible = false;
+                agregarExtraBtn.textContent = "Agregar Extras";
+
+                // Borrar el contenido de todos los campos de texto y numéricos
+                extraInputs.forEach(input => input.value = "");
+            }
+        });
+    });
+</script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const obsContainer = document.getElementById("observacion-container");
+        const agregarObsBtn = document.getElementById("agregar-observacion-btn");
+        const observacionInput = document.querySelector("#observacion-container input");
+        let ObsVisible = false;
+
+        agregarObsBtn.addEventListener("click", function () {
+            if (!ObsVisible) {
+                obsContainer.style.display = "block";
+                ObsVisible = true;
+                agregarObsBtn.textContent = "Quitar Observación";
+            } else {
+                obsContainer.style.display = "none";
+                ObsVisible = false;
+                agregarObsBtn.textContent = "Agregar Observación";
+                // Borrar el contenido del campo de observación
+                observacionInput.value = "";
+            }
+        });
+    });
+</script>
+
+<script>
+    $(document).ready(function () {
+        // Manejar el evento de cambio en el campo de sector
+        $("#id_sector").change(function () {
+            var selectedSector = $(this).val();
+            // Limpiar los valores de los combos de huerto y lote
+            $("#id_huerto").empty();
+            $("#id_lote").empty();
+            $.ajax({
+                url: "/cargar_huertos/",
+                data: {
+                    'sector_id': selectedSector
+                },
+                dataType: 'json',
+                success: function (data) {
+                    var $huertoSelect = $("#id_huerto");
+                    $.each(data.huertos, function (index, huerto) {
+                        $huertoSelect.append($('<option>', {
+                            value: huerto.id,
+                            text: huerto.nombre
+                        }));
+                    });
+
+                    // Disparar el evento "change" en el campo de huerto después de cargar las opciones
+                    $huertoSelect.trigger('change');
+                },
+                error: function () {
+                    console.error("Error al cargar los huertos.");
+                }
+            });
+        });
+
+        // Manejar el evento de cambio en el campo de huerto    
+        $("#id_huerto").change(function () {
+            var selectedHuerto = $(this).val();
+            // Limpiar el valor del combo de lote
+            $("#id_lote").empty();
+            $.ajax({
+                url: "/cargar_lotes/",
+                data: {
+                    'huerto_id': selectedHuerto
+                },
+                dataType: 'json',
+                success: function (data) {
+                    var $loteSelect = $("#id_lote");
+                    $.each(data.lotes, function (index, lote) {
+                        $loteSelect.append($('<option>', {
+                            value: lote.id,
+                            text: lote.nombre
+                        }));
+                    });
+                },
+                error: function () {
+                    console.error("Error al cargar los lotes.");
+                }
+            });
+        });
+    });
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</div>
+{% endblock %}

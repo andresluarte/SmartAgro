@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="{% static 'app/css/estilos.css' %}">
     <style>
         body {
-            font-family: "Times New Roman", Times, serif;
+            font-family: Arial, sans-serif;
             background-color: #caffca;
             text-align: center;
             margin: 0;
@@ -59,7 +59,16 @@
 <body>
     <div class="container">
         <h3>Iniciar Sesión</h3>
+        <style>
+        .logo-small {
+            width: 50px; /* Ajusta el tamaño del logo pequeño */
+            height: auto;
+            margin-right: 20px; /* Espacio entre el logo y el nombre */
+        }
+        </style>
+        <img src="{% static 'app/img/logoagrosmartiot.png' %}" alt="img" class="logo-small ">
         <form method="POST">
+            
             {% csrf_token %}
             <label for="id_username">Nombre de Usuario</label>
             {{ form.username }}
@@ -67,6 +76,7 @@
             <label for="id_password">Contraseña</label>
             {{ form.password }}
             <br>
+            
             <input type="submit" value="Iniciar Sesión">
         </form>
     </div>

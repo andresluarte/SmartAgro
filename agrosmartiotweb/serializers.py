@@ -17,10 +17,4 @@ class ProcesoSerializer(serializers.ModelSerializer):
         )
 
 
-from .models import TemperatureHumidity
-
-class TemperatureHumiditySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = TemperatureHumidity
-        fields = ('temperature', 'humidity')
 

@@ -1,0 +1,62 @@
+{% extends 'agrosmart/base.html' %}
+
+{% load static %}
+{% load agrosmartiotweb %}
+
+
+
+{% block contenido %}
+{% load static %}
+{% load agrosmartiotweb %}
+
+<style>
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    th, td {
+        padding: 10px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+    }
+    th {
+        background-color: #f2f2f2;
+    }
+    tr:hover {
+        background-color: #f5f5f5;
+    }
+    .btn {
+        padding: 8px 16px;
+        margin: 4px;
+        border: none;
+        background-color: #4CAF50;
+        color: white;
+        cursor: pointer;
+        text-decoration: none;
+        border-radius: 4px;
+    }
+    .btn-danger {
+        background-color: #f44336;
+    }
+</style>
+<h3>Mi Empresa</h3>
+<table>
+    <tr>
+      <th>Nombre</th>
+      <th>Hectáreas</th>
+      <th>Fecha de creación</th>
+    </tr>
+    {% for empresa in empresas %}
+    <tr>
+      <td>{{ empresa.nombre }}</td>
+      <td>{{ empresa.numero_hectareas }}</td>
+      <td>{{ empresa.fecha_creacion }}</td>
+    {% empty %}
+      <tr>
+        <td colspan="3">No tienes empresas registradas.</td>
+      </tr>
+      
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}

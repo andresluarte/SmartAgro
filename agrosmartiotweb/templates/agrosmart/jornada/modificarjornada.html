@@ -17,7 +17,7 @@
 
         <div class="card">
             <div class="card-body">
-                <h2> Modificar Jornada </h2>
+                <h3> Modificar Jornada </h3>
                 <a href="{% url 'gestion_jornadas' %}">
                     <button class="btn btn-success">Volver Atrás</button>
                 </a>
@@ -196,27 +196,7 @@
     });
 
     // Manejar el evento de cambio en el campo de huerto    
-    $("#id_huerto").change(function () {
-        var selectedHuerto = $(this).val();
-        // Limpiar el valor del combo de lote
-        $("#id_lote").empty();
-        $.ajax({
-            url: "/cargar_lotes/",
-            data: {
-                'huerto_id': selectedHuerto
-            },
-            dataType: 'json',
-            success: function (data) {
-                var $loteSelect = $("#id_lote");
-                $.each(data.lotes, function (index, lote) {
-                    $loteSelect.append($('<option>', {
-                        value: lote.id,
-                        text: lote.nombre
-                    }));
-                });
-            }
-        });
-    });
+    
 </script>
 <script>
     document.addEventListener("DOMContentLoaded", function () {
@@ -270,8 +250,28 @@
     });
 
 
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-
+</script>
+<script type="text/javascript">
+    $(document).ready(function() {
+        // Al cambiar el huerto, carga los lotes asociados
+        $('#id_huerto').change(function() {
+            var huertoId = $(this).val();
+            $.ajax({
+                url: "{% url 'cargar_lotes' %}",  // Asegúrate de que esta URL coincida con tu configuración de URLs
+                data: {
+                    'huerto_id': huertoId
+                },
+                success: function(data) {
+                    $("#id_lote").html('');  // Limpia las opciones anteriores
+                    for (var i = 0; i < data.length; i++) {
+                        $("#id_lote").append('<option value="' + data[i].id + '">' + data[i].nombre + '</option>');
+                    }
+                }
+            });
+        });
+    });
 </script>
 
 

@@ -1,0 +1,115 @@
+{% extends 'agrosmart/base.html' %}
+
+{% block contenido %}
+{% load static %}
+{% load agrosmartiotweb %}
+
+<style>
+    .table-container {
+        width: 100%;
+        overflow-x: auto;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 600px;
+    }
+    th, td {
+        padding: 10px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+    }
+    th {
+        background-color: #f2f2f2;
+    }
+    tr:hover {
+        background-color: #f5f5f5;
+    }
+    .btn {
+        padding: 8px 16px;
+        margin: 4px;
+        border: none;
+        background-color: #4CAF50;
+        color: white;
+        cursor: pointer;
+        text-decoration: none;
+        border-radius: 4px;
+    }
+    .btn-danger {
+        background-color: #f44336;
+    }
+    @media (max-width: 600px) {
+        th, td {
+            font-size: 14px;
+            padding: 8px;
+        }
+        .btn {
+            padding: 6px 12px;
+        }
+    }
+</style>
+
+{% if request.user.is_authenticated %}
+    {% if request.user.user_type == 'superuser' %}
+    <h3>Lista de Usuarios</h3>
+    {% elif request.user.user_type == 'admin' %}
+    <h3>Lista de Colaboradores</h3>
+    {% endif %}
+{% endif %}
+<div class="btn-group justify-content-end">
+    <button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+      Opciones
+    </button>
+    <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+
+      <a href="{% url 'agregartrabajador' %}" class="btn btn-secondary">Agregar Trabajador</a>
+
+
+     
+
+     
+
+      
+      <a href="{% url 'gestiondetareas' %}" class="btn btn-secondary">Ir a Tareas</a>
+      <a href="{% url 'gestion_jornadas' %}" class="btn btn-secondary">Ir a Jornadas</a>
+
+      
+      </ul>
+    </div>
+
+  </div>
+<div class="table-container">
+    <table>
+        <tr>
+            <th>Username</th>
+            <th>Email</th>
+            <th>User Type</th>
+            <th>Creado por</th>
+            <th>EMPRESA</th>
+            <th>Actions</th>
+        </tr>
+        {% for user in users %}
+        <tr>
+            <td>{{ user.username }}</td>
+            <td>{{ user.email }}</td>
+            <td>{{ user.get_user_type_display }}</td>
+            <td>{{ user.created_by }}</td>
+            <td>{{ user.empresa }}</td>
+            <td>
+                {% if request.user.user_type == 'admin' %}
+                    <a href="{% url 'edit_colaborador' user.id %}" class="btn">Editar</a>
+                {% endif %}
+                <form method="POST" action="{% url 'delete_user' user.id %}" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Eliminar</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+{% endblock %}
+
+
+
+

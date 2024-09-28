@@ -9,14 +9,14 @@ https://docs.djangoproject.com/en/4.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.1/ref/settings/
 """
+
 import os
 from pathlib import Path
 import django_heroku
-import dj_database_url
+import pytz
+AUTH_USER_MODEL = 'agrosmartiotweb.CustomUser'
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
-import pytz
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
@@ -25,14 +25,16 @@ import pytz
 SECRET_KEY = 'django-insecure-i+h^ifkudr)+q*__he#@n=#=q*rk17-b!3^ns4vmt+5og7sqz1'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
+# settings.py
 
-ALLOWED_HOSTS = ['*']
-
+LOGIN_FORM = 'agrosmartiotweb.forms.CustomLoginForm'
+LOGIN_URL = 'login'
 MESSAGE_STORAGE = "django.contrib.messages.storage.cookie.CookieStorage"
 
-LOGIN_REDIRECT_URL ='/'
+LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -42,10 +44,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'agrosmartiotweb','agrosmartiot',
-    'django.contrib.humanize','crispy_forms',"django_filters","rest_framework","import_export","mptt"
-    
+    'agrosmartiotweb', 'agrosmartiot',
+    'django.contrib.humanize', 'crispy_forms', "django_filters", "rest_framework", "import_export", "mptt"
 ]
+
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
 
 MIDDLEWARE = [
@@ -64,7 +66,7 @@ ROOT_URLCONF = 'agrosmartiot.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': ['./templates/agrosmart'],
+        'DIRS': [BASE_DIR / 'templates/agrosmart'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -72,6 +74,10 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                
+                'agrosmartiotweb.context_processors.empresa_info',
+
+                
             ],
         },
     },
@@ -79,35 +85,21 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'agrosmartiot.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
-import dj_database_url
-from decouple import config
 DATABASES = {
-    'default': 
-        {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-         'NAME': 'd19jiqb2kb2vn0', #nombre de la base de datos
-         'USER':'uf38ta0aviljmb', #nombre dl usuario (cuando se instala postgres)
-         'PASSWORD':'p8e487a3c05d4f6dd6a3c6132070f340eb958877c69baff6727d7367f88717888', #password cuando se crea postgree
-         'HOST':'c5flugvup2318r.cluster-czrs8kj4isg7.us-east-1.rds.amazonaws.com', #localhost es el nombre del host cuando se instala
-         'DATABASE_PORT':'5432', # database port == 5432
-        }
-} 
-# DATABASES = {
-#      'default': dj_database_url.config(
-#          default=config('DATABASE_URL')
-#      )
-#  }
-
-import dj_database_url
-db_from_env = dj_database_url.config(conn_max_age=600)
-DATABASES['default'].update(db_from_env)
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}
+# settings.py
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+]
 
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
-
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -123,48 +115,29 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/4.1/topics/i18n/
-
 LANGUAGE_CODE = 'es'
-
 TIME_ZONE = 'America/Santiago'
-
 USE_I18N = True
-
 USE_TZ = True
-
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
-
-STATIC_URL = 'static/'
-
-# Default primary key field type
-# https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
-
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-
-STATIC_URL='/static/'
+STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-
-import os
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
-STATICFILES_STORAGE='whitenoise.storage.CompressedManifestStaticFilesStorage'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-#kafka
+# Kafka
 KAFKA_SERVER = 'localhost:9092'
 KAFKA_TOPIC = 'temperatura-topic'
 
-#New start
-db_from_env = dj_database_url.config(conn_max_age=500)
-DATABASES['default'].update(db_from_env)
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-#New End
-django_heroku.settings(locals())
+# Django Heroku settings
+
+SESSION_COOKIE_SECURE = False  # Si no estás usando HTTPS, asegúrate de que esto sea False
+CSRF_COOKIE_SECURE = False     # Asegúrate de que sea False en desarrollo
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False

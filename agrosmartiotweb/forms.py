@@ -8,16 +8,22 @@ class TimePickerInput(forms.TimeInput):
     input_type = 'time'
 
 class ProcesoForm(forms.ModelForm):
-    
     class Meta:
         model = Procesos
-        fields =  ["trabajo","fecha","hora_asignada","sector","huerto","lote","asignado","presupuesto","observacion"]
-
-        widgets={
-            "fecha":DateInput,
-            
+        fields = ["trabajo", "fecha", "hora_asignada", "sector", "huerto", "lote", "asignado", "presupuesto", "observacion"]
+        widgets = {
+            "fecha": DateInput,
         }
-    
+
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user')  # Extrae el usuario de los kwargs
+        super().__init__(*args, **kwargs)
+        
+        # Filtrar los queryset según el usuario logueado
+        self.fields['asignado'].queryset = Trabajador.objects.filter(user=user)
+        self.fields['sector'].queryset = Sector.objects.filter(user=user)
+        self.fields['huerto'].queryset = Huerto.objects.filter(user=user)
+        self.fields['lote'].queryset = Lote.objects.filter(user=user)
 
 class ContactoForm(forms.ModelForm):
 
@@ -29,12 +35,20 @@ class ProcesoModificarForm(forms.ModelForm):
     
     class Meta:
         model = Procesos
-        fields =  ["trabajo","fecha","hora_asignada","sector","huerto","lote","estado","asignado","presupuesto","observacion"]
-
-        widgets={
-            "fecha":forms.SelectDateWidget,
-            
+        fields = ["trabajo", "fecha", "hora_asignada", "sector", "huerto", "lote", "estado", "asignado", "presupuesto", "observacion"]
+        widgets = {
+            "fecha": forms.SelectDateWidget,
         }
+
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user')  # Extrae el usuario de los kwargs
+        super().__init__(*args, **kwargs)
+        
+        # Filtrar los queryset según el usuario logueado
+        self.fields['asignado'].queryset = Trabajador.objects.filter(user=user)
+        self.fields['sector'].queryset = Sector.objects.filter(user=user)
+        self.fields['huerto'].queryset = Huerto.objects.filter(sector__user=user)
+        self.fields['lote'].queryset = Lote.objects.filter(huerto__sector__user=user)
 class TrabajadorModificarForm(forms.ModelForm):
     
     class Meta:
@@ -50,7 +64,7 @@ class TrabajadorModificarForm(forms.ModelForm):
 class FiltroEstado(forms.Form):
     estado = forms.CharField()
 
-class TrabajadorForm(forms.ModelForm):
+class TrabajadorForm(forms.ModelForm): 
 
     class Meta:
         model = Trabajador
@@ -60,13 +74,10 @@ class TrabajadorForm(forms.ModelForm):
             "fecha_termino_contrato": DateInput(),
    
         }
-        def __init__(self, *args, **kwargs):
-            super().__init__(*args, **kwargs)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         # Establece un valor predeterminado para el campo fecha_termino_contrato
-            self.fields['fecha_termino_contrato'].initial = 'Sin Fecha Termino'
-
-
-
+        self.fields['fecha_termino_contrato'].initial = 'Sin Fecha Termino'  
 ####formato
 
 FORMAT_CHOICES = (
@@ -101,15 +112,18 @@ class CustomTimePickerInput(DateInput):
         return rendered
 
 
+from django import forms
+from .models import Jornada, Trabajador, Sector, Huerto, Lote
+
 class JornadaForm(forms.ModelForm):
     
     class Meta:
         model = Jornada
+        exclude = ['creador']
         fields = ['asignado',  'sector', 'huerto', 'lote', 'fecha', 'nombre_tarea_1', 
                   'hora_inicio_tarea_1', 'hora_fin_tarea_1', 'cobro_tarea_1', 'nombre_tarea_2', 'hora_inicio_tarea_2', 
                   'hora_fin_tarea_2', 'cobro_tarea_2', 'nombre_tarea_3', 'hora_inicio_tarea_3', 'hora_fin_tarea_3', 'cobro_tarea_3',
-
-                  'nombre_extra_1','gasto_extra_1','nombre_extra_2','gasto_extra_2','nombre_extra_3','gasto_extra_3','nombre_extra_1','gasto_extra_1','nombre_extra_2','gasto_extra_2','nombre_extra_3','gasto_extra_3',
+                  'nombre_extra_1', 'gasto_extra_1', 'nombre_extra_2', 'gasto_extra_2', 'nombre_extra_3', 'gasto_extra_3', 
                   'observacion']
         widgets = {
             "fecha": DateInput(),
@@ -121,11 +135,23 @@ class JornadaForm(forms.ModelForm):
             "hora_fin_tarea_3": CustomTimePickerInput(),
         }
 
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)  # Extraer el usuario de kwargs, si está presente
+        super().__init__(*args, **kwargs)
+        
+        if user:
+            self.fields['asignado'].queryset = Trabajador.objects.filter(user=user)
+            self.fields['sector'].queryset = Sector.objects.filter(user=user)
+            self.fields['huerto'].queryset = Huerto.objects.filter(user=user)
+            self.fields['lote'].queryset = Lote.objects.filter(user=user)
+
+        # Hacer que los campos de cobro no sean de solo lectura
+        for field_name in ['cobro_tarea_1', 'cobro_tarea_2', 'cobro_tarea_3']:
+            self.fields[field_name].widget.attrs['readonly'] = False
+
     def save(self, commit=True):
         instance = super().save(commit=False)
         cobro_por_hora = instance.asignado.cobro if instance.asignado else None
-
-        
 
         def calcular_cobro_tarea(hora_inicio, hora_fin):
             if hora_inicio and hora_fin and cobro_por_hora:
@@ -144,7 +170,7 @@ class JornadaForm(forms.ModelForm):
         cobros_tareas = [instance.cobro_tarea_1, instance.cobro_tarea_2, instance.cobro_tarea_3]
         instance.detalle_gasto_total_tareas = sum(filter(None, cobros_tareas))
 
-    # Calcular detalle_gastos_total_extras
+        # Calcular detalle_gastos_total_extras
         gastos_extras = [instance.gasto_extra_1, instance.gasto_extra_2, instance.gasto_extra_3]
         instance.detalle_gastos_total_extras = sum(filter(None, gastos_extras))
 
@@ -155,29 +181,84 @@ class JornadaForm(forms.ModelForm):
             instance.save()
         return instance
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        for field_name in ['cobro_tarea_1', 'cobro_tarea_2', 'cobro_tarea_3']:
-            self.fields[field_name].widget.attrs['readonly'] = False
-        
+from django import forms
+from .models import JornadaPorTrato
 
-class JornadaModificarForm(forms.ModelForm):
+class JornadaPorTratoForm(forms.ModelForm):
     
     class Meta:
-        model = Jornada
-        fields = ['asignado',  'sector', 'huerto', 'lote', 'fecha', 'estado','nombre_tarea_1', 
-                  'hora_inicio_tarea_1', 'hora_fin_tarea_1', 'cobro_tarea_1', 'nombre_tarea_2', 'hora_inicio_tarea_2', 
-                  'hora_fin_tarea_2', 'cobro_tarea_2', 'nombre_tarea_3', 'hora_inicio_tarea_3', 'hora_fin_tarea_3', 'cobro_tarea_3',
+        model = JornadaPorTrato
+        fields = ['asignado', 'sector', 'huerto', 'lote', 'fecha', 'nombre_tarea_1', 'cobro_tarea_1', 
+                  'nombre_tarea_2', 'cobro_tarea_2', 'nombre_tarea_3', 'cobro_tarea_3', 
+                  'nombre_extra_1', 'gasto_extra_1', 'nombre_extra_2', 'gasto_extra_2', 'nombre_extra_3', 'gasto_extra_3', 
+                  'observacion']
+        widgets = {
+            "fecha": forms.DateInput(attrs={'type': 'date'}),
+        }
 
-                  'nombre_extra_1','gasto_extra_1','nombre_extra_2','gasto_extra_2','nombre_extra_3','gasto_extra_3','nombre_extra_1','gasto_extra_1','nombre_extra_2','gasto_extra_2','nombre_extra_3','gasto_extra_3',
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+        
+        if user:
+            self.fields['asignado'].queryset = Trabajador.objects.filter(user=user)
+            self.fields['sector'].queryset = Sector.objects.filter(user=user)
+            self.fields['huerto'].queryset = Huerto.objects.filter(user=user)
+            self.fields['lote'].queryset = Lote.objects.filter(user=user)
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+
+        # Calcular total_gasto_jornada, detalle_gasto_total_tareas y detalle_gastos_total_extras
+        cobros_tareas = [instance.cobro_tarea_1, instance.cobro_tarea_2, instance.cobro_tarea_3]
+        instance.detalle_gasto_total_tareas = sum(filter(None, cobros_tareas))
+        
+        gastos_extras = [instance.gasto_extra_1, instance.gasto_extra_2, instance.gasto_extra_3]
+        instance.detalle_gastos_total_extras = sum(filter(None, gastos_extras))
+
+        instance.total_gasto_jornada = instance.detalle_gasto_total_tareas + instance.detalle_gastos_total_extras
+
+        if commit:
+            instance.save()
+        return instance
+
+
+from django import forms
+from .models import Jornada, Lote
+
+class JornadaModificarForm(forms.ModelForm):
+    class Meta:
+        model = Jornada
+        fields = ['asignado', 'sector', 'huerto', 'lote', 'fecha', 'estado', 'nombre_tarea_1',
+                  'hora_inicio_tarea_1', 'hora_fin_tarea_1', 'cobro_tarea_1', 'nombre_tarea_2',
+                  'hora_inicio_tarea_2', 'hora_fin_tarea_2', 'cobro_tarea_2', 'nombre_tarea_3',
+                  'hora_inicio_tarea_3', 'hora_fin_tarea_3', 'cobro_tarea_3', 'nombre_extra_1',
+                  'gasto_extra_1', 'nombre_extra_2', 'gasto_extra_2', 'nombre_extra_3', 'gasto_extra_3',
                   'observacion']
 
-        
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+
+        if user:
+            # Filtrar sectores
+            self.fields['sector'].queryset = Sector.objects.filter(user=user)
+            # Filtrar huertos
+            self.fields['huerto'].queryset = Huerto.objects.filter(user=user)
+            # Filtrar trabajadores
+            self.fields['asignado'].queryset = Trabajador.objects.filter(user=user)
+
+            if self.instance and self.instance.huerto:
+                self.fields['lote'].queryset = Lote.objects.filter(huerto=self.instance.huerto, user=user)
+            else:
+                self.fields['lote'].queryset = Lote.objects.none()
+
+        for field_name in ['cobro_tarea_1', 'cobro_tarea_2', 'cobro_tarea_3']:
+            self.fields[field_name].widget.attrs['readonly'] = False
+
     def save(self, commit=True):
         instance = super().save(commit=False)
         cobro_por_hora = instance.asignado.cobro if instance.asignado else None
-
-        
 
         def calcular_cobro_tarea(hora_inicio, hora_fin):
             if hora_inicio and hora_fin and cobro_por_hora:
@@ -187,67 +268,103 @@ class JornadaModificarForm(forms.ModelForm):
                 return round(horas_trabajadas * cobro_por_hora, 2)
             return None
 
-        # Calcular los cobros de las tareas
         instance.cobro_tarea_1 = calcular_cobro_tarea(self.cleaned_data.get('hora_inicio_tarea_1'), self.cleaned_data.get('hora_fin_tarea_1'))
         instance.cobro_tarea_2 = calcular_cobro_tarea(self.cleaned_data.get('hora_inicio_tarea_2'), self.cleaned_data.get('hora_fin_tarea_2'))
         instance.cobro_tarea_3 = calcular_cobro_tarea(self.cleaned_data.get('hora_inicio_tarea_3'), self.cleaned_data.get('hora_fin_tarea_3'))
 
-        # Sumar los cobros de las tareas para calcular detalle_gasto_total_tareas
         cobros_tareas = [instance.cobro_tarea_1, instance.cobro_tarea_2, instance.cobro_tarea_3]
         instance.detalle_gasto_total_tareas = sum(filter(None, cobros_tareas))
 
-    # Calcular detalle_gastos_total_extras
         gastos_extras = [instance.gasto_extra_1, instance.gasto_extra_2, instance.gasto_extra_3]
         instance.detalle_gastos_total_extras = sum(filter(None, gastos_extras))
 
-        # Calcular total_gasto_jornada
         instance.total_gasto_jornada = instance.detalle_gasto_total_tareas + instance.detalle_gastos_total_extras
 
         if commit:
             instance.save()
         return instance
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        for field_name in ['cobro_tarea_1', 'cobro_tarea_2', 'cobro_tarea_3']:
-            self.fields[field_name].widget.attrs['readonly'] = False
-
-
 
 from django import forms
 from .models import Sector, Huerto, Lote
 
 class SectorForm(forms.ModelForm):
+    google_maps_link = forms.URLField(
+        max_length=200, 
+        required=False,
+        label="Enlace de Google Maps (opcional)"
+    )
+
     class Meta:
         model = Sector
-        fields = ['nombre']
+        fields = ['nombre', 'latitud', 'longitud', 'google_maps_link']
+
+    def clean(self):
+        cleaned_data = super().clean()
+        lat = cleaned_data.get("latitud")
+        lng = cleaned_data.get("longitud")
+        link = cleaned_data.get("google_maps_link")
+
+        if not link and (not lat or not lng):
+            raise forms.ValidationError("Debes proporcionar coordenadas o un enlace de Google Maps.")
+
+
+
 
 class HuertoForm(forms.ModelForm):
     class Meta:
         model = Huerto
-        fields = ['nombre', 'sector']
+        fields = ['nombre', 'sector']  # Incluye el campo sector
+
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)  # Recibir el usuario desde la vista
+        super(HuertoForm, self).__init__(*args, **kwargs)
+        # Filtrar los sectores para que solo aparezcan los del usuario logueado
+        if user is not None:
+            self.fields['sector'].queryset = Sector.objects.filter(user=user)
+
 
 class LoteForm(forms.ModelForm):
     class Meta:
         model = Lote
         fields = ['nombre', 'huerto']
 
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+        if user:
+            self.fields['huerto'].queryset = Huerto.objects.filter(user=user)
+
+
 class SectorModificarForm(forms.ModelForm):
-    
     class Meta:
-        model = Trabajador
-        fields =  ["nombre"]
+        model = Sector
+        fields = ['nombre', 'latitud', 'longitud', 'google_maps_link']
+
 class HuertoModificarForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        super(HuertoModificarForm, self).__init__(*args, **kwargs)
+        if user:
+            self.fields['sector'].queryset = Sector.objects.filter(user=user)
+
     class Meta:
         model = Huerto
         fields = ['nombre', 'sector']
+
 class LoteModificarForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        super(LoteModificarForm, self).__init__(*args, **kwargs)
+        if user:
+            self.fields['huerto'].queryset = Huerto.objects.filter(user=user)
+
     class Meta:
         model = Lote
         fields = ['nombre', 'huerto']
+
 from django.contrib.auth.forms import UserCreationForm,AuthenticationForm
 from django.contrib.auth.models import User
-
+from .models import CustomUser
 from django import forms
 
 from django.forms.widgets import PasswordInput,TextInput
@@ -255,16 +372,96 @@ from django.forms.widgets import PasswordInput,TextInput
 
 class CreateUserForm(UserCreationForm):
     class Meta:
-        model = User
-        fields = ['username','email','password1','password2']
+        model = CustomUser
+        fields = ['username', 'email', 'password1', 'password2', 'user_type']
+        widgets = {
+            'user_type': forms.HiddenInput()
+        }
+
+from django import forms
+from django.contrib.auth.forms import UserCreationForm
+from .models import CustomUser, EmpresaOFundo
+
+from django import forms
+from .models import CustomUser, EmpresaOFundo
+
+class RegisterColaboradorForm(forms.ModelForm):
+    password = forms.CharField(widget=forms.PasswordInput(), label="Password")
+
+    class Meta:
+        model = CustomUser
+        fields = ['username', 'password', 'email', 'first_name', 'last_name', 'user_type', 'empresa']
+
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)  # Obtener el usuario autenticado
+        super(RegisterColaboradorForm, self).__init__(*args, **kwargs)
+
+        # Filtrar las empresas para que solo muestre las del usuario autenticado
+        if user:
+            self.fields['empresa'].queryset = EmpresaOFundo.objects.filter(created_by=user)
+
+        # Mantener visible el campo user_type pero restringir las opciones
+        self.fields['user_type'].choices = [
+            choice for choice in CustomUser.USER_TYPE_CHOICES if choice[0] not in ['superuser', 'admin']
+        ]
+
+    def save(self, commit=True):
+        # Guardamos el formulario pero antes encriptamos la contraseña
+        user = super(RegisterColaboradorForm, self).save(commit=False)
+        user.set_password(self.cleaned_data['password'])
+
+        if commit:
+            user.save()
+
+        return user
+
+
+
 
 class LoginForm(AuthenticationForm):
     username = forms.CharField(widget=TextInput())
     password = forms.CharField(widget=PasswordInput())
 
+
+from .models import EmpresaOFundo
+
+class EmpresaOFundoForm(forms.ModelForm):
+    class Meta:
+        model = EmpresaOFundo
+        fields = ['nombre', 'numero_hectareas', 'foto1', 'foto2', 'foto3', 'logo', 'ubicacion', 'tipo_cultivo']
+        widgets = {
+            'nombre': forms.TextInput(attrs={'class': 'form-control'}),
+            'numero_hectareas': forms.NumberInput(attrs={'class': 'form-control'}),
+            'foto1': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+            'foto2': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+            'foto3': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+            'logo': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+            'ubicacion': forms.TextInput(attrs={'class': 'form-control'}),  # Campo de ubicación
+            'tipo_cultivo': forms.TextInput(attrs={'class': 'form-control'}),  # Campo de tipo de cultivo
+        }
+
     
     
 
 
 
+
+#edit colaborador
+class EditColaboradorForm(forms.ModelForm):
+    class Meta:
+        model = CustomUser
+        fields = ['user_type', 'empresa']
+
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)  # Obtener el usuario autenticado
+        super(EditColaboradorForm, self).__init__(*args, **kwargs)
+
+        # Filtrar las empresas solo para las del usuario autenticado
+        if user:
+            self.fields['empresa'].queryset = EmpresaOFundo.objects.filter(created_by=user)
+
+        # Evitar que los 'colaboradores' y 'ayudantes' vean los tipos de usuario 'superuser' y 'admin'
+        self.fields['user_type'].choices = [
+            choice for choice in CustomUser.USER_TYPE_CHOICES if choice[0] not in ['superuser', 'admin']
+        ]
 

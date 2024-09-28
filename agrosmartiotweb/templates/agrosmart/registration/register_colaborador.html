@@ -1,0 +1,64 @@
+{% extends 'agrosmart/base.html' %}
+
+{% block contenido %}
+{% load static %}
+{% load crispy_forms_tags %}
+<br><br><br>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const checkbox = document.getElementById('agregar-trabajador-checkbox');
+        const trabajadorFormDiv = document.getElementById("trabajador-form");
+
+        // Mostrar/ocultar el formulario según el estado del checkbox
+        checkbox.addEventListener("change", function() {
+            if (checkbox.checked) {
+                trabajadorFormDiv.style.display = "block";
+            } else {
+                trabajadorFormDiv.style.display = "none";
+                // Limpiar el formulario de trabajador al desmarcar el checkbox
+                document.getElementById('form-trabajador').reset();
+            }
+        });
+
+        // Mostrar el formulario de trabajador si el checkbox ya está marcado al cargar la página
+        if (checkbox.checked) {
+            trabajadorFormDiv.style.display = "block";
+        } else {
+            trabajadorFormDiv.style.display = "none";
+        }
+    });
+</script>
+
+<div class="row">
+    <hr>
+    <div class="col-12 col-md-6 offset-md-3">
+        <div class="card">
+            <div class="card-body">
+                <h3>Registrar Colaborador</h3>
+                <button class="btn btn-success" onclick="window.history.back();">Volver Atrás</button>
+
+                <!-- Mostrar mensajes aquí -->
+                <div id="message"></div>
+
+                <!-- Formulario para registrar colaborador -->
+                <form method="post" id="form-colaborador">
+                    {% csrf_token %}
+                    {{ registerform.as_p }}
+
+                    <!-- Checkbox para agregar como trabajador -->
+                    
+                    <br><br>
+
+                    <!-- Botón para registrar solo colaborador -->
+                    <button type="submit" name="submit_colaborador" class="btn btn-primary">Registrar Colaborador</button>
+                </form>
+
+                <!-- Formulario de trabajador oculto inicialmente -->
+                
+                
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -32,23 +32,48 @@
 
 <!-- Incluir los estilos de Bootstrap -->
 
+<!-- Bootstrap CSS -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KyZXEAg3QhqLMpG8r+8fhAXLRH9rRJZv7iVThzF5iVGkEkC3f5iGq1lCj4VwhYFB" crossorigin="anonymous">
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js" integrity="sha384-VVo8u6f5xXHQMoO+zLfLprMf3yXjKMTKCRvhIChsn1A9MCnT9GuLCScfsfs5B+vg" crossorigin="anonymous"></script>
 
 
 <div class="jornadas">
   <br>
   <br>
   <div class="card ">
-    <div class="card-body ">
-
-      <h3> Gestión de Jornadas </h3>
+    <div class="d-flex flex-column flex-sm-row card-body ">
+      {% if request.path == '/gestion_jornadas_por_trato/' %}
+      <h3> Gestión de Jornadas por Trato </h3>
+        {% else %}
+        <h3> Gestión de Jornadas por Horas</h3>
+        {% endif %}
+      
       <hr>
+     
       <td>
-        <div class="btn-group justify-content-end">
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        {% if request.path == '/gestion_jornadas_por_trato/' %}
+            <a href="{% url 'gestion_jornadas' %}" class="btn btn-info">Cargar Jornadas por horas</a>
+            
+        {% else %}
+            <a href="{% url 'gestion_jornadas_por_trato' %}" class="btn btn-warning">Cargar Jornadas por Trato</a>
+        {% endif %}
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
           <button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
             Opciones
           </button>
           <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
-            <a class="dropdown-item" href="{% url 'agregar_jornada' %}">Agregar Jornada</a>
+            
+            <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#modalJornada">Agregar Jornada</a>
+
+
             <a class="dropdown-item" href="{% url 'gestiondetrabajadores' %}">Trabajadores</a>
             <a type="button" class="dropdown-item" data-toggle="modal" data-target="#searchModal" href="#">FILTRAR</a>
             <a class="dropdown-item" href="{% url 'exportar_a_excel_jornada' %}?{{ request.GET.urlencode }}">Exportar a
@@ -135,7 +160,7 @@
             </tr>
           </thead>
           <tbody>
-            {% for jornada in jornada_page_obj %}
+            {% for jornada in jornada_page_obj %} 
             <tr>
               <td>{{ jornada.asignado }}</td>
 
@@ -169,20 +194,34 @@
               <td>
                 <div class="tareas-extras">
                   <div class="tarea-extra-item">
-                    <strong>Tarea 1:</strong> {{ jornada.nombre_tarea_1 }} <strong>Horario:</strong>
+                    <strong>Tarea 1:</strong> {{ jornada.nombre_tarea_1 }}
+                    {% if request.path == '/gestion_jornadas_por_trato/' %}
+           
+        {% else %}
+        <strong>Horario:</strong>
+        {% endif %}
+                    
                     {{jornada.hora_inicio_tarea_1 }} a {{ jornada.hora_fin_tarea_1 }} <br> <strong>Cobro tarea 1:
                       $</strong> {{ jornada.cobro_tarea_1|intcomma }}
                   </div>
                   {% if jornada.nombre_tarea_2 %}
                   <div class="tarea-extra-item">
-                    <strong>Tarea 2:</strong> {{ jornada.nombre_tarea_2 }} <strong>Horario:</strong>
+                    <strong>Tarea 2:</strong> {{ jornada.nombre_tarea_2 }} {% if request.path == '/gestion_jornadas_por_trato/' %}
+           
+                    {% else %}
+                    <strong>Horario:</strong>
+                    {% endif %}
                     {{jornada.hora_inicio_tarea_2 }} a {{ jornada.hora_fin_tarea_2 }} <br> <strong>Cobro tarea 2:
                       $</strong> {{ jornada.cobro_tarea_2|intcomma }}
                   </div>
                   {% endif %}
                   {% if jornada.nombre_tarea_3 %}
                   <div class="tarea-extra-item">
-                    <strong>Tarea 3:</strong> {{ jornada.nombre_tarea_3 }} <strong>Horario:</strong>
+                    <strong>Tarea 3:</strong> {{ jornada.nombre_tarea_3 }} {% if request.path == '/gestion_jornadas_por_trato/' %}
+           
+                    {% else %}
+                    <strong>Horario:</strong>
+                    {% endif %}
                     {{jornada.hora_inicio_tarea_3 }} a {{ jornada.hora_fin_tarea_3 }} <br> <strong>Cobro tarea 3:
                       $</strong> {{ jornada.cobro_tarea_3|intcomma }}
                   </div>
@@ -287,6 +326,28 @@
         {% endif %}
       </span>
     </div>
+    <!-- Modal -->
+<div class="modal fade" id="modalJornada" tabindex="-1" aria-labelledby="modalJornadaLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalJornadaLabel">¿Qué tipo de jornada desea agregar?</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>Seleccione el tipo de jornada que desea agregar:</p>
+        <div class="d-flex justify-content-around">
+          <button type="button" class="btn btn-warning" onclick="window.location.href='{% url 'agregar_jornada_por_trato' %}'">Por Trato</button>
+          <button type="button" class="btn btn-info" onclick="window.location.href='{% url 'agregar_jornada' %}'">Por Horas</button>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 
 
 
@@ -319,6 +380,7 @@
           })
       }
     </script>
+    
     
 
 

@@ -1,0 +1,62 @@
+{% extends 'agrosmart/base.html' %}
+
+{% block contenido %}
+{% load static %}
+{% load crispy_forms_tags %}
+<br>
+<br>
+<br>
+
+
+
+<div class="row">
+
+    <hr>
+
+    <div class="col-12 col-md-6 offset-md-3">
+
+        <div class="card">
+            <div class="card-body">
+                <h3> Modificar Colaborador </h3>
+                <button class="btn btn-success" onclick="window.history.back();">Volver Atrás</button>
+
+                <form action="" class="formularioproceso" method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    {{form | crispy}}
+
+                    <br>
+                    <br>
+
+                    <div>
+                        <input type="button" value="Cancelar" class="btn btn-danger" onclick="window.history.back();">
+
+                        &nbsp;
+                        <br>
+                        <br>
+                        <button type="submit" id="btnAgregar" class="btn btn-primary">Modificar Colaborador</button>
+                        &nbsp;
+
+
+
+                        {{mensaje}}
+                    </div>
+
+                </form>
+                
+                
+            </div>
+            <br>
+            
+            <button class="btn btn-success" onclick="window.history.back();">Volver Atrás</button>
+
+        </div>
+    </div>
+</div>
+
+
+
+
+
+</div>
+{% endblock %}

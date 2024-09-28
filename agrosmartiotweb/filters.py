@@ -32,15 +32,22 @@ class TrabajadorFilter(django_filters.FilterSet):
                 }
 
 
-
+from .models import Jornada, Trabajador, Sector, Huerto, Lote,JornadaPorTrato
 class JornadaFilter(django_filters.FilterSet):
     total_gasto_jornada = django_filters.RangeFilter(
         label='Gasto Total Jornada Desde $ : Y HASTA $ :',
         widget=django_filters.widgets.RangeWidget(attrs={'type': 'number'}),
     )
-    fecha = django_filters.DateFromToRangeFilter(field_name='fecha', label='Fecha', widget=django_filters.widgets.RangeWidget(attrs={'type': 'date'}))
-    asignado__nombre = django_filters.CharFilter(lookup_expr='icontains', label='Buscar Asignado')
-    
+    fecha = django_filters.DateFromToRangeFilter(
+        field_name='fecha', 
+        label='Fecha', 
+        widget=django_filters.widgets.RangeWidget(attrs={'type': 'date'})
+    )
+    asignado__nombre = django_filters.CharFilter(
+        lookup_expr='icontains', 
+        label='Buscar Asignado'
+    )
+
     class Meta:
         model = Jornada
         fields = {
@@ -48,9 +55,53 @@ class JornadaFilter(django_filters.FilterSet):
             'asignado': ['exact'],
             'sector': ['exact'],
             'huerto': ['exact'],
-            
-            
-
         }
+
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)  # Extraer el usuario de kwargs, si está presente
+        super().__init__(*args, **kwargs)
+        
+        if user:
+            # Filtrar los queryset de los campos en función del usuario
+            self.filters['sector'].queryset = Sector.objects.filter(user=user)
+            self.filters['huerto'].queryset = Huerto.objects.filter(user=user)
+            self.filters['asignado'].queryset = Trabajador.objects.filter(user=user)
+
+
+
+
+class JornadaPorTratoFilter(django_filters.FilterSet):
+    total_gasto_jornada = django_filters.RangeFilter(
+        label='Gasto Total Jornada Desde $ : Y HASTA $ :',
+        widget=django_filters.widgets.RangeWidget(attrs={'type': 'number'}),
+    )
+    fecha = django_filters.DateFromToRangeFilter(
+        field_name='fecha', 
+        label='Fecha', 
+        widget=django_filters.widgets.RangeWidget(attrs={'type': 'date'})
+    )
+    asignado__nombre = django_filters.CharFilter(
+        lookup_expr='icontains', 
+        label='Buscar Asignado'
+    )
+
+    class Meta:
+        model = JornadaPorTrato
+        fields = {
+            'estado': ['exact'],
+            'asignado': ['exact'],
+            'sector': ['exact'],
+            'huerto': ['exact'],
+        }
+
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)  # Extraer el usuario de kwargs, si está presente
+        super().__init__(*args, **kwargs)
+        
+        if user:
+            # Filtrar los queryset de los campos en función del usuario
+            self.filters['sector'].queryset = Sector.objects.filter(user=user)
+            self.filters['huerto'].queryset = Huerto.objects.filter(user=user)
+            self.filters['asignado'].queryset = Trabajador.objects.filter(user=user)
 
 
