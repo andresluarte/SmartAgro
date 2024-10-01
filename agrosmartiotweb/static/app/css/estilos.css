@@ -293,3 +293,35 @@ textarea {
     font-weight: bold;
     color: #333;
 }
+
+
+/* Estilo para el sidenav */
+.sidenav {
+    height: 100%; /* Ocupa toda la altura de la pantalla */
+    width: 250px; /* Ancho de la barra lateral */
+    position: fixed; /* Fijado para que permanezca en la pantalla mientras se desplaza */
+    top: 0; /* Comienza desde la parte superior */
+    left: 0; /* Se coloca a la izquierda */
+    background-color: #111; /* Color de fondo */
+    padding-top: 20px; /* Espacio superior */
+    z-index: 1; /* Se asegura de que quede sobre otros elementos */
+    overflow-x: hidden; /* Desactiva el desbordamiento horizontal */
+    transition: 0.5s; /* Transición suave al abrir/cerrar */
+}
+
+.sidenav a {
+    padding: 8px 8px 8px 32px; /* Espaciado interno */
+    text-decoration: none; /* Elimina el subrayado */
+    font-size: 25px; /* Tamaño de fuente */
+    color: #818181; /* Color de texto */
+    display: block; /* Bloque completo para cada enlace */
+    transition: 0.3s; /* Transición suave al pasar sobre enlaces */
+}
+
+/* Estilo para cerrar el sidenav */
+.sidenav .closebtn {
+    position: absolute; /* Fijado dentro del sidenav */
+    top: 0; /* En la parte superior */
+    right: 25px; /* Espaciado desde la derecha */
+    font-size: 36px; /* Tamaño del botón de cierre */
+}
