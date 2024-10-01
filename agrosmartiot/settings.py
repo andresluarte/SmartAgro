@@ -25,7 +25,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-i+h^ifkudr)+q*__he#@n=#=q*rk17-b!3^ns4vmt+5og7sqz1'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 # settings.py
 
 LOGIN_FORM = 'agrosmartiotweb.forms.CustomLoginForm'
