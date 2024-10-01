@@ -86,7 +86,7 @@ urlpatterns = [
     path('register/', views.register, name='register'),
     path('register_colaborador/', views.register_colaborador, name='register_colaborador'),
     
-    path('accounts/login/', views.my_login, name='login'), 
+    path('accounts/login/', views.my_login, name='my_login'), 
     path('user_logout/', views.user_logout, name='user_logout'),
     path('list_all_users/', views.list_all_users, name='list_all_users'),
     path('list_colaboradores/', views.list_colaboradores, name='list_colaboradores'),
