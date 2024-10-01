@@ -146,4 +146,9 @@ SESSION_COOKIE_SECURE = False  # Si no estás usando HTTPS, asegúrate de que es
 CSRF_COOKIE_SECURE = False     # Asegúrate de que sea False en desarrollo
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 
-ALLOWED_HOSTS = ['web-production-3711.up.railway.app', 'localhost']
+ALLOWED_HOSTS = [
+    'web-production-3711.up.railway.app',
+    'localhost',
+    '127.0.0.1',  # Agrega esto
+]
+
