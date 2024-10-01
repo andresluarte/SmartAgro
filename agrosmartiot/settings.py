@@ -25,7 +25,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-i+h^ifkudr)+q*__he#@n=#=q*rk17-b!3^ns4vmt+5og7sqz1'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 # settings.py
 
 LOGIN_FORM = 'agrosmartiotweb.forms.CustomLoginForm'
@@ -87,11 +87,14 @@ WSGI_APPLICATION = 'agrosmartiot.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
+
+import dj_database_url
+import os
+
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    'default': dj_database_url.config(
+        default=os.getenv('DATABASE_URL')
+    )
 }
 # settings.py
 AUTHENTICATION_BACKENDS = [
@@ -141,3 +144,5 @@ KAFKA_TOPIC = 'temperatura-topic'
 SESSION_COOKIE_SECURE = False  # Si no estás usando HTTPS, asegúrate de que esto sea False
 CSRF_COOKIE_SECURE = False     # Asegúrate de que sea False en desarrollo
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+
+ALLOWED_HOSTS = ['web-production-3711.up.railway.app', 'localhost']
