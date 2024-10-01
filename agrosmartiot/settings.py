@@ -148,3 +148,4 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 
 ALLOWED_HOSTS = ['web-production-3711.up.railway.app', 'localhost', '127.0.0.1']
 
+CSRF_TRUSTED_ORIGINS = ['https://web-production-3711.up.railway.app']
