@@ -1,0 +1,138 @@
+/* Estilos para el menú lateral */
+.sidenav {
+    height: 100%;
+    width: 0;
+    position: fixed;
+    top: 0;
+    right: 0; /* Cambiamos "left" por "right" para posicionarlo a la derecha */
+    background-color: #caffca;
+    overflow-x: hidden;
+    transition: 0.3s;
+    z-index: 9999; /* Asegúrate de que esté al frente de todos los demás elementos */
+}
+
+.sidenav p {
+    padding: 30px 25px;
+    text-decoration: none;
+    font-size: 15px;
+    color: #000000;
+    display: block;
+    transition: 0.3s;
+}
+.sidenav a {
+    padding: 10px 25px;
+    text-decoration: none;
+    font-size: 18px;
+    color: #818181;
+    display: block;
+    transition: 0.3s;
+}
+
+
+.sidenav a:hover {
+    color: #76d6ff;
+}
+.sidebar-nav {
+    width: 0; /* change this value to set the width of the sidebar when it's hidden */
+}   
+/* Estilos para el botón de hamburguesa */
+.container-fluid {
+    cursor: pointer;
+    position: fixed;
+    right: 10px; /* Posición fija a la derecha */
+}
+
+.bar1, .bar2, .bar3 {
+    width: 35px;
+    height: 5px;
+    background-color: #333;
+    margin: 6px 0;
+    transition: 0.4s;
+}
+
+.change .bar1 {
+    -webkit-transform: rotate(-45deg) translate(-5px, 6px);
+    transform: rotate(-45deg) translate(-5px, 6px);
+}
+
+.change .bar2 {
+    opacity: 0;
+}
+
+.change .bar3 {
+    -webkit-transform: rotate(45deg) translate(-5px, -6px);
+    transform: rotate(45deg) translate(-5px, -6px);
+}
+.logo-real {
+	display:contents;
+	align-items: center;
+ }
+ 
+ /* Otras propiedades de estilo para el logo */
+.logo-img {
+	height: 100px;
+	
+    
+
+	
+	
+	/* Ajusta el tamaño del logo según sea necesario */
+}
+
+
+/* Estilos adicionales según tus necesidades */
+.menu-container {
+    display: flex;
+    justify-content: flex-end; /* Alinea el contenido a la derecha */
+}
+
+.menu-button {
+    cursor: pointer;
+}
+
+.bar1, .bar2, .bar3 {
+    width: 35px;
+    height: 5px;
+    background-color: #333;
+    margin: 6px 0;
+    transition: 0.4s;
+}
+
+.change .bar1 {
+    -webkit-transform: rotate(-45deg) translate(-5px, 6px);
+    transform: rotate(-45deg) translate(-5px, 6px);
+}
+
+.change .bar2 {
+    opacity: 0;
+}
+
+.change .bar3 {
+    -webkit-transform: rotate(45deg) translate(-5px, -6px);
+    transform: rotate(45deg) translate(-5px, -6px);
+}
+.logo12 {
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+* {
+	margin:0;
+	padding:0;
+}
+
+body {
+	background:#FFFFFA;
+}
+
+
+
+.menu_bar {
+	display:none;
+}
+
+
+section {
+	padding:20px;
+}
+
