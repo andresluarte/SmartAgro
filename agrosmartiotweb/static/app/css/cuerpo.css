@@ -12,22 +12,7 @@
     background-color: rgba(255, 255, 255, 0.678);
 }
 
-#rcorners2 {
-    border-radius: 25px;
-    border: 2px solid #73AD21;
-    padding: 20px;
-    width: 200px;
-    height: 150px;
-    background-image: url("fondo.jpg");
-}
 
-#carrito {
-    background-image: url("carro-de-la-compra.png");
-    position: fixed;
-    top: 20px;
-    right: 16px;
-    background-color: coral;
-}
 
 .right {
     float: right;
