@@ -375,9 +375,18 @@ class CreateUserForm(UserCreationForm):
         model = CustomUser
         fields = ['username', 'email', 'password1', 'password2', 'user_type']
         widgets = {
-            'user_type': forms.HiddenInput()
+            'user_type': forms.HiddenInput()  # Campo oculto
         }
 
+    def save(self, commit=True):
+        # Guardamos el formulario pero asignamos el tipo de usuario
+        user = super(CreateUserForm, self).save(commit=False)
+        if not user.user_type:  # Si el tipo de usuario no ha sido asignado, lo asignamos
+            user.user_type = 'admin'
+        if commit:
+            user.save()
+        return user
+    
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from .models import CustomUser, EmpresaOFundo

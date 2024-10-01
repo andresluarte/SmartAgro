@@ -657,15 +657,14 @@ from .forms import CreateUserForm, RegisterColaboradorForm
 from .models import CustomUser
 
 @login_required(login_url="my_login")
-@user_passes_test(lambda u: u.user_type in ['superuser'])
+@user_passes_test(lambda u: u.is_superuser)
 def register(request):
-    
     form = CreateUserForm()
     if request.method == 'POST':
         form = CreateUserForm(request.POST)
         if form.is_valid():
             user = form.save(commit=False)
-            user.user_type = 'admin'
+            user.user_type = 'admin'  # Asignar tipo 'admin'
             user.save()
             return redirect('list_all_users')
     context = {'registerform': form}
