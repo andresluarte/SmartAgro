@@ -66,7 +66,7 @@ ROOT_URLCONF = 'agrosmartiot.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates/agrosmart'],
+        'DIRS': [BASE_DIR / 'templates'],  # Cambia a 'templates' en lugar de 'templates/agrosmart'
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -74,14 +74,12 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                
                 'agrosmartiotweb.context_processors.empresa_info',
-
-                
             ],
         },
     },
 ]
+
 
 WSGI_APPLICATION = 'agrosmartiot.wsgi.application'
 
