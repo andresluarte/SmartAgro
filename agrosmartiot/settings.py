@@ -66,7 +66,7 @@ ROOT_URLCONF = 'agrosmartiot.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],  # Cambia a 'templates' en lugar de 'templates/agrosmart'
+        'DIRS': [BASE_DIR / 'templates/agrosmart'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -74,12 +74,14 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                
                 'agrosmartiotweb.context_processors.empresa_info',
+
+                
             ],
         },
     },
 ]
-
 
 WSGI_APPLICATION = 'agrosmartiot.wsgi.application'
 
@@ -144,9 +146,5 @@ SESSION_COOKIE_SECURE = False  # Si no estás usando HTTPS, asegúrate de que es
 CSRF_COOKIE_SECURE = False     # Asegúrate de que sea False en desarrollo
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 
-ALLOWED_HOSTS = [
-    'web-production-3711.up.railway.app',
-    'localhost',
-    '127.0.0.1',  # Agrega esto
-]
+ALLOWED_HOSTS = ['web-production-3711.up.railway.app', 'localhost', '127.0.0.1']
 
