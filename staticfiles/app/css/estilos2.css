@@ -1,4 +1,4 @@
-
+/* Estilos para el menú lateral */
 .sidenav {
     height: 100%;
     width: 0;
@@ -27,6 +27,7 @@
     display: block;
     transition: 0.3s;
 }
+
 
 .sidenav a:hover {
     color: #76d6ff;
