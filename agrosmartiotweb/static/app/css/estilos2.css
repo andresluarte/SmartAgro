@@ -4,7 +4,7 @@
     width: 0;
     position: fixed;
     top: 0;
-    right: 0; /* Cambiamos "left" por "right" para posicionarlo a la derecha */
+    left: 0; /* Cambiamos "left" por "right" para posicionarlo a la derecha */
     background-color: #caffca;
     overflow-x: hidden;
     transition: 0.3s;
