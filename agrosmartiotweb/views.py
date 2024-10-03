@@ -841,3 +841,129 @@ def lista_empresas(request):
 
     return render(request, 'agrosmart/empresa/lista_empresas.html', {'empresas': empresas})
 
+
+
+#DATOS DE SENSOR 
+
+from .models import TemperatureHumidityLocation
+from .models import HumiditySoil
+@csrf_exempt
+def receive_data(request):
+    if request.method == 'POST':
+        # Procesar los datos aquí
+        data = request.POST
+        temperature = data.get('temperature')
+        humidity = data.get('humidity')
+        latitude=data.get('latitude')
+        longitude=data.get('longitude')
+        
+
+        # Guardar los datos en la base de datos
+        # Suponiendo que tienes un modelo TemperatureHumidity para almacenar estos datos
+        from .models import TemperatureHumidityLocation
+        TemperatureHumidityLocation.objects.create(
+            temperature=temperature,
+            humidity=humidity,
+            latitude=latitude,
+            longitude=longitude
+
+            
+        )
+
+        return JsonResponse({"status": "success"})
+    else:
+        return JsonResponse({"message": "Invalid request method"}, status=405)
+    
+#DATOS SENSOR SUELO
+
+@csrf_exempt
+def receive_data_soil(request):
+    if request.method == 'POST':
+        # Procesar los datos aquí
+        data = request.POST
+        humiditysoil = data.get('humiditysoil')
+
+        if humiditysoil:
+            HumiditySoil.objects.create(
+                humiditysoil=humiditysoil,
+            )
+            return JsonResponse({"status": "success"})
+        else:
+            return JsonResponse({"message": "Missing data"}, status=400)
+    else:
+        return JsonResponse({"message": "Invalid request method"}, status=405)
+
+
+
+
+from .serializers import TemperatureHumidityLocationSerializer
+class TemperatureHumidityAPIView(APIView):
+    def post(self, request, format=None):
+        serializer = TemperatureHumidityLocationSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+           
+def combined_data_view(request):
+    # Obtener la última entrada
+    latest_data = TemperatureHumidityLocation.objects.last()
+    return render(request, 'agrosmart/tiemporeal.html', {'latest_data': latest_data})
+
+def combined_data_view_soil(request):
+    latest_data = HumiditySoil.objects.last()
+    return render(request, 'agrosmart/tiemporealsoil.html', {'latest_data': latest_data})
+
+
+#INFORMES DE DATOS 1
+from django.db.models import Avg, DateTimeField
+from django.db.models.functions import TruncHour
+from django.shortcuts import render
+from django.db.models import Count, FloatField, Value
+from django.db.models.functions import TruncHour, Cast
+import json
+
+def informes(request):
+    # Promedio por hora para TemperatureHumidityLocation
+    temp_humidity_data = (
+        TemperatureHumidityLocation.objects
+        .annotate(hour=TruncHour('timestamp'))
+        .values('hour')
+        .annotate(
+            avg_temp=Avg('temperature'),
+            avg_humidity=Avg('humidity')
+        )
+        .order_by('hour')
+    )
+    
+    # Promedio por hora para HumiditySoil
+    soil_data = (
+        HumiditySoil.objects
+        .annotate(hour=TruncHour('timestamp'))
+        .values('hour')
+        .annotate(avg_humidity_soil=Avg('humiditysoil'))
+        .order_by('hour')
+    )
+
+    # Redondear los valores
+    temp_humidity_data = [
+        {
+            'hour': entry['hour'].strftime('%Y-%m-%d %H:%M:%S'),
+            'avg_temp': round(entry['avg_temp'], 2),
+            'avg_humidity': round(entry['avg_humidity'], 2),
+        } for entry in temp_humidity_data
+    ]
+    
+    soil_data = [
+        {
+            'hour': entry['hour'].strftime('%Y-%m-%d %H:%M:%S'),
+            'avg_humidity_soil': round(entry['avg_humidity_soil'], 2),
+        } for entry in soil_data
+    ]
+
+    context = {
+        'temp_humidity_data': json.dumps(temp_humidity_data),
+        'soil_data': json.dumps(soil_data),
+    }
+    
+    return render(request, 'agrosmart/informes.html', context)

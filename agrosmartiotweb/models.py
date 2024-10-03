@@ -354,3 +354,25 @@ class EmpresaOFundo(models.Model):
     
     def __str__(self):
         return self.nombre
+
+
+#MODELOS DE SENSOR 
+
+class TemperatureHumidityLocation(models.Model):
+    temperature = models.FloatField()
+    humidity = models.FloatField()
+    latitude = models.FloatField()
+    longitude = models.FloatField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Temperature: {self.temperature}, Humidity: {self.humidity}, Latitude: {self.latitude}, Longitude: {self.longitude}"
+
+class HumiditySoil(models.Model):
+    humiditysoil = models.FloatField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Humidity: {self.humiditysoil}, Timestamp: {self.timestamp}"
+    
+    

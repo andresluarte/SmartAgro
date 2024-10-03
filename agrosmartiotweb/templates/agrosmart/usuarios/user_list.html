@@ -61,10 +61,17 @@
       Opciones
     </button>
     <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+      <a href="{% url 'agregartrabajador' %}" class="btn btn-secondary">Agregar Trabajador</a>  
 
-      <a href="{% url 'agregartrabajador' %}" class="btn btn-secondary">Agregar Trabajador</a>
+      
+      {% if request.user.user_type == 'superuser' %}
+      
+      <a href="{% url 'register' %}" class="btn btn-secondary">Registrar Usuario</a>
 
-
+      {% elif request.user.user_type == 'admin' %}
+      <a href="{% url 'register_colaborador' %}">Registrar Colaborador</a>
+      {% endif %}
+      {% endif %}
      
 
      
