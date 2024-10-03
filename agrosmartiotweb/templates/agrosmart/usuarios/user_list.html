@@ -9,22 +9,28 @@
         width: 100%;
         overflow-x: auto;
     }
+
     table {
         width: 100%;
         border-collapse: collapse;
         min-width: 600px;
     }
-    th, td {
+
+    th,
+    td {
         padding: 10px;
         text-align: left;
         border-bottom: 1px solid #ddd;
     }
+
     th {
         background-color: #f2f2f2;
     }
+
     tr:hover {
         background-color: #f5f5f5;
     }
+
     .btn {
         padding: 8px 16px;
         margin: 4px;
@@ -35,14 +41,19 @@
         text-decoration: none;
         border-radius: 4px;
     }
+
     .btn-danger {
         background-color: #f44336;
     }
+
     @media (max-width: 600px) {
-        th, td {
+
+        th,
+        td {
             font-size: 14px;
             padding: 8px;
         }
+
         .btn {
             padding: 6px 12px;
         }
@@ -50,41 +61,39 @@
 </style>
 
 {% if request.user.is_authenticated %}
-    {% if request.user.user_type == 'superuser' %}
-    <h3>Lista de Usuarios</h3>
-    {% elif request.user.user_type == 'admin' %}
-    <h3>Lista de Colaboradores</h3>
-    {% endif %}
+{% if request.user.user_type == 'superuser' %}
+<h3>Lista de Usuarios</h3>
+{% elif request.user.user_type == 'admin' %}
+<h3>Lista de Colaboradores</h3>
+{% endif %}
 {% endif %}
 <div class="btn-group justify-content-end">
     <button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-      Opciones
+        Opciones
     </button>
     <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
-      <a href="{% url 'agregartrabajador' %}" class="btn btn-secondary">Agregar Trabajador</a>  
+        <a href="{% url 'agregartrabajador' %}" class="btn btn-secondary">Agregar Trabajador</a>
 
-      
-      {% if request.user.user_type == 'superuser' %}
-      
-      <a href="{% url 'register' %}" class="btn btn-secondary">Registrar Usuario</a>
 
-      {% elif request.user.user_type == 'admin' %}
-      <a href="{% url 'register_colaborador' %}">Registrar Colaborador</a>
-      {% endif %}
-      {% endif %}
-     
+        {% if request.user.user_type == 'superuser' %}
+        <a href="{% url 'register' %}" class="btn btn-secondary">Registrar Usuario</a>
+        {% elif request.user.user_type == 'admin' %}
+        <a href="{% url 'register_colaborador' %}">Registrar Colaborador</a>
+        {% endif %}
 
-     
 
-      
-      <a href="{% url 'gestiondetareas' %}" class="btn btn-secondary">Ir a Tareas</a>
-      <a href="{% url 'gestion_jornadas' %}" class="btn btn-secondary">Ir a Jornadas</a>
 
-      
-      </ul>
+
+
+
+        <a href="{% url 'gestiondetareas' %}" class="btn btn-secondary">Ir a Tareas</a>
+        <a href="{% url 'gestion_jornadas' %}" class="btn btn-secondary">Ir a Jornadas</a>
+
+
+        </ul>
     </div>
 
-  </div>
+</div>
 <div class="table-container">
     <table>
         <tr>
@@ -104,7 +113,7 @@
             <td>{{ user.empresa }}</td>
             <td>
                 {% if request.user.user_type == 'admin' %}
-                    <a href="{% url 'edit_colaborador' user.id %}" class="btn">Editar</a>
+                <a href="{% url 'edit_colaborador' user.id %}" class="btn">Editar</a>
                 {% endif %}
                 <form method="POST" action="{% url 'delete_user' user.id %}" style="display:inline;">
                     {% csrf_token %}
@@ -116,7 +125,3 @@
     </table>
 </div>
 {% endblock %}
-
-
-
-
