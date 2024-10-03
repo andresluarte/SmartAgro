@@ -3,32 +3,7 @@
 {% block contenido %}
 {% load static %}
 {% load crispy_forms_tags %}
-<br><br><br>
 
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        const checkbox = document.getElementById('agregar-trabajador-checkbox');
-        const trabajadorFormDiv = document.getElementById("trabajador-form");
-
-        // Mostrar/ocultar el formulario según el estado del checkbox
-        checkbox.addEventListener("change", function() {
-            if (checkbox.checked) {
-                trabajadorFormDiv.style.display = "block";
-            } else {
-                trabajadorFormDiv.style.display = "none";
-                // Limpiar el formulario de trabajador al desmarcar el checkbox
-                document.getElementById('form-trabajador').reset();
-            }
-        });
-
-        // Mostrar el formulario de trabajador si el checkbox ya está marcado al cargar la página
-        if (checkbox.checked) {
-            trabajadorFormDiv.style.display = "block";
-        } else {
-            trabajadorFormDiv.style.display = "none";
-        }
-    });
-</script>
 
 <div class="row">
     <hr>
