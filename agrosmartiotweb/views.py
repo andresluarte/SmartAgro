@@ -972,18 +972,22 @@ def informes(request):
 
 from django.shortcuts import render, redirect
 from .forms import SectorPoligonForm
-
+@login_required(login_url="my_login")
 def crear_sectorPoligon(request):
     if request.method == 'POST':
         form = SectorPoligonForm(request.POST)
         if form.is_valid():
             sector = form.save(commit=False)
+            sector.user = request.user
             sector.created_by = request.user  # Asignamos el usuario actual como creador
             sector.save()
             return redirect('gestion_zonaPoligon')  # Redirigir a la lista de sectores o cualquier otra vista
     else:
         form = SectorPoligonForm()
     return render(request, "agrosmart/zona/crear_sectorPoligon.html", {'form': form})
+
+
+
 
 from .models import SectorPoligon
 
