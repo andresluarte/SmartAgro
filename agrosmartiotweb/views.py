@@ -982,7 +982,7 @@ def crear_sectorPoligon(request):
             sector.save()
             return redirect('gestion_zonaPoligon')  # Redirigir a la lista de sectores o cualquier otra vista
     else:
-        form = SectorForm()
+        form = SectorPoligonForm()
     return render(request, "agrosmart/zona/crear_sectorPoligon.html", {'form': form})
 
 from .models import SectorPoligon
