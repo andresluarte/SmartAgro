@@ -3,10 +3,13 @@
 <head>
     <title>Crear Sectorss</title>
   
+    
     <script
-        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDT0QJ4JVXUrTA8mRZN_YXjy2CZDsa_vmw&libraries=drawing"
-        defer></script>
-    <script>
+  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDT0QJ4JVXUrTA8mRZN_YXjy2CZDsa_vmw&callback=initMap&libraries=drawing"
+  async
+  defer
+></script>
+
       let map;
       let drawingManager;
       let selectedShape;
