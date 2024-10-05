@@ -22,28 +22,65 @@
         // Obtener los sectores pasados desde la vista
         const sectores = {{ sectores_json|safe }};
 
-        // Inicializa el mapa de Google
         let map;
+        let infoWindow;
+
         function initMap() {
+            // Inicializamos el mapa y centramos temporalmente en una latitud y longitud inicial
             map = new google.maps.Map(document.getElementById("map"), {
                 center: { lat: -34.397, lng: 150.644 },
                 zoom: 8,
             });
 
-            // Itera sobre los sectores y dibuja los polígonos en el mapa
-            sectores.forEach(sector => {
-                const path = JSON.parse(sector.fields.coordenadas); // Asegúrate de que "coordenadas" sea el campo correcto
+            // InfoWindow para mostrar el nombre del polígono
+            infoWindow = new google.maps.InfoWindow();
 
+            // Objeto para ajustar los límites del mapa y mostrar todos los polígonos
+            const bounds = new google.maps.LatLngBounds();
+
+            // Itera sobre los sectores y dibuja los polígonos en el mapa
+            sectores.forEach((sector, index) => {
+                const path = JSON.parse(sector.fields.coordenadas); // Asegúrate de que "coordenadas" sea el campo correcto
+                
+                // Generar un color aleatorio o definir colores preestablecidos
+                const color = getRandomColor();
+
+                // Crear el polígono
                 const poligono = new google.maps.Polygon({
                     paths: path,
-                    strokeColor: '#FF0000',
+                    strokeColor: color,
                     strokeOpacity: 0.8,
                     strokeWeight: 2,
-                    fillColor: '#FF0000',
+                    fillColor: color,
                     fillOpacity: 0.35,
                     map: map,
                 });
+
+                // Expandir los límites del mapa para incluir cada vértice del polígono
+                path.forEach(coord => {
+                    bounds.extend(new google.maps.LatLng(coord.lat, coord.lng));
+                });
+
+                // Agregar un evento click para mostrar el nombre del sector
+                google.maps.event.addListener(poligono, 'click', function() {
+                    infoWindow.setContent(sector.fields.nombre); // Asegúrate de que "nombre" sea el campo correcto
+                    infoWindow.setPosition(path[0]); // Usa la primera coordenada como posición para el infoWindow
+                    infoWindow.open(map);
+                });
             });
+
+            // Ajusta el mapa para mostrar todos los sectores
+            map.fitBounds(bounds);
+        }
+
+        // Función para generar colores aleatorios en formato hexadecimal
+        function getRandomColor() {
+            const letters = '0123456789ABCDEF';
+            let color = '#';
+            for (let i = 0; i < 6; i++) {
+                color += letters[Math.floor(Math.random() * 16)];
+            }
+            return color;
         }
 
         // Cargar el script de Google Maps
