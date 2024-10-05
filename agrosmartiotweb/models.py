@@ -63,6 +63,18 @@ class Sector(models.Model):
 
     def __str__(self):
         return self.nombre
+    
+  # If using PostgreSQL
+
+class SectorPoligon(models.Model):
+    nombre = models.CharField(max_length=100)
+    coordenadas = models.TextField()
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)  # Relación con el usuario  # Almacenaremos las coordenadas como un JSON (array de objetos LatLng)  # For Django 3.1+, JSONField is available by default
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, related_name='sectorPoligon_creado', on_delete=models.CASCADE
+    )
+    def __str__(self):
+        return self.nombre
 
 
 

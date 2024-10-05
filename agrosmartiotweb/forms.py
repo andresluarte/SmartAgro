@@ -434,6 +434,11 @@ class LoginForm(AuthenticationForm):
 
 from .models import EmpresaOFundo
 
+from django import forms
+from django.core.exceptions import ValidationError
+from .models import EmpresaOFundo
+from PIL import Image
+
 class EmpresaOFundoForm(forms.ModelForm):
     class Meta:
         model = EmpresaOFundo
@@ -445,12 +450,48 @@ class EmpresaOFundoForm(forms.ModelForm):
             'foto2': forms.ClearableFileInput(attrs={'class': 'form-control'}),
             'foto3': forms.ClearableFileInput(attrs={'class': 'form-control'}),
             'logo': forms.ClearableFileInput(attrs={'class': 'form-control'}),
-            'ubicacion': forms.TextInput(attrs={'class': 'form-control'}),  # Campo de ubicación
-            'tipo_cultivo': forms.TextInput(attrs={'class': 'form-control'}),  # Campo de tipo de cultivo
+            'ubicacion': forms.TextInput(attrs={'class': 'form-control'}),
+            'tipo_cultivo': forms.TextInput(attrs={'class': 'form-control'}),
         }
 
-    
-    
+    def clean(self):
+        cleaned_data = super().clean()
+        foto1 = cleaned_data.get('foto1')
+        foto2 = cleaned_data.get('foto2')
+        foto3 = cleaned_data.get('foto3')
+
+        # Definir la relación de aspecto estándar (1250:837)
+        aspect_ratio_target = 1250 / 837  # Calcula la relación de aspecto
+
+        # Verifica la foto1
+        if foto1:
+            img1 = Image.open(foto1)
+            width1, height1 = img1.size
+            aspect_ratio1 = width1 / height1
+
+            # Verifica que la relación de aspecto de foto1 sea correcta
+            if not self.is_aspect_ratio_valid(aspect_ratio1, aspect_ratio_target):
+                raise ValidationError("La relación de aspecto de foto1 debe ser 1250:837.")
+
+        # Verifica las otras fotos
+        for i, foto in enumerate([foto2, foto3], start=2):
+            if foto:
+                img = Image.open(foto)
+                width, height = img.size
+                aspect_ratio = width / height
+                
+                # Verifica que la relación de aspecto de las otras fotos sea correcta
+                if not self.is_aspect_ratio_valid(aspect_ratio, aspect_ratio_target):
+                    raise ValidationError(f"La relación de aspecto de foto{i} debe ser 1250:837.")
+
+        return cleaned_data
+
+    def is_aspect_ratio_valid(self, aspect_ratio, target_ratio, tolerance=0.01):
+        """
+        Verifica si la relación de aspecto está dentro de un margen de tolerancia del objetivo.
+        """
+        return abs(aspect_ratio - target_ratio) < tolerance
+
 
 
 
@@ -474,3 +515,13 @@ class EditColaboradorForm(forms.ModelForm):
             choice for choice in CustomUser.USER_TYPE_CHOICES if choice[0] not in ['superuser', 'admin']
         ]
 
+from django import forms
+from .models import SectorPoligon
+
+class SectorPoligonForm(forms.ModelForm):
+    class Meta:
+        model = SectorPoligon
+        fields = ['nombre', 'coordenadas']
+        widgets = {
+            'coordenadas': forms.HiddenInput(),  # Ocultamos este campo, se llenará desde JavaScript
+        }

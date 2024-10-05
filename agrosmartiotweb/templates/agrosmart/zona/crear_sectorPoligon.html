@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Crear Sectorss</title>
+  
+    <script
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDT0QJ4JVXUrTA8mRZN_YXjy2CZDsa_vmw&libraries=drawing"
+        defer></script>
+    <script>
+      let map;
+      let drawingManager;
+      let selectedShape;
+
+      function initMap() {
+        map = new google.maps.Map(document.getElementById("map"), {
+          center: { lat: -34.397, lng: 150.644 },
+          zoom: 8,
+        });
+
+        drawingManager = new google.maps.drawing.DrawingManager({
+          drawingMode: google.maps.drawing.OverlayType.POLYGON,
+          drawingControl: true,
+          drawingControlOptions: {
+            position: google.maps.ControlPosition.TOP_CENTER,
+            drawingModes: ['polygon'],
+          },
+          polygonOptions: {
+            editable: true,
+            draggable: true,
+          },
+        });
+        drawingManager.setMap(map);
+
+        google.maps.event.addListener(drawingManager, 'overlaycomplete', function(event) {
+          if (event.type === 'polygon') {
+            if (selectedShape) {
+              selectedShape.setMap(null);
+            }
+            selectedShape = event.overlay;
+            document.getElementById('id_coordenadas').value = JSON.stringify(selectedShape.getPath().getArray().map(coord => ({
+              lat: coord.lat(),
+              lng: coord.lng(),
+            })));
+          }
+        });
+      }
+
+      window.initMap = initMap;
+    </script>
+</head>
+<body>
+  <h1>Crear Sector</h1>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <div id="map" style="height: 400px; width: 100%;"></div>
+    <button type="submit">Guardar Sector</button>
+  </form>
+</body>
+</html>

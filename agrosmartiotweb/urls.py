@@ -102,6 +102,9 @@ urlpatterns = [
 
     #edita colaborador 
     path('edit_colaborador/<int:user_id>/', views.edit_colaborador_view, name='edit_colaborador'),
+
+    path('crear_sectorPoligon/', views.crear_sectorPoligon, name='crear_sectorPoligon'),
+    path('gestion_zonaPoligon/', views.gestion_zonaPoligon, name='gestion_zonaPoligon'),
    
 
 

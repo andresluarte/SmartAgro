@@ -967,3 +967,45 @@ def informes(request):
     }
     
     return render(request, 'agrosmart/informes.html', context)
+
+
+
+from django.shortcuts import render, redirect
+from .forms import SectorPoligonForm
+
+def crear_sectorPoligon(request):
+    if request.method == 'POST':
+        form = SectorPoligonForm(request.POST)
+        if form.is_valid():
+            sector = form.save(commit=False)
+            sector.created_by = request.user  # Asignamos el usuario actual como creador
+            sector.save()
+            return redirect('gestion_zonaPoligon')  # Redirigir a la lista de sectores o cualquier otra vista
+    else:
+        form = SectorForm()
+    return render(request, "agrosmart/zona/crear_sectorPoligon.html", {'form': form})
+
+from .models import SectorPoligon
+
+@login_required(login_url="my_login")
+def gestion_zonaPoligon(request):
+    if request.user.is_superuser:
+        sectores = SectorPoligon.objects.all()
+    elif request.user.user_type == 'admin':
+        sectores = SectorPoligon.objects.filter(user=request.user)
+    elif request.user.user_type == 'colaborador':
+        # Colaborador puede ver sus propias zonas y las del admin que lo creó
+        admin_user = request.user.created_by
+        sectores = SectorPoligon.objects.filter(user__in=[request.user, admin_user])
+    elif request.user.user_type == 'agricultor':
+        # Agricultor puede ver sus propias zonas y las del colaborador y admin que lo creó
+        colaborador_user = request.user.created_by
+        admin_user = colaborador_user.created_by if colaborador_user else None
+        sectores = SectorPoligon.objects.filter(user__in=[request.user, colaborador_user, admin_user])
+    else:
+        sectores = SectorPoligon.objects.none()
+
+    context = {'sectores': sectores}
+
+    return render(request, "agrosmart/zona/gestion_zonaPoligon.html", {'sectores': sectores})
+    
