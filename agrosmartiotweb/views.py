@@ -990,7 +990,7 @@ def crear_sectorPoligon(request):
 
 
 from .models import SectorPoligon
-
+from django.core.serializers import serialize
 @login_required(login_url="my_login")
 def gestion_zonaPoligon(request):
     if request.user.is_superuser:
@@ -1008,8 +1008,10 @@ def gestion_zonaPoligon(request):
         sectores = SectorPoligon.objects.filter(user__in=[request.user, colaborador_user, admin_user])
     else:
         sectores = SectorPoligon.objects.none()
+    sectores_json = serialize('json', sectores)
+    context = {
+        'sectores_json': sectores_json,  # Envía el JSON serializado a la plantilla
+    }
 
-    context = {'sectores': sectores}
-
-    return render(request, "agrosmart/zona/gestion_zonaPoligon.html", {'sectores': sectores})
+    return render(request, "agrosmart/zona/gestion_zonaPoligon.html", context)
     

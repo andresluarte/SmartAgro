@@ -1,37 +1,60 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Lista de Sectores</title>
-    <script
-      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDT0QJ4JVXUrTA8mRZN_YXjy2CZDsa_vmw"
-      defer></script>
-    <script>
-      function initMap() {
-        const map = new google.maps.Map(document.getElementById("map"), {
-          zoom: 5,
-          center: { lat: -34.397, lng: 150.644 },
-        });
-
-        const sectores = {{ sectores_json|safe }};
-
-        sectores.forEach(sector => {
-          const coords = JSON.parse(sector.coordenadas);
-          const sectorPolygon = new google.maps.Polygon({
-            paths: coords,
-            strokeColor: "#FF0000",
-            strokeOpacity: 0.8,
-            strokeWeight: 2,
-            fillColor: "#FF0000",
-            fillOpacity: 0.35,
-          });
-          sectorPolygon.setMap(map);
-        });
-      }
-
-      window.initMap = initMap;
-    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Zonas Polígono</title>
+    <style>
+        /* Asegúrate de tener el contenedor de mapa definido */
+        #map {
+            height: 400px;
+            width: 100%;
+        }
+    </style>
 </head>
 <body>
-    <div id="map" style="height: 400px;"></div>
+    <h1>Gestión de Zonas Polígono</h1>
+    
+    <!-- Mapa -->
+    <div id="map"></div>
+
+    <script>
+        // Obtener los sectores pasados desde la vista
+        const sectores = {{ sectores_json|safe }};
+
+        // Inicializa el mapa de Google
+        let map;
+        function initMap() {
+            map = new google.maps.Map(document.getElementById("map"), {
+                center: { lat: -34.397, lng: 150.644 },
+                zoom: 8,
+            });
+
+            // Itera sobre los sectores y dibuja los polígonos en el mapa
+            sectores.forEach(sector => {
+                const path = JSON.parse(sector.fields.coordenadas); // Asegúrate de que "coordenadas" sea el campo correcto
+
+                const poligono = new google.maps.Polygon({
+                    paths: path,
+                    strokeColor: '#FF0000',
+                    strokeOpacity: 0.8,
+                    strokeWeight: 2,
+                    fillColor: '#FF0000',
+                    fillOpacity: 0.35,
+                    map: map,
+                });
+            });
+        }
+
+        // Cargar el script de Google Maps
+    </script>
+
+    <!-- Script de Google Maps API -->
+    <script
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDT0QJ4JVXUrTA8mRZN_YXjy2CZDsa_vmw&callback=initMap&libraries=drawing"
+        async
+        defer
+    ></script>
+
 </body>
 </html>
