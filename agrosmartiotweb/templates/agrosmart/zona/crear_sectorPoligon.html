@@ -1,4 +1,8 @@
+{% extends 'agrosmart/base.html' %}
 
+{% block contenido %}
+{% load static %}
+{% load crispy_forms_tags %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -15,13 +19,17 @@
 <body>
   <h1>Crear Sector Polígono</h1>
 
-  <form method="post" id="sectorForm">
+  
+  <form action="" autocomplete="off" class="formularioproceso" method="post" enctype="multipart/form-data">
     {% csrf_token %}
     {{ form.as_p }}
     <div id="map"></div>
     <!-- Campo oculto para coordenadas -->
     <button type="submit">Guardar Sector</button>
-  </form>
+
+        {{mensaje}}
+
+    </form>
 
   <script>
     let map;
@@ -126,3 +134,5 @@
 
 </body>
 </html>
+
+
