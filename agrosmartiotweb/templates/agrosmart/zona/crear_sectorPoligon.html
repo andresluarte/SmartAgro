@@ -40,106 +40,67 @@
 
     </form>
 
-  <script>
-    let map;
-    let drawingManager;
-    let selectedShape;
-
-    // Coordenadas por defecto (Santiago, Chile)
-    const defaultLocation = { lat: -33.4489, lng: -70.6693 };
-
-    function initMap() {
-      // Intentar obtener la ubicación del usuario
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(handleLocationSuccess, handleLocationError);
-      } else {
-        // Si el navegador no soporta geolocalización, cargar el mapa centrado en Santiago
-        handleLocationError();
-      }
-    }
-
-    // Si se obtiene la ubicación del usuario
-    function handleLocationSuccess(position) {
-      const userLat = position.coords.latitude;
-      const userLng = position.coords.longitude;
-      const userLocation = { lat: userLat, lng: userLng };
-
-      // Crear un mapa centrado en la ubicación del usuario con tipo satélite
-      map = new google.maps.Map(document.getElementById('map'), {
-        zoom: 12,
-        center: userLocation,
-        mapTypeId: 'satellite' // Tipo de mapa: satélite
-      });
-
-      initializeDrawingManager();
-    }
-
-    // Si no se puede obtener la ubicación del usuario
-    function handleLocationError() {
-      alert("No se pudo obtener la ubicación. Mostrando el mapa centrado en Santiago, Chile.");
-      map = new google.maps.Map(document.getElementById('map'), {
-        zoom: 12,
-        center: defaultLocation, // Coordenadas de Santiago, Chile
-        mapTypeId: 'satellite' // Tipo de mapa: satélite
-      });
-
-      initializeDrawingManager();
-    }
-
-    // Inicializar el DrawingManager para permitir el dibujo de polígonos
-    function initializeDrawingManager() {
-      drawingManager = new google.maps.drawing.DrawingManager({
-        drawingMode: google.maps.drawing.OverlayType.POLYGON,
-        drawingControl: true,
-        drawingControlOptions: {
-          position: google.maps.ControlPosition.TOP_CENTER,
-          drawingModes: ['polygon'],
-        },
-        polygonOptions: {
-          editable: true,
-          draggable: true,
-        },
-      });
-      drawingManager.setMap(map);
-
-      // Evento para capturar el polígono dibujado
-      google.maps.event.addListener(drawingManager, 'overlaycomplete', function(event) {
-        if (event.type === 'polygon') {
-          if (selectedShape) {
-            selectedShape.setMap(null);
+    <script>
+      let map;
+      let drawingManager;
+      let selectedShape;
+  
+      function initMap() {
+          map = new google.maps.Map(document.getElementById("map"), {
+              center: { lat: -34.397, lng: 150.644 },
+              zoom: 8,
+          });
+  
+          drawingManager = new google.maps.drawing.DrawingManager({
+              drawingMode: google.maps.drawing.OverlayType.POLYGON,
+              drawingControl: true,
+              drawingControlOptions: {
+                  position: google.maps.ControlPosition.TOP_CENTER,
+                  drawingModes: ['polygon'],
+              },
+              polygonOptions: {
+                  editable: true,
+                  draggable: true,
+              },
+          });
+  
+          drawingManager.setMap(map);
+  
+          // Evento para capturar el polígono dibujado
+          google.maps.event.addListener(drawingManager, 'overlaycomplete', function(event) {
+              if (event.type === 'polygon') {
+                  if (selectedShape) {
+                      selectedShape.setMap(null);
+                  }
+                  selectedShape = event.overlay;
+  
+                  // Guardar las coordenadas del polígono en el campo oculto
+                  document.getElementById('id_coordenadas').value = JSON.stringify(
+                      selectedShape.getPath().getArray().map(coord => ({
+                          lat: coord.lat(),
+                          lng: coord.lng(),
+                      }))
+                  );
+              }
+          });
+  
+          // Escuchar cambios en el polígono para actualizar coordenadas en tiempo real
+          google.maps.event.addListener(map, 'polygoncomplete', function(polygon) {
+              google.maps.event.addListener(polygon.getPath(), 'set_at', updateCoordinates);
+              google.maps.event.addListener(polygon.getPath(), 'insert_at', updateCoordinates);
+          });
+  
+          function updateCoordinates() {
+              document.getElementById('id_coordenadas').value = JSON.stringify(
+                  selectedShape.getPath().getArray().map(coord => ({
+                      lat: coord.lat(),
+                      lng: coord.lng(),
+                  }))
+              );
           }
-          selectedShape = event.overlay;
-
-          // Guardar las coordenadas del polígono en el campo oculto
-          document.getElementById('id_coordenadas').value = JSON.stringify(
-            selectedShape.getPath().getArray().map(coord => ({
-              lat: coord.lat(),
-              lng: coord.lng(),
-            }))
-          );
-        }
-      });
-    }
-
-    // Manejar el envío del formulario
-    document.getElementById('sectorForm').addEventListener('submit', function(event) {
-      const coordinatesField = document.getElementById('id_coordenadas');
-      if (!coordinatesField.value) {
-        alert('Debes dibujar un polígono antes de guardar el sector.');
-        event.preventDefault(); // Evitar el envío del formulario
       }
-    });
-
-    // Iniciar el mapa cuando la página haya cargado
-    window.initMap = initMap;
   </script>
-
-  <!-- Cargar la API de Google Maps con Drawing Manager -->
-  <script
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDT0QJ4JVXUrTA8mRZN_YXjy2CZDsa_vmw&callback=initMap&libraries=drawing"
-    async
-    defer
-  ></script>
+  
 
 </body>
 </html>
