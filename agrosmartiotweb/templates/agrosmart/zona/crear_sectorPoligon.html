@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mapa con Geolocalización</title>
+  <title>Crear Sector Poligonal</title>
   <style>
     #map {
       height: 400px;
@@ -12,9 +12,10 @@
   </style>
 </head>
 <body>
-  <h1>Mapa con Geolocalización</h1>
-  <p>Dibuja donde deseas agregar tu sector</p>
-  <form method="post">
+  <h1>Crear Sector Poligonal</h1>
+  
+  <!-- Formulario para guardar el polígono -->
+  <form id="sectorForm" method="post" onsubmit="return validateForm()">
     {% csrf_token %}
     {{ form.as_p }}
     
@@ -23,9 +24,13 @@
     
     <!-- Campo oculto para almacenar las coordenadas del polígono -->
     <input type="hidden" id="id_coordenadas" name="coordenadas">
-    <br>
+    
+    <!-- Mensaje de error si no se han dibujado coordenadas -->
+    <p id="error-message" style="color: red; display: none;">Por favor, dibuja un polígono en el mapa.</p>
+    
     <button type="submit">Guardar Sector</button>
   </form>
+
   <script>
     let map;
     let drawingManager;
@@ -35,7 +40,7 @@
     const defaultLocation = { lat: -33.4489, lng: -70.6693 };
 
     function initMap() {
-      // Primero, tratamos de obtener la ubicación del usuario
+      // Intentar obtener la ubicación del usuario
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
           (position) => {
@@ -47,12 +52,12 @@
             loadMap(userLocation);
           },
           () => {
-            // Si el usuario rechaza la geolocalización, cargamos el mapa en Santiago
+            // Si el usuario rechaza la geolocalización, centramos en Santiago
             loadMap(defaultLocation);
           }
         );
       } else {
-        // Si el navegador no soporta la geolocalización, centramos en Santiago
+        // Si el navegador no soporta geolocalización, centramos en Santiago
         loadMap(defaultLocation);
       }
     }
@@ -65,7 +70,7 @@
         mapTypeId: 'satellite'
       });
 
-      // Configurar el DrawingManager
+      // Configurar el DrawingManager para crear polígonos
       drawingManager = new google.maps.drawing.DrawingManager({
         drawingMode: google.maps.drawing.OverlayType.POLYGON,
         drawingControl: true,
@@ -88,13 +93,32 @@
             selectedShape.setMap(null);
           }
           selectedShape = event.overlay;
-          document.getElementById('id_coordenadas').value = JSON.stringify(selectedShape.getPath().getArray().map(coord => ({
-            lat: coord.lat(),
-            lng: coord.lng(),
-          })));
+
+          // Guardar las coordenadas del polígono en el campo oculto
+          document.getElementById('id_coordenadas').value = JSON.stringify(
+            selectedShape.getPath().getArray().map(coord => ({
+              lat: coord.lat(),
+              lng: coord.lng(),
+            }))
+          );
+
+          // Ocultar el mensaje de error si ya se ha dibujado un polígono
+          document.getElementById('error-message').style.display = 'none';
         }
       });
     }
+
+    // Validar el formulario antes de enviar
+    function validateForm() {
+      const coordenadas = document.getElementById('id_coordenadas').value;
+      if (!coordenadas) {
+        document.getElementById('error-message').style.display = 'block';  // Mostrar el mensaje de error
+        return false;  // Prevenir el envío del formulario
+      }
+      return true;  // Permitir el envío del formulario si hay coordenadas
+    }
+
+    window.initMap = initMap;
   </script>
 
   <!-- Cargar la API de Google Maps con Drawing Manager -->
