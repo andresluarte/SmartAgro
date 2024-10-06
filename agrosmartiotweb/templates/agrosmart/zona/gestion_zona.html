@@ -68,7 +68,7 @@
 
 
 
-{% endblock js %}
+
 
 
 <div class="zonas">
@@ -279,7 +279,7 @@
   </div>
   <script>
     // Obtener los sectores pasados desde la vista
-    const sectores = {{ sectores_json|safe }};
+    const sectores = {{ sectores_json| safe }};
 
     let map;
     let infoWindow;
@@ -300,7 +300,7 @@
         // Itera sobre los sectores y dibuja los polígonos en el mapa
         sectores.forEach((sector, index) => {
             const path = JSON.parse(sector.fields.coordenadas); // Asegúrate de que "coordenadas" sea el campo correcto
-            
+
             // Generar un color aleatorio o definir colores preestablecidos
             const color = getRandomColor();
 
@@ -321,7 +321,7 @@
             });
 
             // Agregar un evento click para mostrar el nombre del sector
-            google.maps.event.addListener(poligono, 'click', function() {
+            google.maps.event.addListener(poligono, 'click', function () {
                 infoWindow.setContent(sector.fields.nombre); // Asegúrate de que "nombre" sea el campo correcto
                 infoWindow.setPosition(path[0]); // Usa la primera coordenada como posición para el infoWindow
                 infoWindow.open(map);
@@ -350,4 +350,5 @@
         defer
     ></script>
 </html>
+{% endblock js %}
 {% endblock %}
