@@ -1,8 +1,9 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Crear Sector Polígono</title>
+    <title>Crear Sector</title>
     <style>
         /* Asegúrate de que el contenedor del mapa tenga un tamaño definido */
         #map {
@@ -14,11 +15,11 @@
 <body>
   <h1>Crear Sector Polígono</h1>
 
-  <form method="post">
+  <form method="post" id="sectorForm">
     {% csrf_token %}
     {{ form.as_p }}
     <div id="map"></div>
-    <input type="hidden" id="id_coordenadas" name="coordenadas">
+    <input type="hidden" id="id_coordenadas" name="coordenadas" required> <!-- Campo oculto para coordenadas -->
     <button type="submit">Guardar Sector</button>
   </form>
 
@@ -102,6 +103,15 @@
         }
       });
     }
+
+    // Manejar el envío del formulario
+    document.getElementById('sectorForm').addEventListener('submit', function(event) {
+      const coordinatesField = document.getElementById('id_coordenadas');
+      if (!coordinatesField.value) {
+        alert('Debes dibujar un polígono antes de guardar el sector.');
+        event.preventDefault(); // Evitar el envío del formulario
+      }
+    });
 
     // Iniciar el mapa cuando la página haya cargado
     window.initMap = initMap;
