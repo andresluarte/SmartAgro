@@ -175,102 +175,72 @@
         <br>
         <div id="map"></div>
         <script>
+          // Obtener los sectores pasados desde la vista
+          const sectores = {{ sectores_json|safe }};
+  
+          let map;
+          let infoWindow;
+  
           function initMap() {
-            // Función para manejar el éxito en la obtención de la ubicación
-            function handleLocationSuccess(position) {
-              var userLat = position.coords.latitude;
-              var userLng = position.coords.longitude;
-              var userLocation = { lat: userLat, lng: userLng };
-        
-              // Crear un mapa centrado en la ubicación del usuario con el tipo satélite
-              var map = new google.maps.Map(document.getElementById('map'), {
-                zoom: 12,
-                center: userLocation,
-                mapTypeId: 'satellite' // Cambiar el tipo de mapa a satélite
+              // Inicializamos el mapa y centramos temporalmente en una latitud y longitud inicial
+              map = new google.maps.Map(document.getElementById("map"), {
+                  center: { lat: -34.397, lng: 150.644 },
+                  zoom: 8,
               });
-        
-              // Array para almacenar las ventanas de información
-              var infoWindowArray = [];
-              console.log("Mapa creado:", map);
-              // Agregar los marcadores de los sectores
-              {% for sector in sectores %}
-              (function (lat, lng, nombre) {
-                var marker = new google.maps.Marker({
-                  position: { lat: lat, lng: lng },
-                  map: map,
-                  title: nombre
-                });
-
-                var infowindow = new google.maps.InfoWindow({
-                  content: '<div><strong>' + nombre + '</strong></div>'
-                });
-
-                // Añadir un listener para mostrar la ventana de información al hacer clic en el marcador
-                marker.addListener('click', function () {
-                  infowindow.open(map, marker);
-                });
-              })(
-                parseFloat('{{ sector.latitud|escapejs }}'),
-                parseFloat('{{ sector.longitud|escapejs }}'),
-                '{{ sector.nombre|escapejs }}'
-              );
-              {% endfor %}
-              
-            }
-        
-            // Función para manejar los errores de geolocalización
-            function handleLocationError() {
-              alert("No se pudo obtener la ubicación. Mostrando el mapa centrado en Santiago, Chile.");
-              var map = new google.maps.Map(document.getElementById('map'), {
-                zoom: 12,
-                center: { lat: -33.4489, lng: -70.6693 }, // Coordenadas de Santiago, Chile
-                mapTypeId: 'satellite' // Cambiar el tipo de mapa a satélite
-              });
-              // Array para almacenar las ventanas de información
-              var infoWindowArray = [];
-        
-              // Agregar los marcadores de todos modos
-              {% for sector in sectores %}
-              (function (lat, lng, nombre) {
-                var marker = new google.maps.marker.AdvancedMarkerElement({
-                  position: { lat: lat, lng: lng },
-                  map: map,
-                  title: nombre
-                });
-        
-                var infowindow = new google.maps.InfoWindow({
-                  content: '<div><strong>' + nombre + '</strong></div>'
-                });
-        
-                // Añadir el marcador al array de ventanas de información
-                infoWindowArray.push(infowindow);
-        
-                // Añadir un listener para mostrar la ventana de información al hacer clic en el marcador
-                marker.addListener('click', function () {
-                  infoWindowArray.forEach(function (iw) {
-                    iw.close();
+  
+              // InfoWindow para mostrar el nombre del polígono
+              infoWindow = new google.maps.InfoWindow();
+  
+              // Objeto para ajustar los límites del mapa y mostrar todos los polígonos
+              const bounds = new google.maps.LatLngBounds();
+  
+              // Itera sobre los sectores y dibuja los polígonos en el mapa
+              sectores.forEach((sector, index) => {
+                  const path = JSON.parse(sector.fields.coordenadas); // Asegúrate de que "coordenadas" sea el campo correcto
+                  
+                  // Generar un color aleatorio o definir colores preestablecidos
+                  const color = getRandomColor();
+  
+                  // Crear el polígono
+                  const poligono = new google.maps.Polygon({
+                      paths: path,
+                      strokeColor: color,
+                      strokeOpacity: 0.8,
+                      strokeWeight: 2,
+                      fillColor: color,
+                      fillOpacity: 0.35,
+                      map: map,
                   });
-                  infowindow.open(map, marker);
-                });
-              })(
-                parseFloat('{{ sector.latitud|escapejs }}'),
-                parseFloat('{{ sector.longitud|escapejs }}'),
-                '{{ sector.nombre|escapejs }}'
-              );
-              {% endfor %}
-            }
-        
-            // Intentar obtener la ubicación del usuario
-            if (navigator.geolocation) {
-              navigator.geolocation.getCurrentPosition(handleLocationSuccess, handleLocationError);
-            } else {
-              handleLocationError();
-            }
+  
+                  // Expandir los límites del mapa para incluir cada vértice del polígono
+                  path.forEach(coord => {
+                      bounds.extend(new google.maps.LatLng(coord.lat, coord.lng));
+                  });
+  
+                  // Agregar un evento click para mostrar el nombre del sector
+                  google.maps.event.addListener(poligono, 'click', function() {
+                      infoWindow.setContent(sector.fields.nombre); // Asegúrate de que "nombre" sea el campo correcto
+                      infoWindow.setPosition(path[0]); // Usa la primera coordenada como posición para el infoWindow
+                      infoWindow.open(map);
+                  });
+              });
+  
+              // Ajusta el mapa para mostrar todos los sectores
+              map.fitBounds(bounds);
           }
-        
-          // Inicializar el mapa cuando la página esté completamente cargada
-          window.onload = initMap;
-        </script>
+  
+          // Función para generar colores aleatorios en formato hexadecimal
+          function getRandomColor() {
+              const letters = '0123456789ABCDEF';
+              let color = '#';
+              for (let i = 0; i < 6; i++) {
+                  color += letters[Math.floor(Math.random() * 16)];
+              }
+              return color;
+          }
+  
+          // Cargar el script de Google Maps
+      </script>
         
 
         <ul>
@@ -373,6 +343,10 @@
 
 
   </div>
-
+  <script
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDT0QJ4JVXUrTA8mRZN_YXjy2CZDsa_vmw&callback=initMap&libraries=drawing"
+        async
+        defer
+    ></script>
 </html>
 {% endblock %}

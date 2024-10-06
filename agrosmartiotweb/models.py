@@ -16,49 +16,9 @@ def validate_rut(value):
 
 class Sector(models.Model):
     nombre = models.CharField(max_length=50)
+    coordenadas = models.TextField()
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    latitud = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
-    longitud = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
-    google_maps_link = models.URLField(max_length=200, null=True, blank=True)  # Actualiza aquí
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='sector_creado', on_delete=models.CASCADE)
-    def save(self, *args, **kwargs):
-        if self.google_maps_link and (not self.latitud or not self.longitud):
-            lat, lng = self.extract_lat_lng_from_link(self.google_maps_link)
-            self.latitud = lat
-            self.longitud = lng
-        super(Sector, self).save(*args, **kwargs)
-
-    def extract_lat_lng_from_link(self, link):
-        # Ejemplo: https://www.google.com/maps?q=loc:40.748817,-73.985428&hl=es
-        import re
-        match = re.search(r'@(-?\d+\.\d+),(-?\d+\.\d+)', link)
-        if match:
-            lat = float(match.group(1))
-            lng = float(match.group(2))
-            return lat, lng
-        match_alt = re.search(r'loc:(-?\d+\.\d+),(-?\d+\.\d+)', link)
-        if match_alt:
-            lat = float(match_alt.group(1))
-            lng = float(match_alt.group(2))
-            return lat, lng
-
-        # Enlace en formato https://maps.app.goo.gl/5w8XHiCz9G9peGSSA
-        if "maps.app.goo.gl" in link:
-            response = requests.get(link)
-            url_parts = response.url.split("q=")
-            if len(url_parts) > 1:
-                location_parts = url_parts[1].split("&")
-                if len(location_parts) > 0:
-                    location = location_parts[0]
-                    lat_lng_parts = location.split(",")
-                    if len(lat_lng_parts) == 2:
-                        lat = float(lat_lng_parts[0])
-                        lng = float(lat_lng_parts[1])
-                        return lat, lng
-            return None, None
-
-        
-    
 
 
     def __str__(self):

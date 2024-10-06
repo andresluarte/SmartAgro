@@ -463,7 +463,7 @@ def agregar_sector(request):
             return redirect('agregar_huerto', sector_id=sector.id)
     else:
         form = SectorForm()
-    return render(request, 'agrosmart/zona/agregarsector.html', {'form': form})
+    return render(request, 'agrosmart/zona/crear_sectorPoligon.html', {'form': form})
 
 
 

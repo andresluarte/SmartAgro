@@ -1,5 +1,5 @@
 from django import forms 
-from .models import Procesos,Contacto,Trabajador,Sector,Huerto,Lote
+from .models import Procesos,Contacto,Trabajador,Sector,Huerto,Lote,SectorPoligon
 
 class DateInput(forms.DateInput):
     input_type='date'
@@ -288,25 +288,21 @@ from django import forms
 from .models import Sector, Huerto, Lote
 
 class SectorForm(forms.ModelForm):
-    google_maps_link = forms.URLField(
-        max_length=200, 
-        required=False,
-        label="Enlace de Google Maps (opcional)"
-    )
 
     class Meta:
         model = Sector
-        fields = ['nombre', 'latitud', 'longitud', 'google_maps_link']
+        fields = ['nombre', 'coordenadas']
+        widgets = {
+            'coordenadas': forms.HiddenInput(),  # Ocultamos este campo, se llenará desde JavaScript
+        }
 
-    def clean(self):
-        cleaned_data = super().clean()
-        lat = cleaned_data.get("latitud")
-        lng = cleaned_data.get("longitud")
-        link = cleaned_data.get("google_maps_link")
-
-        if not link and (not lat or not lng):
-            raise forms.ValidationError("Debes proporcionar coordenadas o un enlace de Google Maps.")
-
+class SectorPoligonForm(forms.ModelForm):
+    class Meta:
+        model = SectorPoligon
+        fields = ['nombre', 'coordenadas']
+        widgets = {
+            'coordenadas': forms.HiddenInput(),  # Ocultamos este campo, se llenará desde JavaScript
+        }
 
 
 
@@ -338,7 +334,7 @@ class LoteForm(forms.ModelForm):
 class SectorModificarForm(forms.ModelForm):
     class Meta:
         model = Sector
-        fields = ['nombre', 'latitud', 'longitud', 'google_maps_link']
+        fields = ['nombre', 'coordenadas']
 
 class HuertoModificarForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
@@ -518,10 +514,3 @@ class EditColaboradorForm(forms.ModelForm):
 from django import forms
 from .models import SectorPoligon
 
-class SectorPoligonForm(forms.ModelForm):
-    class Meta:
-        model = SectorPoligon
-        fields = ['nombre', 'coordenadas']
-        widgets = {
-            'coordenadas': forms.HiddenInput(),  # Ocultamos este campo, se llenará desde JavaScript
-        }
