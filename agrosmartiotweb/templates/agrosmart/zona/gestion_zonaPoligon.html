@@ -1,69 +1,5 @@
-{% extends 'agrosmart/base.html' %}
-{% load humanize %}
-{% block contenido %}
-{% load static %}
-{% load agrosmartiotweb %}
-{% block js %}
 <!DOCTYPE html>
-<html lang="es">
-<script>
-    function eliminarSector(id) {
-        Swal.fire({
-            "title": "¿Estas Seguro?",
-            "text": "Esta acción no se puede deshacer",
-            "icon": "question",
-            "showCancelButton": true,
-            "cancelButtonText": "No, Cancelar",
-            "confirmButtonText": "Si, Eliminar",
-            "reverseButtons": true,
-            "confirmButtonColor": "dc3545",
-
-
-
-
-
-
-
-
-
-
-        })
-            .then(function (result) {
-                if (result.isConfirmed) {
-                    window.location.href = "/eliminarsector/" + id + "/"
-                }
-            })
-    }
-    function eliminarHuerto(id) {
-        Swal.fire({
-            "title": "¿Estas Seguro?",
-            "text": "Esta acción no se puede deshacer",
-            "icon": "question",
-            "showCancelButton": true,
-            "cancelButtonText": "No, Cancelar",
-            "confirmButtonText": "Si, Eliminar",
-            "reverseButtons": true,
-            "confirmButtonColor": "dc3545",
-
-
-
-
-
-
-
-
-
-
-        })
-            .then(function (result) {
-                if (result.isConfirmed) {
-                    window.location.href = "/eliminarhuerto/" + id + "/"
-                }
-            })
-    }
-
-</script>
-
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -76,16 +12,15 @@
         }
     </style>
 </head>
-
 <body>
     <h1>Gestión de Zonas Polígono</h1>
-
+    
     <!-- Mapa -->
     <div id="map"></div>
 
     <script>
         // Obtener los sectores pasados desde la vista
-        const sectores = {{ sectores_json| safe }};
+        const sectores = {{ sectores_json|safe }};
 
         let map;
         let infoWindow;
@@ -106,7 +41,7 @@
             // Itera sobre los sectores y dibuja los polígonos en el mapa
             sectores.forEach((sector, index) => {
                 const path = JSON.parse(sector.fields.coordenadas); // Asegúrate de que "coordenadas" sea el campo correcto
-
+                
                 // Generar un color aleatorio o definir colores preestablecidos
                 const color = getRandomColor();
 
@@ -127,7 +62,7 @@
                 });
 
                 // Agregar un evento click para mostrar el nombre del sector
-                google.maps.event.addListener(poligono, 'click', function () {
+                google.maps.event.addListener(poligono, 'click', function() {
                     infoWindow.setContent(sector.fields.nombre); // Asegúrate de que "nombre" sea el campo correcto
                     infoWindow.setPosition(path[0]); // Usa la primera coordenada como posición para el infoWindow
                     infoWindow.open(map);
@@ -154,9 +89,11 @@
     <!-- Script de Google Maps API -->
     <script
         src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDT0QJ4JVXUrTA8mRZN_YXjy2CZDsa_vmw&callback=initMap&libraries=drawing"
-        async defer></script>
+        async
+        defer
+    ></script>
 
 </body>
-
 </html>
+
 
