@@ -424,6 +424,7 @@ def ProcesoList(request):
     
     return render(request, 'agrosmart/gestiondetareas.html', context=context)
 
+from django.core.serializers import serialize
 @login_required(login_url="my_login")
 def gestion_zona(request):
     if request.user.is_superuser:
