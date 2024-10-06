@@ -17,15 +17,22 @@
     </style>
 </head>
 <body>
-  <h1>Crear Sector Polígono</h1>
+  <h2>Crear Sector</h2>
+  <br>
+  
+
 
   
   <form action="" autocomplete="off" class="formularioproceso" method="post" enctype="multipart/form-data">
     {% csrf_token %}
-    {{ form.as_p }}
+    <p> Dibuja el sector en google maps </p>
+    {{ form }}
     <div id="map"></div>
-    <!-- Campo oculto para coordenadas -->
-    <button type="submit">Guardar Sector</button>
+    <br>
+    <br>
+
+   
+    <button type="submit" id="btnAgregar" class="btn btn-primary">Agregar Sector</button>
 
         {{mensaje}}
 
