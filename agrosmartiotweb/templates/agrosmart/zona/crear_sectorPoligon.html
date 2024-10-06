@@ -1,36 +1,62 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-    <title>Crear Sector</title>
-    <style>
-        /* Asegúrate de que el contenedor del mapa tenga un tamaño definido */
-        #map {
-            height: 400px;
-            width: 100%;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mapa con Geolocalización</title>
+  <style>
+    #map {
+      height: 400px;
+      width: 100%;
+    }
+  </style>
 </head>
 <body>
-  <h1>Crear Sector Polígono</h1>
-
-  <form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <div id="map"></div>
-    <button type="submit">Guardar Sector</button>
-  </form>
+  <h1>Mapa con Geolocalización</h1>
+  
+  <!-- Mapa -->
+  <div id="map"></div>
 
   <script>
     let map;
     let drawingManager;
     let selectedShape;
 
+    // Coordenadas por defecto (Santiago, Chile)
+    const defaultLocation = { lat: -33.4489, lng: -70.6693 };
+
     function initMap() {
+      // Primero, tratamos de obtener la ubicación del usuario
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            // Si se obtiene la ubicación del usuario, centramos el mapa ahí
+            const userLocation = {
+              lat: position.coords.latitude,
+              lng: position.coords.longitude
+            };
+            loadMap(userLocation);
+          },
+          () => {
+            // Si el usuario rechaza la geolocalización, cargamos el mapa en Santiago
+            loadMap(defaultLocation);
+          }
+        );
+      } else {
+        // Si el navegador no soporta la geolocalización, centramos en Santiago
+        loadMap(defaultLocation);
+      }
+    }
+
+    // Función para cargar el mapa con la ubicación dada
+    function loadMap(location) {
       map = new google.maps.Map(document.getElementById("map"), {
-        center: { lat: -34.397, lng: 150.644 },
-        zoom: 8,
+        center: location,
+        zoom: 12,
+        mapTypeId: 'satellite'
       });
 
+      // Configurar el DrawingManager
       drawingManager = new google.maps.drawing.DrawingManager({
         drawingMode: google.maps.drawing.OverlayType.POLYGON,
         drawingControl: true,
@@ -43,8 +69,10 @@
           draggable: true,
         },
       });
+
       drawingManager.setMap(map);
 
+      // Evento para capturar el polígono dibujado
       google.maps.event.addListener(drawingManager, 'overlaycomplete', function(event) {
         if (event.type === 'polygon') {
           if (selectedShape) {
@@ -60,12 +88,11 @@
     }
   </script>
 
-  <!-- Coloca el script de Google Maps al final -->
+  <!-- Cargar la API de Google Maps con Drawing Manager -->
   <script
     src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDT0QJ4JVXUrTA8mRZN_YXjy2CZDsa_vmw&callback=initMap&libraries=drawing"
     async
     defer
   ></script>
-
 </body>
 </html>
