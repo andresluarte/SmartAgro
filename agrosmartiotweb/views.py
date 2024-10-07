@@ -469,10 +469,18 @@ def agregar_sector(request):
             sector.user = request.user  # Asigna el usuario logueado (admin)
             sector.created_by = request.user
             sector.save()
-            return redirect('agregar_huerto', sector_id=sector.id)
+
+            # Manejo de las acciones del formulario
+            if request.POST.get('action') == 'add_and_redirect':
+                return redirect('agregar_huerto', sector_id=sector.id)
+            elif request.POST.get('action') == 'add_another':
+                # Redirigir al mismo formulario para agregar otro sector
+                return render(request, 'agrosmart/zona/crear_sectorPoligon.html', {'form': SectorForm(), 'mensaje': 'Sector agregado exitosamente, puedes agregar otro sector.'})
     else:
         form = SectorForm()
+    
     return render(request, 'agrosmart/zona/crear_sectorPoligon.html', {'form': form})
+
 
 
 
