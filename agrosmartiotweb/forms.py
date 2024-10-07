@@ -435,6 +435,10 @@ from django.core.exceptions import ValidationError
 from .models import EmpresaOFundo
 from PIL import Image
 
+from django import forms
+from django.core.exceptions import ValidationError
+from PIL import Image
+
 class EmpresaOFundoForm(forms.ModelForm):
     class Meta:
         model = EmpresaOFundo
@@ -456,8 +460,8 @@ class EmpresaOFundoForm(forms.ModelForm):
         foto2 = cleaned_data.get('foto2')
         foto3 = cleaned_data.get('foto3')
 
-        # Definir la relación de aspecto estándar (1250:837)
-        aspect_ratio_target = 1250 / 837  # Calcula la relación de aspecto
+        # Definir la relación de aspecto más común (4:3)
+        aspect_ratio_target = 4 / 3  # Calcula la relación de aspecto
 
         # Verifica la foto1
         if foto1:
@@ -467,7 +471,7 @@ class EmpresaOFundoForm(forms.ModelForm):
 
             # Verifica que la relación de aspecto de foto1 sea correcta
             if not self.is_aspect_ratio_valid(aspect_ratio1, aspect_ratio_target):
-                raise ValidationError("La relación de aspecto de foto1 debe ser 1250:837.")
+                raise ValidationError("La relación de aspecto de foto1 debe ser aproximadamente 4:3.")
 
         # Verifica las otras fotos
         for i, foto in enumerate([foto2, foto3], start=2):
@@ -478,18 +482,15 @@ class EmpresaOFundoForm(forms.ModelForm):
                 
                 # Verifica que la relación de aspecto de las otras fotos sea correcta
                 if not self.is_aspect_ratio_valid(aspect_ratio, aspect_ratio_target):
-                    raise ValidationError(f"La relación de aspecto de foto{i} debe ser 1250:837.")
+                    raise ValidationError(f"La relación de aspecto de foto{i} debe ser aproximadamente 4:3.")
 
         return cleaned_data
 
-    def is_aspect_ratio_valid(self, aspect_ratio, target_ratio, tolerance=0.01):
+    def is_aspect_ratio_valid(self, aspect_ratio, target_ratio, tolerance=0.1):
         """
         Verifica si la relación de aspecto está dentro de un margen de tolerancia del objetivo.
         """
         return abs(aspect_ratio - target_ratio) < tolerance
-
-
-
 
 
 #edit colaborador
