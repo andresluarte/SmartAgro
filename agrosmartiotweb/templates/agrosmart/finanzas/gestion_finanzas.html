@@ -1,0 +1,69 @@
+{% extends 'agrosmart/base.html' %}
+
+{% block contenido %}
+{% load static %}
+{% load agrosmartiotweb %}
+{% block js %}
+<style>
+    .tareas-extras {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .tarea-extra-item {
+        flex: 1;
+        border: 1px solid #ccc;
+        padding: 10px;
+    }
+
+    .campo-total {
+        flex: 1;
+        border: 1px solid #e00000;
+        padding: 10px;
+    }
+</style>
+{% endblock js %}
+{% load humanize %}
+
+<div class="finanzas">
+    <br>
+    <br>
+    <div class="card ">
+        <div class="card-body ">
+            <h3> Gestión de Finanzas por Trabajador </h3>
+            <hr>
+            <td>
+                <br>
+                &nbsp;
+            </td>
+
+            <div>
+
+                <table class="table table-striped table-hover table-responsive" style="overflow-x: auto;">
+                    <tr>
+                        <th>Trabajador</th>
+                        <th>Total Jornadas Por Horas</th>
+                        <th>Total Jornadas por Trato</th>
+                        <th>Total Final</th>
+                    </tr>
+                    {% for finanza in finanzas %}
+                    <tr>
+                        <td>{{ finanza.trabajador.nombre }}</td>
+                        <td>{{ finanza.total_gasto_jornadas }}</td>
+                        <td>{{ finanza.total_gasto_jornadas_por_trato }}</td>
+                        <td>{{ finanza.total_gasto_final }}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+
+            </div>
+        </div>
+        <br>
+
+
+        <br>
+
+    </div>
+</div>
+{% endblock %}

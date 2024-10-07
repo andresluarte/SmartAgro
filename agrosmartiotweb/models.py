@@ -104,6 +104,7 @@ class Trabajador(models.Model):
 
     class Meta:
         ordering = ['-fecha_ingreso']
+
 class Procesos(models.Model):
     trabajo = models.CharField(max_length=50, null=True, blank=True)
     fecha = models.DateField(default=datetime.date.today)
@@ -348,4 +349,37 @@ class HumiditySoil(models.Model):
     def __str__(self):
         return f"Humidity: {self.humiditysoil}, Timestamp: {self.timestamp}"
     
+from django.db.models import Sum
+
+#finanzas por trabajador
+class FinanzasPorTrabajador(models.Model):
+    trabajador = models.ForeignKey(Trabajador, on_delete=models.CASCADE)
+    total_gasto_jornadas = models.IntegerField(default=0, editable=False)  # Total de todas las jornadas
+    total_gasto_jornadas_por_trato = models.IntegerField(default=0, editable=False)  # Total de todas las jornadas por trato
+    total_gasto_final = models.IntegerField(default=0, editable=False)  # Suma de ambos totales
+ 
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='finanzas_creadas', on_delete=models.CASCADE)  # Admin que gestionó las finanzas
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)  # Usuario que está visualizando
+
+    def actualizar_finanzas_trabajador(trabajador, creador):
+        # Obtener o crear el registro de finanzas para el trabajador
+        finanzas, created = FinanzasPorTrabajador.objects.get_or_create(
+            trabajador=trabajador,
+            created_by=creador,
+            defaults={'user': creador}
+        )
+
+        # Calcular total de gastos por jornadas normales y jornadas por trato
+        total_jornadas = Jornada.objects.filter(asignado=trabajador).aggregate(total=Sum('total_gasto_jornada'))['total'] or 0
+        total_jornadas_por_trato = JornadaPorTrato.objects.filter(asignado=trabajador).aggregate(total=Sum('total_gasto_jornada'))['total'] or 0
+
+        # Actualizar los campos del modelo FinanzasPorTrabajador
+        finanzas.total_gasto_jornadas = total_jornadas
+        finanzas.total_gasto_jornadas_por_trato = total_jornadas_por_trato
+        finanzas.total_gasto_final = total_jornadas + total_jornadas_por_trato
+
+        finanzas.save()
+
+
+
     

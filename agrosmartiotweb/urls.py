@@ -66,6 +66,7 @@ urlpatterns = [
     
     path('modificarjornada/<id>', views.modificarjornada, name = "modificarjornada"),
     path('eliminarjornada/<int:id>/', views.eliminarjornada, name = "eliminarjornada"),
+    path('eliminarjornadaPorTrato/<int:id>/', views.eliminarjornadaPorTrato, name = "eliminarjornadaPorTrato"),
 
     path('cargar_huertos/', views.cargar_huertos, name='cargar_huertos'),
     path('cargar_lotes/', views.cargar_lotes, name='cargar_lotes'),
@@ -105,8 +106,11 @@ urlpatterns = [
 
     path('crear_sectorPoligon/', views.crear_sectorPoligon, name='crear_sectorPoligon'),
     path('gestion_zonaPoligon/', views.gestion_zonaPoligon, name='gestion_zonaPoligon'),
-   
 
+
+
+   
+    path('gestion_finanzas/', views.gestion_finanzas, name='gestion_finanzas'),
 
 
 

@@ -17,7 +17,7 @@
     </style>
 </head>
 <body>
-  <h2>Crear Sector</h2>
+  <h3>Crear Sector</h3>
   <br>
   
 
@@ -42,6 +42,7 @@
       &nbsp;
       <button type="submit" name="action" value="add_another" class="btn btn-secondary">Agregar Otro Sector</button>
       &nbsp;
+      
 
       {{ mensaje }}
   </div>
@@ -49,6 +50,11 @@
         
 
     </form>
+    <br>
+    <a href="{% url 'gestion_zona' %}">
+      <button class="btn btn-success">Volver Atrás</button>
+      
+  </a>
 
     <script>
       let map;

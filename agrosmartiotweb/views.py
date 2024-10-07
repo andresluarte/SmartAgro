@@ -266,6 +266,12 @@ def eliminarjornada(request, id):
     messages.success(request, "Jornada Eliminada Correctamente")
     return redirect('gestion_jornadas')
 
+def eliminarjornadaPorTrato(request, id):
+    jornada = get_object_or_404(JornadaPorTrato, id=id)
+    jornada.delete()
+    messages.success(request, "Jornada Eliminada Correctamente")
+    return redirect('gestion_jornadas_por_trato')
+
 #exportar excel
 def eliminartrabajador(request, id):
     proceso = get_object_or_404(Trabajador, id=id)
@@ -1032,3 +1038,10 @@ def gestion_zonaPoligon(request):
 
     return render(request, "agrosmart/zona/gestion_zonaPoligon.html", context)
     
+
+
+from .models import FinanzasPorTrabajador
+
+def gestion_finanzas(request):
+    finanzas = FinanzasPorTrabajador.objects.all()
+    return render(request, 'agrosmart/finanzas/gestion_finanzas.html', {'finanzas': finanzas})

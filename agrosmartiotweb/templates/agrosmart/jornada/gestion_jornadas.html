@@ -287,8 +287,14 @@
               <td>
                 <a href="{% url 'modificarjornada' jornada.id %}" class="btn btn-warning">Modificar</a>
               <td>
-                <a href="#" onclick="eliminarJornada({{ jornada.id }})" class="btn btn-danger">Eliminar </a>
+                {% if request.path == '/gestion_jornadas_por_trato/' %}
+              <a href="#" onclick="eliminarjornadaPorTrato({{ jornada.id }})" class="btn btn-danger">Eliminar </a>
+            
+            {% else %}
+            <a href="#" onclick="eliminarJornada({{ jornada.id }})" class="btn btn-danger">Eliminar </a>
+            {% endif %}
               </td>
+              
 
 
               </td>
@@ -376,6 +382,35 @@
           .then(function (result) {
             if (result.isConfirmed) {
               window.location.href = "/eliminarjornada/" + id + "/"
+            }
+          })
+      }
+    </script>
+    <script>
+      function eliminarjornadaPorTrato(id) {
+        Swal.fire({
+          "title": "¿Estas Seguro?",
+          "text": "Esta acción no se puede deshacer",
+          "icon": "question",
+          "showCancelButton": true,
+          "cancelButtonText": "No, Cancelar",
+          "confirmButtonText": "Si, Eliminar",
+          "reverseButtons": true,
+          "confirmButtonColor": "dc3545",
+
+
+
+
+
+
+
+
+
+
+        })
+          .then(function (result) {
+            if (result.isConfirmed) {
+              window.location.href = "/eliminarjornadaPorTrato/" + id + "/"
             }
           })
       }
