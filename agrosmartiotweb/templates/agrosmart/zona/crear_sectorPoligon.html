@@ -45,10 +45,35 @@
       let map;
       let drawingManager;
       let selectedShape;
-  
+    
       function initMap() {
+          // Intentar obtener la ubicación del usuario
+          if (navigator.geolocation) {
+              navigator.geolocation.getCurrentPosition(
+                  // Si la ubicación es exitosa, centrar el mapa en la ubicación del usuario
+                  function(position) {
+                      const userLocation = {
+                          lat: position.coords.latitude,
+                          lng: position.coords.longitude,
+                      };
+                      initializeMap(userLocation);
+                  },
+                  // Si hay un error o el usuario no da permiso, usar la ubicación predeterminada en Chile
+                  function() {
+                      const defaultLocation = { lat: -33.4489, lng: -70.6693 }; // Santiago, Chile
+                      initializeMap(defaultLocation);
+                  }
+              );
+          } else {
+              // Si el navegador no soporta geolocalización, usar la ubicación predeterminada
+              const defaultLocation = { lat: -33.4489, lng: -70.6693 }; // Santiago, Chile
+              initializeMap(defaultLocation);
+          }
+      }
+  
+      function initializeMap(centerLocation) {
           map = new google.maps.Map(document.getElementById("map"), {
-              center: { lat: -34.397, lng: 150.644 },
+              center: centerLocation,
               zoom: 8,
           });
   
@@ -101,6 +126,7 @@
           }
       }
   </script>
+  
   <script
     src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDT0QJ4JVXUrTA8mRZN_YXjy2CZDsa_vmw&callback=initMap&libraries=drawing"
     async
