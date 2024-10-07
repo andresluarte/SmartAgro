@@ -4,7 +4,6 @@
 {% load static %}
 {% load agrosmartiotweb %}
 {% block js %}
-
 <!DOCTYPE html>
 <html lang="es">
 <script>
@@ -65,19 +64,9 @@
 
 </script>
 
-
-
-
 {% endblock js %}
-
-
 <div class="zonas">
-
-
-  <br>
-  <br>
-
-  <div class="card">
+<div class="card">
     <div class="card-body">
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -115,8 +104,7 @@
 
 
       </head>
-      <br>
-      <style>
+<style>
         body {
           font-family: Arial, sans-serif;
         }
@@ -170,13 +158,13 @@
           width: 100%;
         }
       </style>
-      <script
-        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDT0QJ4JVXUrTA8mRZN_YXjy2CZDsa_vmw&callback=initMap&libraries=drawing"
-        async
-        defer
-    ></script>
 
-      <body>
+<body>
+    <h1>Gestión de Zonas Polígono</h1>
+    
+    <!-- Mapa -->
+    <div id="map"></div>
+<body>
         <br>
         <div id="map"></div>
         <script>
@@ -339,15 +327,14 @@
 
       </body>
 
+    
 
+    <!-- Script de Google Maps API -->
+    <script
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDT0QJ4JVXUrTA8mRZN_YXjy2CZDsa_vmw&callback=initMap&libraries=drawing"
+        async
+        defer
+    ></script>
 
-
-
-    </div>
-
-
-
-  </div>
-  
+</body>
 </html>
-{% endblock %}
