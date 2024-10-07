@@ -73,6 +73,7 @@ class SensorData(models.Model):
         return self.temperature
 
 class Trabajador(models.Model):
+    foto = models.ImageField(upload_to='fotos_trabajadores/', blank=True, null=True)  # Campo de imagen opcional
     nombre = models.CharField(max_length=50, null=True)
     rut = models.CharField(max_length=12, null=True, validators=[validate_rut])
     TIPO_CONTRATO_CHOICES = (

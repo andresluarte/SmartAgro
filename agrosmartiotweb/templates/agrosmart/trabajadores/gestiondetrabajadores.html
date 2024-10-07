@@ -124,6 +124,7 @@
       <table class="table table-striped table-hover table-responsive">
         <thead>
           <tr>
+            <th>foto </th>
             <th>NOMBRE </th>
             <th>COBRO PROMEDIO</th>
             <th>TRABAJO A REALIZAR</th>
@@ -144,6 +145,14 @@
         <tbody>
           {% for t in trabajador_page_obj %}
           <tr>
+            <td>
+              {% if t.foto %}
+                  <img src="{{ t.foto.url }}" alt="Foto de {{ t.nombre }}" style="width: 100px; height: auto;">
+              {% else %}
+                  Sin foto
+              {% endif %}
+          </td>
+          
             <td>{{ t.nombre }}</td>
             <td>${{ t.cobro|floatformat:"-2" }}</td>
             <td>{{ t.trabajo_a_realizar }}</td>

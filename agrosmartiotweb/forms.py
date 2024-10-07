@@ -68,7 +68,7 @@ class TrabajadorForm(forms.ModelForm):
 
     class Meta:
         model = Trabajador
-        fields = ['nombre','rut','tipo_contraro','fecha_ingreso', 'fecha_termino_contrato','cobro','trabajo_a_realizar']
+        fields = ['foto','nombre','rut','tipo_contraro','fecha_ingreso', 'fecha_termino_contrato','cobro','trabajo_a_realizar']
         widgets={
             "fecha_ingreso":DateInput(),
             "fecha_termino_contrato": DateInput(),
