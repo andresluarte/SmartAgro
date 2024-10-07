@@ -442,13 +442,18 @@ def gestion_zona(request):
         sectores = Sector.objects.filter(user__in=[request.user, colaborador_user, admin_user])
     else:
         sectores = Sector.objects.none()
+
+    # Serializa los sectores a JSON para usarlos en el frontend
     sectores_json = serialize('json', sectores)
+
+    # Asegúrate de pasar tanto 'sectores_json' como 'sectores' al contexto
     context = {
         'sectores_json': sectores_json,  # Envía el JSON serializado a la plantilla
+        'sectores': sectores              # Envía la queryset de sectores a la plantilla
     }
-    context = {'sectores': sectores}
 
     return render(request, "agrosmart/zona/gestion_zona.html", context)
+
 
 
 
