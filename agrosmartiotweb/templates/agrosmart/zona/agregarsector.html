@@ -16,24 +16,24 @@
             <div class="card-body">
                 <h2> Agregar Sector </h2>
                 <p> Dibuja el sector en google maps </p>
-                <form action="" autocomplete="off" class="formularioproceso" method="post" enctype="multipart/form-data"> 
+                <form action="" autocomplete="off" class="formularioproceso" method="post" enctype="multipart/form-data">
                     {% csrf_token %}
-                
-                    {{ form | crispy }}
-                
+
+                    {{form | crispy}}
+
                     <br>
                     <br>
-                
+
                     <div>
                         <input type="reset" value="Cancelar" class="btn btn-danger">
                         &nbsp;
-                        <button type="submit" name="action" value="add_and_redirect" id="btnAgregar" class="btn btn-primary">Agregar Sector y Huertos y Lotes</button>
+                        <button type="submit" id="btnAgregar" class="btn btn-primary">Agregar Sector</button>
                         &nbsp;
-                        <button type="submit" name="action" value="add_another" class="btn btn-secondary">Agregar Otro Sector</button>
-                        &nbsp;
-                
-                        {{ mensaje }}
-                    </div>
+
+
+
+                        {{mensaje}}
+
                 </form>
                 
                 

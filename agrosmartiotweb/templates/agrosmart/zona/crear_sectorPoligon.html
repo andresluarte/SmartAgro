@@ -35,9 +35,18 @@
     <br>
 
    
-    <button type="submit" id="btnAgregar" class="btn btn-primary">Agregar Sector</button>
+    <div>
+      <input type="reset" value="Cancelar" class="btn btn-danger">
+      &nbsp;
+      <button type="submit" name="action" value="add_and_redirect" id="btnAgregar" class="btn btn-primary">Agregar Sector y Huertos y Lotes</button>
+      &nbsp;
+      <button type="submit" name="action" value="add_another" class="btn btn-secondary">Agregar Otro Sector</button>
+      &nbsp;
 
-        {{mensaje}}
+      {{ mensaje }}
+  </div>
+
+        
 
     </form>
 
