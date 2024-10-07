@@ -6,7 +6,63 @@
 
 <!DOCTYPE html>
 <html lang="es">
+<script>
+  function eliminarSector(id) {
+    Swal.fire({
+      "title": "¿Estas Seguro?",
+      "text": "Esta acción no se puede deshacer",
+      "icon": "question",
+      "showCancelButton": true,
+      "cancelButtonText": "No, Cancelar",
+      "confirmButtonText": "Si, Eliminar",
+      "reverseButtons": true,
+      "confirmButtonColor": "dc3545",
 
+
+
+
+
+
+
+
+
+
+    })
+      .then(function (result) {
+        if (result.isConfirmed) {
+          window.location.href = "/eliminarsector/" + id + "/"
+        }
+      })
+  }
+  function eliminarHuerto(id) {
+    Swal.fire({
+      "title": "¿Estas Seguro?",
+      "text": "Esta acción no se puede deshacer",
+      "icon": "question",
+      "showCancelButton": true,
+      "cancelButtonText": "No, Cancelar",
+      "confirmButtonText": "Si, Eliminar",
+      "reverseButtons": true,
+      "confirmButtonColor": "dc3545",
+
+
+
+
+
+
+
+
+
+
+    })
+      .then(function (result) {
+        if (result.isConfirmed) {
+          window.location.href = "/eliminarhuerto/" + id + "/"
+        }
+      })
+  }
+
+</script>
 <div class="zonas">
   <div class="card">
     <div class="card-body">
@@ -111,7 +167,7 @@
         <script
           src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDT0QJ4JVXUrTA8mRZN_YXjy2CZDsa_vmw&callback=initMap&libraries=drawing"
           async defer>
-        </script>
+          </script>
         <script>
           // Obtener los sectores pasados desde la vista
           const sectores = {{ sectores_json| safe }};
