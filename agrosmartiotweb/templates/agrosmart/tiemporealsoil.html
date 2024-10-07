@@ -1,0 +1,99 @@
+
+{% extends 'agrosmart/base.html' %}
+
+{% block contenido %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Humedad del Suelo</title>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f4f4f4;
+        }
+        .container {
+            margin-top: 50px;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .section {
+            margin-bottom: 20px;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .section h3 {
+            margin-bottom: 20px;
+            font-size: 28px;
+            color: #333;
+        }
+        .data {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .data div {
+            margin: 10px;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            flex: 1 1 45%;
+        }
+        .timestamp {
+            margin-top: 20px;
+            font-size: 18px;
+            color: #555;
+        }
+        .map-link a {
+            text-decoration: none;
+            color: #007BFF;
+        }
+        .map-link a:hover {
+            text-decoration: underline;
+        }
+        @media (max-width: 600px) {
+            .data div {
+                flex: 1 1 100%;
+            }
+        }
+        #map {
+            height: 500px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h3>Datos Sensor 2  </h3>
+        {% if latest_data %}
+            <div class="section">
+                <h3>Humedad Suelo</h3>
+                <div class="data">
+                    
+                    <div>
+                        <strong>Humedad :</strong> <span>{{ latest_data.humiditysoil }}%</span>
+<br>
+<br>
+
+                        <strong>Ultimos Datos:</strong> <span>{{ latest_data.timestamp }}</span>
+                    </div>
+                </div>
+            </div>
+
+            
+        
+        {% else %}
+            <p>No data available.</p>
+        {% endif %}
+    </div>
+    
+</body>
+</html>
+{% endblock %}

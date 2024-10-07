@@ -1,0 +1,163 @@
+{% extends 'agrosmart/base.html' %}
+
+{% block contenido %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Datos Sensor</title>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f4f4f4;
+        }
+        .container {
+            margin-top: 50px;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .section {
+            margin-bottom: 20px;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .section h3 {
+            margin-bottom: 20px;
+            font-size: 28px;
+            color: #333;
+        }
+        .data {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .data div {
+            margin: 10px;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            flex: 1 1 45%;
+        }
+        .timestamp {
+            margin-top: 20px;
+            font-size: 18px;
+            color: #555;
+        }
+        .map-link a {
+            text-decoration: none;
+            color: #007BFF;
+        }
+        .map-link a:hover {
+            text-decoration: underline;
+        }
+        @media (max-width: 600px) {
+            .data div {
+                flex: 1 1 100%;
+            }
+        }
+        #map {
+            height: 500px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h3>Datos Sensor 1  </h3>
+        {% if latest_data %}
+            <div class="section">
+                <h3>Temperatura y Humedad</h3>
+                <div class="data">
+                    <div>
+                        <strong>Temperature:</strong> <span>{{ latest_data.temperature }}°C</span>
+                    </div>
+                    <div>
+                        <strong>Humidity:</strong> <span>{{ latest_data.humidity }}%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3>Ubicación</h3>
+                <div id="map"></div>
+
+                <div class="data">
+                    <div>
+                        <strong>Latitud:</strong> <span>{{ latest_data.latitude }}</span>
+                    </div>
+                    <div>
+                        <strong>Longitud:</strong> <span>{{ latest_data.longitude }}</span>
+                    </div>
+                </div>
+                <div class="timestamp">
+                    Last updated: {{ latest_data.timestamp }}
+                </div>
+                <div class="map-link">
+                    <a href="https://www.google.com/maps/search/?api=1&query={{ latest_data.latitude|urlencode }},{{ latest_data.longitude|urlencode }}" target="_blank">
+                        View on Google Maps
+                    </a>
+                </div>
+            </div>
+        {% else %}
+            <p>No data available.</p>
+        {% endif %}
+    </div>
+    <script>
+        async function initMap() {
+          
+            var lat = "{{ latest_data.latitude|default:'0' }}".replace(',', '.');
+            var lng = "{{ latest_data.longitude|default:'0' }}".replace(',', '.');
+            const map = new google.maps.Map(document.getElementById('map'), {
+                center: { lat: parseFloat(lat), lng: parseFloat(lng) },
+
+                zoom: 19,
+                mapId: 'DEMO_MAP_ID'
+            });
+            var latitude = parseFloat(lat);
+            var longitude = parseFloat(lng);
+
+            const marker = new google.maps.Marker({
+            position: { lat: latitude, lng: longitude },
+            map: map,
+            title: 'Sensor Location'
+        });
+
+           
+
+            var infoWindow = [];
+
+            var infowindow = new google.maps.InfoWindow({
+                content: '<div><strong>Ubicación Sensor</strong></div>',
+            });
+            infoWindow.push(infowindow);
+            // Agregar un evento click al marcador para abrir el InfoWindow
+            marker.addListener('click', function() {
+                // Cerrar cualquier InfoWindow abierto
+                infoWindow.forEach(function(iw) {
+                    iw.close();
+                });
+    
+                // Abrir el InfoWindow asociado con el marcador
+                infowindow.open(map, marker);
+            });
+        }
+
+        window.addEventListener('load', () => {
+            const script = document.createElement('script');
+            script.src = "https://maps.googleapis.com/maps/api/js?key=AIzaSyDT0QJ4JVXUrTA8mRZN_YXjy2CZDsa_vmw&callback=initMap&libraries=marker&v=beta";
+            script.defer = true;
+            document.head.appendChild(script);
+        });
+
+        
+    </script>
+</body>
+</html>
+{% endblock %}

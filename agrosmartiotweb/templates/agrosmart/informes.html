@@ -1,5 +1,93 @@
-{% extends 'agrosmart/base.html' %} 
+{% extends 'agrosmart/base.html' %}
 
 {% block contenido %}
-{% load static %}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Informes</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <br>
+    <h3>Informes de Datos</h3>
+    <br>
+    <br>
+    <h3>Temperatura y Humedad</h3>
+    <canvas id="tempHumidityChart"></canvas>
+<br>
+
+    <h3>Humedad del Suelo</h3>
+    <canvas id="soilHumidityChart"></canvas>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const tempHumidityData = JSON.parse('{{ temp_humidity_data|escapejs }}');
+            const soilData = JSON.parse('{{ soil_data|escapejs }}');
+
+            const tempHumidityLabels = tempHumidityData.map(entry => entry.hour);
+            const tempHumidityTemp = tempHumidityData.map(entry => entry.avg_temp);
+            const tempHumidityHum = tempHumidityData.map(entry => entry.avg_humidity);
+
+            const soilLabels = soilData.map(entry => entry.hour);
+            const soilHumidity = soilData.map(entry => entry.avg_humidity_soil);
+
+            const tempHumidityChart = new Chart(document.getElementById('tempHumidityChart'), {
+                type: 'line',
+                data: {
+                    labels: tempHumidityLabels,
+                    datasets: [
+                        {
+                            label: 'Temperatura Promedio',
+                            data: tempHumidityTemp,
+                            borderColor: 'rgba(255, 99, 132, 1)',
+                            backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                            fill: true
+                        },
+                        {
+                            label: 'Humedad Promedio',
+                            data: tempHumidityHum,
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                            fill: true
+                        }
+                    ]
+                }
+            });
+
+            const soilHumidityChart = new Chart(document.getElementById('soilHumidityChart'), {
+                type: 'line',
+                data: {
+                    labels: soilLabels,
+                    datasets: [
+                        {
+                            label: 'Humedad del Suelo Promedio',
+                            data: soilHumidity,
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                            fill: true
+                        }
+                    ]
+                }
+            });
+        });
+    </script>
+</body>
+</html>
 {% endblock %}

@@ -382,4 +382,7 @@ class FinanzasPorTrabajador(models.Model):
 
 
 
+
+
+
     

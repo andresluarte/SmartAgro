@@ -112,6 +112,12 @@ urlpatterns = [
    
     path('gestion_finanzas/', views.gestion_finanzas, name='gestion_finanzas'),
 
+    path('receive-data/', views.receive_data, name='receive_data'),
+    path('receive-data-soil/', views.receive_data_soil, name='receive_data_soil'),
+    
+    path('tiemporealsoil/', views.combined_data_view_soil, name='tiemporealsoil'),
+    path('tiemporeal/', views.combined_data_view, name='tiemporeal'),
+
 
 
 
