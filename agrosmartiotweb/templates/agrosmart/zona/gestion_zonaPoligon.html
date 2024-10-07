@@ -1,26 +1,106 @@
+{% extends 'agrosmart/base.html' %}
+{% load humanize %}
+{% block contenido %}
+{% load static %}
+{% load agrosmartiotweb %}
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestión de Zonas Polígono</title>
-    <style>
-        /* Asegúrate de tener el contenedor de mapa definido */
-        #map {
-            height: 400px;
-            width: 100%;
-        }
-    </style>
+    <title>Gestión de Zonas</title>
+    <div class="btn-group justify-content-end">
+        <button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+            Opciones
+        </button>
+
+        <br>
+
+        <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+
+            <a href="{% url 'agregarsector' %}" class="btn btn-secondary">Agregar Sector</a>
+
+            <a href="{% url 'agregar_huerto_ss' %}" class="btn btn-secondary">Agregar Huerto</a>
+
+            <a href="{% url 'agregar_lote' %}" class="btn btn-secondary">&nbsp;&nbsp;&nbsp;Agregar Lote</a>
+
+
+
+
+
+
+
+
+        </div>
+
+
+    </div>
+
+
 </head>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+    }
+
+    h1 {
+        color: #333;
+    }
+
+    .recuadro {
+        border: 1px solid #ccc;
+        padding: 10px;
+        margin: 10px;
+    }
+
+    ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
+
+    ul ul {
+        margin-left: 20px;
+        padding-left: 10px;
+        border-left: 1px solid #ccc;
+    }
+
+    li {
+        margin-bottom: 5px;
+    }
+
+    .nivel {
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+
+    .sector {
+        color: #FF5733;
+    }
+
+    .huerto {
+        color: #33A0FF;
+    }
+
+    .lote {
+        color: #33FF63;
+    }
+
+
+    #map {
+        height: 500px;
+        width: 100%;
+    }
+</style>
+
 <body>
-    <h1>Gestión de Zonas Polígono</h1>
-    
+    <h3>Gestión de Zonas Polígono</h3>
+<br>
     <!-- Mapa -->
     <div id="map"></div>
-
+    <br>
     <script>
         // Obtener los sectores pasados desde la vista
-        const sectores = {{ sectores_json|safe }};
+        const sectores = {{ sectores_json| safe }};
 
         let map;
         let infoWindow;
@@ -41,7 +121,7 @@
             // Itera sobre los sectores y dibuja los polígonos en el mapa
             sectores.forEach((sector, index) => {
                 const path = JSON.parse(sector.fields.coordenadas); // Asegúrate de que "coordenadas" sea el campo correcto
-                
+
                 // Generar un color aleatorio o definir colores preestablecidos
                 const color = getRandomColor();
 
@@ -62,7 +142,7 @@
                 });
 
                 // Agregar un evento click para mostrar el nombre del sector
-                google.maps.event.addListener(poligono, 'click', function() {
+                google.maps.event.addListener(poligono, 'click', function () {
                     infoWindow.setContent(sector.fields.nombre); // Asegúrate de que "nombre" sea el campo correcto
                     infoWindow.setPosition(path[0]); // Usa la primera coordenada como posición para el infoWindow
                     infoWindow.open(map);
@@ -85,15 +165,102 @@
 
         // Cargar el script de Google Maps
     </script>
+    <ul>
+        <li class="nivel sector">SECTOR:</li>
+        {% for sector in sectores %}
+        <div class="recuadro">
+            <li class="sector ">
+                <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor"
+                    class="bi bi-arrow-down-right" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd"
+                        d="M14 13.5a.5.5 0 0 1-.5.5h-6a.5.5 0 0 1 0-1h4.793L2.146 2.854a.5.5 0 1 1 .708-.708L13 12.293V7.5a.5.5 0 0 1 1 0v6z" />
+                </svg>
+                {{ sector.nombre }}
+
+
+                <a href="{% url 'modificarsector' sector.id %}" class="btn btn-warning"
+                    style=" border-radius: 100%; padding: 10px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor"
+                        class="bi bi-pencil" viewBox="0 0 16 16">
+                        <path
+                            d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z" />
+                    </svg>
+                </a>
+
+                <a href="#" onclick="eliminarSector({{ sector.id }})" class="btn btn-danger"
+                    style=" border-radius: 100%; padding: 10px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor"
+                        class="bi bi-trash3" viewBox="0 0 16 16">
+                        <path
+                            d="M6.5 1h3a.5.5 0 0 1 .5.5v1H6v-1a.5.5 0 0 1 .5-.5ZM11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3A1.5 1.5 0 0 0 5 1.5v1H2.506a.58.58 0 0 0-.01 0H1.5a.5.5 0 0 0 0 1h.538l.853 10.66A2 2 0 0 0 4.885 16h6.23a2 2 0 0 0 1.994-1.84l.853-10.66h.538a.5.5 0 0 0 0-1h-.995a.59.59 0 0 0-.01 0H11Zm1.958 1-.846 10.58a1 1 0 0 1-.997.92h-6.23a1 1 0 0 1-.997-.92L3.042 3.5h9.916Zm-7.487 1a.5.5 0 0 1 .528.47l.5 8.5a.5.5 0 0 1-.998.06L5 5.03a.5.5 0 0 1 .47-.53Zm5.058 0a.5.5 0 0 1 .47.53l-.5 8.5a.5.5 0 1 1-.998-.06l.5-8.5a.5.5 0 0 1 .528-.47ZM8 4.5a.5.5 0 0 1 .5.5v8.5a.5.5 0 0 1-1 0V5a.5.5 0 0 1 .5-.5Z" />
+                    </svg>
+                </a>
+
+            </li>
+
+
+            <ul>
+                <li class="nivel huerto ">HUERTO:</li>
+                {% for huerto in sector.huerto_set.all %}
+                <li class="huerto">
+                    {{ huerto.nombre }}
+
+
+
+
+
+                    <a href="{% url 'modificarhuerto' huerto.id %}" class="btn btn-warning"
+                        style="background-color: #33A0FF; color: white; border-radius: 100%; padding: 10px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor"
+                            class="bi bi-pencil" viewBox="0 0 16 16">
+                            <path
+                                d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z" />
+                        </svg>
+                    </a>
+                    <a href="#" onclick="eliminarHuerto({{ huerto.id }})" class="btn btn-danger"
+                        style=" border-radius: 100%; padding: 10px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor"
+                            class="bi bi-trash3" viewBox="0 0 16 16">
+                            <path
+                                d="M6.5 1h3a.5.5 0 0 1 .5.5v1H6v-1a.5.5 0 0 1 .5-.5ZM11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3A1.5 1.5 0 0 0 5 1.5v1H2.506a.58.58 0 0 0-.01 0H1.5a.5.5 0 0 0 0 1h.538l.853 10.66A2 2 0 0 0 4.885 16h6.23a2 2 0 0 0 1.994-1.84l.853-10.66h.538a.5.5 0 0 0 0-1h-.995a.59.59 0 0 0-.01 0H11Zm1.958 1-.846 10.58a1 1 0 0 1-.997.92h-6.23a1 1 0 0 1-.997-.92L3.042 3.5h9.916Zm-7.487 1a.5.5 0 0 1 .528.47l.5 8.5a.5.5 0 0 1-.998.06L5 5.03a.5.5 0 0 1 .47-.53Zm5.058 0a.5.5 0 0 1 .47.53l-.5 8.5a.5.5 0 1 1-.998-.06l.5-8.5a.5.5 0 0 1 .528-.47ZM8 4.5a.5.5 0 0 1 .5.5v8.5a.5.5 0 0 1-1 0V5a.5.5 0 0 1 .5-.5Z" />
+                        </svg>
+
+                    </a>
+
+                </li>
+                <ul>
+                    <li class="nivel lote">LOTE:</li>
+                    {% for lote in huerto.lote_set.all %}
+                    <li class="lote">
+                        {{ lote.nombre }}
+                        <a href="{% url 'modificarlote' lote.id %}" class="btn btn-warning"
+                            style="background-color: #33FF63; color: white; border-radius: 100%; padding: 10px;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor"
+                                class="bi bi-pencil" viewBox="0 0 16 16">
+                                <path
+                                    d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z" />
+                            </svg>
+                        </a>
+
+
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endfor %}
+    </ul>
 
     <!-- Script de Google Maps API -->
     <script
         src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDT0QJ4JVXUrTA8mRZN_YXjy2CZDsa_vmw&callback=initMap&libraries=drawing"
-        async
-        defer
-    ></script>
+        async defer>
+    </script>
 
 </body>
+
 </html>
 
 
+{% endblock %}
