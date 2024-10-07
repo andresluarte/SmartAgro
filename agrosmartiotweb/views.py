@@ -201,7 +201,7 @@ def eliminartarea(request, id):
 @login_required(login_url="my_login")
 def agregartrabajador(request):
     if request.method == "POST":
-        form = TrabajadorForm(request.POST)
+        form = TrabajadorForm(request.POST, request.FILES) 
         if form.is_valid():
             trabajador = form.save(commit=False)
             trabajador.created_by = request.user  # Asignar el usuario logueado al campo 'created_by'
