@@ -55,9 +55,9 @@
 
 <script>
 // Tu clave de API de OpenWeatherMap
-const apiKey = 'b2240d2305cc3984b9662c4d473df3a3';
+const openWeatherApiKey = 'b2240d2305cc3984b9662c4d473df3a3';
 
-// Obtener la ubicación del usuario
+// Obtener ubicación usando la API de Geolocalización de Google
 function getLocation() {
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(showWeather, showError);
@@ -70,7 +70,7 @@ function getLocation() {
 function showWeather(position) {
   const lat = position.coords.latitude;
   const lon = position.coords.longitude;
-  const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&lang=es&appid=${apiKey}`;
+  const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&lang=es&appid=${openWeatherApiKey}`;
 
   fetch(url)
     .then(response => response.json())
@@ -116,7 +116,6 @@ function showError(error) {
 // Llamar a la función para obtener la ubicación y mostrar el clima
 getLocation();
 </script>
-
 
 
 <div class="productos">
