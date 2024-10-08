@@ -68,9 +68,13 @@
             <a href="{% url 'home' %}">Inicio</a>
 
             <span onclick="toggleSubMenu('sensoresSubMenu')">
-                <a href="#" class="bold-link">Sensores</a>
+                <a href="#" style=font-weight:aria-label class="bold-link ">Sensores</a>
             </span>
-            <div id="sensoresSubMenu" class="submenu" style="display: none;"></div>
+            <div id="sensoresSubMenu" class="submenu" style="display: none;">
+                <a href="{% url 'tiemporeal' %}">Datos</a>
+                <a href="{% url 'tiemporealsoil' %}">Datos Suelo</a>
+                <a href="{% url 'informes' %}">Informes</a>
+            </div>
 
             <span onclick="toggleSubMenu('gestionSubMenu')">
                 <a href="#" class="bold-link">Gestión</a>
