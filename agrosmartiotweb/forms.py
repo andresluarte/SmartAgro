@@ -454,43 +454,6 @@ class EmpresaOFundoForm(forms.ModelForm):
             'tipo_cultivo': forms.TextInput(attrs={'class': 'form-control'}),
         }
 
-    def clean(self):
-        cleaned_data = super().clean()
-        foto1 = cleaned_data.get('foto1')
-        foto2 = cleaned_data.get('foto2')
-        foto3 = cleaned_data.get('foto3')
-
-        # Definir la relación de aspecto más común (4:3)
-        aspect_ratio_target = 4 / 3  # Calcula la relación de aspecto
-
-        # Verifica la foto1
-        if foto1:
-            img1 = Image.open(foto1)
-            width1, height1 = img1.size
-            aspect_ratio1 = width1 / height1
-
-            # Verifica que la relación de aspecto de foto1 sea correcta
-            if not self.is_aspect_ratio_valid(aspect_ratio1, aspect_ratio_target):
-                raise ValidationError("La relación de aspecto de foto1 debe ser aproximadamente 4:3.")
-
-        # Verifica las otras fotos
-        for i, foto in enumerate([foto2, foto3], start=2):
-            if foto:
-                img = Image.open(foto)
-                width, height = img.size
-                aspect_ratio = width / height
-                
-                # Verifica que la relación de aspecto de las otras fotos sea correcta
-                if not self.is_aspect_ratio_valid(aspect_ratio, aspect_ratio_target):
-                    raise ValidationError(f"La relación de aspecto de foto{i} debe ser aproximadamente 4:3.")
-
-        return cleaned_data
-
-    def is_aspect_ratio_valid(self, aspect_ratio, target_ratio, tolerance=0.1):
-        """
-        Verifica si la relación de aspecto está dentro de un margen de tolerancia del objetivo.
-        """
-        return abs(aspect_ratio - target_ratio) < tolerance
 
 
 #edit colaborador
