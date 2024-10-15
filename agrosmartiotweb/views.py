@@ -936,9 +936,17 @@ def combined_data_view(request):
     temperature_recommendation = ""
     humidity_recommendation = ""
 
+    # Simular valores para pruebas
+    simulation = request.GET.get('simulation', False)
+
     if latest_data:
         temperature = float(latest_data.temperature)
         humidity = float(latest_data.humidity)
+
+        if simulation:
+            # Valores simulados: cambiar estos valores para probar las alertas
+            temperature = 35  # Ejemplo: alta temperatura
+            humidity = 80      # Ejemplo: alta humedad
 
         # Recomendaciones basadas en temperatura
         if temperature < 0:
@@ -963,7 +971,6 @@ def combined_data_view(request):
         'temperature_recommendation': temperature_recommendation,
         'humidity_recommendation': humidity_recommendation
     })
-
 
 def combined_data_view_soil(request):
     latest_data = HumiditySoil.objects.last()
