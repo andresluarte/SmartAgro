@@ -24,6 +24,7 @@
             background-color: #fff;
             border-radius: 10px;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            word-wrap: break-word;
         }
         .section h3 {
             margin-bottom: 20px;
@@ -61,10 +62,15 @@
             .data div {
                 flex: 1 1 100%;
             }
-        }
-        #map {
-            height: 500px;
-            width: 100%;
+            .section h3 {
+                font-size: 22px; /* Reduce el tamaño del título en móviles */
+            }
+            .section {
+                padding: 15px; /* Reduce el padding para móviles */
+            }
+            .data {
+                flex-direction: column; /* Hace que el contenido se muestre en una columna en pantallas pequeñas */
+            }
         }
     </style>
 </head>
