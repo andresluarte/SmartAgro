@@ -1077,3 +1077,39 @@ from .models import FinanzasPorTrabajador
 def gestion_finanzas(request):
     finanzas = FinanzasPorTrabajador.objects.all()
     return render(request, 'agrosmart/finanzas/gestion_finanzas.html', {'finanzas': finanzas})
+
+
+
+from django import template
+
+register = template.Library()
+
+@register.filter
+def color_temperature(temperature):
+    # Cambia el color de azul a rojo en función de la temperatura (0 a 40 °C como referencia)
+    if temperature <= 0:
+        return "#0000FF"  # Azul para frío extremo
+    elif temperature >= 40:
+        return "#FF0000"  # Rojo para calor extremo
+    else:
+        # Cálculo del gradiente de azul a rojo
+        red = int(255 * (temperature / 40))
+        blue = 255 - red
+        return f"rgb({red}, 0, {blue})"
+
+@register.filter
+def color_humidity(humidity):
+    # Cambia el color de verde a marrón en función de la humedad (0 a 100%)
+    if humidity <= 0:
+        return "#8B4513"  # Marrón para sequedad extrema
+    elif humidity >= 100:
+        return "#008000"  # Verde para humedad extrema
+    else:
+        # Cálculo del gradiente de marrón a verde
+        green = int(128 + (127 * (humidity / 100)))
+        return f"rgb(139, {green}, 19)"
+
+@register.filter
+def percentage_temperature(temperature):
+    # Devuelve el porcentaje de la barra de temperatura con un rango de 0 a 40 °C
+    return min(max((temperature / 40) * 100, 0), 100)

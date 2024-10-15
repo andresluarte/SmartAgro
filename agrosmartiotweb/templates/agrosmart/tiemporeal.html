@@ -76,6 +76,21 @@
             height: 500px;
             width: 100%;
         }
+        
+        .kpi {
+            height: 20px;
+            background-color: #f0f0f0;
+            border-radius: 10px;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.5s ease, background-color 0.5s ease;
+        }
+        
     </style>
 </head>
 <body>
@@ -87,11 +102,19 @@
                 <div class="data">
                     <div>
                         <strong>Temperatura:</strong> <span>{{ latest_data.temperature }}°C</span>
+                        <div class="kpi kpi-temperature">
+                            <div class="progress-bar" style="width: {{ latest_data.temperature|percentage_temperature }}%; background-color: {{ latest_data.temperature|color_temperature }};"></div>
+                        </div>
                     </div>
                     <div>
                         <strong>Humedad:</strong> <span>{{ latest_data.humidity }}%</span>
+                        <div class="kpi kpi-humidity">
+                            <div class="progress-bar" style="width: {{ latest_data.humidity }}%; background-color: {{ latest_data.humidity|color_humidity }};"></div>
+                        </div>
                     </div>
                 </div>
+                
+                
             </div>
             <div class="section">
                 <h3>Recomendaciones</h3>
