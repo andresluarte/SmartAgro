@@ -45,6 +45,7 @@
             border-radius: 10px;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
             flex: 1 1 45%;
+            position: relative;
         }
         .timestamp {
             margin-top: 20px;
@@ -76,14 +77,23 @@
             height: 500px;
             width: 100%;
         }
-        
-        .kpi {
-            height: 20px;
-            background-color: #f0f0f0;
+        .kpi-bar {
+            height: 30px;
             border-radius: 10px;
-            margin-top: 10px;
+            background: lightgray;
+            position: relative;
             overflow: hidden;
         }
+        .kpi-bar span {
+            display: block;
+            height: 100%;
+            border-radius: 10px;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        
+        
         
         .progress-bar {
             height: 100%;
@@ -101,18 +111,19 @@
                 
                 <div class="data">
                     <div>
-                        <strong>Temperatura:</strong> <span id="temperature">{{ latest_data.temperature }}°C</span>
-                        <div class="kpi kpi-temperature">
-                            <div id="temperature-bar" class="progress-bar"></div>
+                        <strong>Temperatura:</strong> <span>{{ latest_data.temperature }}°C</span>
+                        <div class="kpi-bar temperature-bar">
+                            <span></span>
                         </div>
                     </div>
                     <div>
-                        <strong>Humedad:</strong> <span id="humidity">{{ latest_data.humidity }}%</span>
-                        <div class="kpi kpi-humidity">
-                            <div id="humidity-bar" class="progress-bar"></div>
+                        <strong>Humedad:</strong> <span>{{ latest_data.humidity }}%</span>
+                        <div class="kpi-bar humidity-bar">
+                            <span></span>
                         </div>
                     </div>
                 </div>
+                
                 
                 
             </div>
