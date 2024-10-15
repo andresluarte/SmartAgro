@@ -101,15 +101,15 @@
                 
                 <div class="data">
                     <div>
-                        <strong>Temperatura:</strong> <span>{{ latest_data.temperature }}°C</span>
+                        <strong>Temperatura:</strong> <span id="temperature">{{ latest_data.temperature }}°C</span>
                         <div class="kpi kpi-temperature">
-                            <div class="progress-bar" style="width: {{ latest_data.temperature|percentage_temperature }}%; background-color: {{ latest_data.temperature|color_temperature }};"></div>
+                            <div id="temperature-bar" class="progress-bar"></div>
                         </div>
                     </div>
                     <div>
-                        <strong>Humedad:</strong> <span>{{ latest_data.humidity }}%</span>
+                        <strong>Humedad:</strong> <span id="humidity">{{ latest_data.humidity }}%</span>
                         <div class="kpi kpi-humidity">
-                            <div class="progress-bar" style="width: {{ latest_data.humidity }}%; background-color: {{ latest_data.humidity|color_humidity }};"></div>
+                            <div id="humidity-bar" class="progress-bar"></div>
                         </div>
                     </div>
                 </div>
@@ -199,6 +199,36 @@
         });
 
         
+    </script>
+
+    <script>
+        // Función para actualizar los KPI en base a los valores de temperatura y humedad
+        function updateKPI(temperature, humidity) {
+            // Actualiza el texto de los elementos
+            document.getElementById("temperature").textContent = temperature + "°C";
+            document.getElementById("humidity").textContent = humidity + "%";
+
+            // Calcula el porcentaje para la barra de temperatura (0 a 50 grados)
+            let tempPercentage = Math.min(Math.max((temperature / 50) * 100, 0), 100);
+            document.getElementById("temperature-bar").style.width = tempPercentage + "%";
+            
+            // Cambia el color de la barra de temperatura (azul -> rojo)
+            document.getElementById("temperature-bar").style.backgroundColor = `rgb(${Math.min(255, (temperature / 50) * 255)}, 0, ${Math.max(0, 255 - (temperature / 50) * 255)})`;
+
+            // Calcula el porcentaje para la barra de humedad (0 a 100%)
+            let humidityPercentage = Math.min(Math.max(humidity, 0), 100);
+            document.getElementById("humidity-bar").style.width = humidityPercentage + "%";
+            
+            // Cambia el color de la barra de humedad (gris -> azul)
+            document.getElementById("humidity-bar").style.backgroundColor = `rgb(0, ${Math.min(255, (humidity / 100) * 255)}, ${Math.min(255, (humidity / 100) * 255)})`;
+        }
+
+        // Ejemplo: valores iniciales (puedes obtener estos valores dinámicamente a través de AJAX o WebSockets)
+        let temperature = parseFloat(document.getElementById("temperature").textContent);
+        let humidity = parseFloat(document.getElementById("humidity").textContent);
+
+        // Actualiza los KPI en la carga inicial
+        updateKPI(temperature, humidity);
     </script>
 </body>
 </html>
