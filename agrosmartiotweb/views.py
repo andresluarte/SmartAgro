@@ -931,7 +931,39 @@ class TemperatureHumidityAPIView(APIView):
 def combined_data_view(request):
     # Obtener la última entrada
     latest_data = TemperatureHumidityLocation.objects.last()
-    return render(request, 'agrosmart/tiemporeal.html', {'latest_data': latest_data})
+
+    # Definir umbrales para temperatura y humedad
+    temperature_recommendation = ""
+    humidity_recommendation = ""
+
+    if latest_data:
+        temperature = float(latest_data.temperature)
+        humidity = float(latest_data.humidity)
+
+        # Recomendaciones basadas en temperatura
+        if temperature < 0:
+            temperature_recommendation = "La temperatura es muy baja. Protege tus plantas del frío extremo."
+        elif 0 <= temperature <= 10:
+            temperature_recommendation = "La temperatura es fresca. Considera proteger las plantas del frío."
+        elif 10 < temperature <= 25:
+            temperature_recommendation = "La temperatura es óptima para las plantas de uva."
+        elif temperature > 25:
+            temperature_recommendation = "La temperatura es alta. Asegúrate de que las plantas tengan suficiente agua."
+
+        # Recomendaciones basadas en humedad
+        if humidity < 40:
+            humidity_recommendation = "El aire está seco. Es recomendable aumentar la humedad para las plantas."
+        elif 40 <= humidity <= 70:
+            humidity_recommendation = "La humedad es adecuada para el crecimiento de las plantas de uva."
+        elif humidity > 70:
+            humidity_recommendation = "La humedad es alta. Podría haber riesgo de enfermedades fúngicas."
+
+    return render(request, 'agrosmart/tiemporeal.html', {
+        'latest_data': latest_data,
+        'temperature_recommendation': temperature_recommendation,
+        'humidity_recommendation': humidity_recommendation
+    })
+
 
 def combined_data_view_soil(request):
     latest_data = HumiditySoil.objects.last()
