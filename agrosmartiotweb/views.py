@@ -871,32 +871,30 @@ def lista_empresas(request):
 from .models import TemperatureHumidityLocation
 from .models import HumiditySoil,SensorAire
 @csrf_exempt
-
 def receive_data(request):
     if request.method == 'POST':
-        sensor_name = request.POST.get('sensor_id')  # Recibir el ID del sensor (por ejemplo, 'sensor_3')
+        sensor_name = request.POST.get('sensor_id')
         temperature = request.POST.get('temperature')
         humidity = request.POST.get('humidity')
         latitude = request.POST.get('latitude')
         longitude = request.POST.get('longitude')
 
-        # Buscar el sensor asociado
-        sensor = SensorAire.objects.filter(name=sensor_name, user=request.user).first()
+        sensor = SensorAire.objects.filter(name=sensor_name).first()
 
         if sensor:
-            # Crear una nueva entrada de datos para ese sensor
             TemperatureHumidityLocation.objects.create(
                 temperature=temperature,
                 humidity=humidity,
                 latitude=latitude,
                 longitude=longitude,
-                sensor=sensor  # Asociar los datos al sensor encontrado
+                sensor=sensor
             )
             return JsonResponse({'status': 'success'})
         else:
-            return JsonResponse({'status': 'error', 'message': 'Sensor no encontrado o no pertenece al usuario'}, status=400)
+            return JsonResponse({'status': 'error', 'message': 'Sensor no encontrado'}, status=400)
 
     return JsonResponse({'status': 'error', 'message': 'Método no permitido'}, status=405)
+
     
 #DATOS SENSOR SUELO
 
