@@ -940,20 +940,28 @@ def combined_data_view(request):
     # Obtener los sensores del usuario
     sensors = SensorAire.objects.filter(user=user)
 
+    # Comprobar si el usuario tiene sensores
+    if not sensors.exists():
+        return render(request, 'agrosmart/tiemporeal.html', {
+            'latest_data': None,
+            'temperature_recommendation': "No tienes sensores registrados.",
+            'humidity_recommendation': "",
+            'sensor_id': None,
+        })
+
     # Obtener la última entrada de datos para los sensores del usuario
     latest_data = TemperatureHumidityLocation.objects.filter(sensor__in=sensors).order_by('-timestamp').first()
 
-    # Definir umbrales para temperatura y humedad
+    # Inicializar las recomendaciones
     temperature_recommendation = ""
     humidity_recommendation = ""
-
-    # Obtener el nombre y ID del sensor si hay datos disponibles
-    
-    sensor_id = latest_data.sensor.id if latest_data else None
+    sensor_id = None
 
     if latest_data:
+        # Obtener datos de temperatura y humedad
         temperature = float(latest_data.temperature)
         humidity = float(latest_data.humidity)
+        sensor_id = latest_data.sensor.id
 
         # Recomendaciones basadas en temperatura
         if temperature < 0:
@@ -972,6 +980,8 @@ def combined_data_view(request):
             humidity_recommendation = "La humedad es adecuada para el crecimiento de las plantas de uva."
         elif humidity > 70:
             humidity_recommendation = "La humedad es alta. Podría haber riesgo de enfermedades fúngicas."
+    else:
+        temperature_recommendation = "No hay datos disponibles para tus sensores."
 
     return render(request, 'agrosmart/tiemporeal.html', {
         'latest_data': latest_data,
@@ -979,7 +989,6 @@ def combined_data_view(request):
         'humidity_recommendation': humidity_recommendation,
         'sensor_id': sensor_id,
     })
-
 
 
 def combined_data_view_soil(request):
