@@ -929,13 +929,26 @@ class TemperatureHumidityAPIView(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
            
+from django.shortcuts import render
+from .models import TemperatureHumidityLocation, SensorAire
+
 def combined_data_view(request):
-    # Obtener la última entrada
-    latest_data = TemperatureHumidityLocation.objects.last()
+    # Obtener el usuario actual
+    user = request.user
+
+    # Obtener los sensores del usuario
+    sensors = SensorAire.objects.filter(user=user)
+
+    # Obtener la última entrada de datos para los sensores del usuario
+    latest_data = TemperatureHumidityLocation.objects.filter(sensor__in=sensors).order_by('-timestamp').first()
 
     # Definir umbrales para temperatura y humedad
     temperature_recommendation = ""
     humidity_recommendation = ""
+
+    # Obtener el nombre y ID del sensor si hay datos disponibles
+    
+    sensor_id = latest_data.sensor.id if latest_data else None
 
     if latest_data:
         temperature = float(latest_data.temperature)
@@ -962,8 +975,10 @@ def combined_data_view(request):
     return render(request, 'agrosmart/tiemporeal.html', {
         'latest_data': latest_data,
         'temperature_recommendation': temperature_recommendation,
-        'humidity_recommendation': humidity_recommendation
+        'humidity_recommendation': humidity_recommendation,
+        'sensor_id': sensor_id,
     })
+
 
 
 def combined_data_view_soil(request):

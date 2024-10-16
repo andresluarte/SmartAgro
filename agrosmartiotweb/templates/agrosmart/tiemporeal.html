@@ -109,62 +109,60 @@
         <div id="weather-widget"></div>
         <h3>Datos Sensor Aire</h3>
         {% if latest_data %}
-            <div class="section">
-                
-                <div class="data">
-                    <div>
-                        <strong>Temperatura:</strong> 
-                        <span id="temperature">{{ latest_data.temperature }}°C</span> <!-- Agregar ID -->
-                        <div class="kpi-bar temperature-bar">
-                            <span id="temperature-bar"></span> <!-- Agregar ID -->
-                        </div>
-                    </div>
-                    <div>
-                        <strong>Humedad:</strong> 
-                        <span id="humidity">{{ latest_data.humidity }}%</span> <!-- Agregar ID -->
-                        <div class="kpi-bar humidity-bar">
-                            <span id="humidity-bar"></span> <!-- Agregar ID -->
-                        </div>
-                    </div>
-                </div>
-                
-                
-                
+        <div class="section">
+            <h2>Datos del Sensor</h2>
+            <div>
                 
             </div>
-            <div class="section">
-                <h3>Recomendaciones</h3>
-                <div>
-                    <strong>Recomendación de temperatura:</strong> <span>{{ temperature_recommendation }}</span>
-                </div>
-                <div>
-                    <strong>Recomendación de humedad:</strong> <span>{{ humidity_recommendation }}</span>
+            <div>
+                <strong>ID del Sensor:</strong> <span>{{ sensor_id }}</span>
+            </div>
+            <div>
+                <strong>Temperatura:</strong> <span id="temperature">{{ latest_data.temperature }}°C</span>
+                <div class="kpi-bar temperature-bar">
+                    <span id="temperature-bar"></span>
                 </div>
             </div>
+            <div>
+                <strong>Humedad:</strong> <span id="humidity">{{ latest_data.humidity }}%</span>
+                <div class="kpi-bar humidity-bar">
+                    <span id="humidity-bar"></span>
+                </div>
+            </div>
+        </div>
 
-            <div class="section">
-                <h3>Ubicación</h3>
-                <div id="map"></div>
+        <div class="section">
+            <h3>Recomendaciones</h3>
+            <div>
+                <strong>Recomendación de temperatura:</strong> <span>{{ temperature_recommendation }}</span>
+            </div>
+            <div>
+                <strong>Recomendación de humedad:</strong> <span>{{ humidity_recommendation }}</span>
+            </div>
+        </div>
 
-                <div class="data">
-                    <div>
-                        <strong>Latitud:</strong> <span>{{ latest_data.latitude }}</span>
-                    </div>
-                    <div>
-                        <strong>Longitud:</strong> <span>{{ latest_data.longitude }}</span>
-                    </div>
+        <div class="section">
+            <h3>Ubicación</h3>
+            <div id="map"></div>
+            <div class="data">
+                <div>
+                    <strong>Latitud:</strong> <span>{{ latest_data.latitude }}</span>
                 </div>
-                <div class="timestamp">
-                    Last updated: {{ latest_data.timestamp }}
-                </div>
-                <div class="map-link">
-                    <a href="https://www.google.com/maps/search/?api=1&query={{ latest_data.latitude|urlencode }},{{ latest_data.longitude|urlencode }}" target="_blank">
-                        View on Google Maps
-                    </a>
+                <div>
+                    <strong>Longitud:</strong> <span>{{ latest_data.longitude }}</span>
                 </div>
             </div>
+            <div class="timestamp">
+                Última actualización: {{ latest_data.timestamp }}
+            </div>
+            <div class="map-link">
+                <a href="https://www.google.com/maps/search/?api=1&query={{ latest_data.latitude|urlencode }},{{ latest_data.longitude|urlencode }}" target="_blank">
+                    Ver en Google Maps
+                </a>
+            </div>
+        </div>
         {% else %}
-            <p>No data available.</p>
+            <p>No hay datos disponibles para este sensor.</p>
         {% endif %}
     </div>
     <script>
