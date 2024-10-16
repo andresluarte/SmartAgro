@@ -869,33 +869,34 @@ def lista_empresas(request):
 #DATOS DE SENSOR 
 
 from .models import TemperatureHumidityLocation
-from .models import HumiditySoil
+from .models import HumiditySoil,SensorAire
 @csrf_exempt
+
 def receive_data(request):
     if request.method == 'POST':
-        # Procesar los datos aquí
-        data = request.POST
-        temperature = data.get('temperature')
-        humidity = data.get('humidity')
-        latitude=data.get('latitude')
-        longitude=data.get('longitude')
-        
+        sensor_name = request.POST.get('sensor_id')  # Recibir el ID del sensor (por ejemplo, 'sensor_3')
+        temperature = request.POST.get('temperature')
+        humidity = request.POST.get('humidity')
+        latitude = request.POST.get('latitude')
+        longitude = request.POST.get('longitude')
 
-        # Guardar los datos en la base de datos
-        # Suponiendo que tienes un modelo TemperatureHumidity para almacenar estos datos
-        from .models import TemperatureHumidityLocation
-        TemperatureHumidityLocation.objects.create(
-            temperature=temperature,
-            humidity=humidity,
-            latitude=latitude,
-            longitude=longitude
+        # Buscar el sensor asociado
+        sensor = SensorAire.objects.filter(name=sensor_name, user=request.user).first()
 
-            
-        )
+        if sensor:
+            # Crear una nueva entrada de datos para ese sensor
+            TemperatureHumidityLocation.objects.create(
+                temperature=temperature,
+                humidity=humidity,
+                latitude=latitude,
+                longitude=longitude,
+                sensor=sensor  # Asociar los datos al sensor encontrado
+            )
+            return JsonResponse({'status': 'success'})
+        else:
+            return JsonResponse({'status': 'error', 'message': 'Sensor no encontrado o no pertenece al usuario'}, status=400)
 
-        return JsonResponse({"status": "success"})
-    else:
-        return JsonResponse({"message": "Invalid request method"}, status=405)
+    return JsonResponse({'status': 'error', 'message': 'Método no permitido'}, status=405)
     
 #DATOS SENSOR SUELO
 
@@ -936,17 +937,9 @@ def combined_data_view(request):
     temperature_recommendation = ""
     humidity_recommendation = ""
 
-    # Simular valores para pruebas
-    simulation = request.GET.get('simulation', False)
-
     if latest_data:
         temperature = float(latest_data.temperature)
         humidity = float(latest_data.humidity)
-
-        if simulation:
-            # Valores simulados: cambiar estos valores para probar las alertas
-            temperature = 35  # Ejemplo: alta temperatura
-            humidity = 80      # Ejemplo: alta humedad
 
         # Recomendaciones basadas en temperatura
         if temperature < 0:
@@ -971,6 +964,7 @@ def combined_data_view(request):
         'temperature_recommendation': temperature_recommendation,
         'humidity_recommendation': humidity_recommendation
     })
+
 
 def combined_data_view_soil(request):
     latest_data = HumiditySoil.objects.last()

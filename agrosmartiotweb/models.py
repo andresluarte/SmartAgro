@@ -331,16 +331,22 @@ class EmpresaOFundo(models.Model):
 
 
 #MODELOS DE SENSOR 
-
+class SensorAire(models.Model):
+    name = models.CharField(max_length=100)  # Nombre o ID del sensor
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    def __str__(self):
+        return f"Sensor: {self.name} de {self.user.username}"
+    
 class TemperatureHumidityLocation(models.Model):
     temperature = models.FloatField()
     humidity = models.FloatField()
     latitude = models.FloatField()
     longitude = models.FloatField()
     timestamp = models.DateTimeField(auto_now_add=True)
+    sensor = models.ForeignKey(SensorAire, on_delete=models.CASCADE)  # Asociar datos con un sensor específico
 
     def __str__(self):
-        return f"Temperature: {self.temperature}, Humidity: {self.humidity}, Latitude: {self.latitude}, Longitude: {self.longitude}"
+        return f"Sensor: {self.sensor.name}, Temp: {self.temperature}, Hum: {self.humidity}, Lat: {self.latitude}, Lon: {self.longitude}"
 
 class HumiditySoil(models.Model):
     humiditysoil = models.FloatField()

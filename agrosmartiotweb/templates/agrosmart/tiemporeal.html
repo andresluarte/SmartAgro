@@ -105,7 +105,9 @@
 </head>
 <body>
     <div class="container">
-        <h3>Datos Sensor 1  </h3>
+        <h3>Clima Actual</h3>
+        <div id="weather-widget"></div>
+        <h3>Datos Sensor Aire</h3>
         {% if latest_data %}
             <div class="section">
                 
@@ -165,6 +167,69 @@
             <p>No data available.</p>
         {% endif %}
     </div>
+    <script>
+        // Tu clave de API de OpenWeatherMap
+        const openWeatherApiKey = 'b2240d2305cc3984b9662c4d473df3a3';
+
+        // Obtener ubicación usando la API de Geolocalización de Google
+        function getLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(showWeather, showError);
+            } else {
+                document.getElementById('weather-widget').innerHTML = 'Geolocalización no soportada.';
+            }
+        }
+
+        // Mostrar el clima basado en la ubicación del usuario
+        function showWeather(position) {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+            const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&lang=es&appid=${openWeatherApiKey}`;
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    const temp = data.main.temp;
+                    const description = data.weather[0].description;
+                    const city = data.name;
+                    const icon = `http://openweathermap.org/img/wn/${data.weather[0].icon}.png`;
+
+                    // Mostrar el widget del clima
+                    document.getElementById('weather-widget').innerHTML = `
+                        <div style="font-family: Arial, sans-serif; text-align: center;">
+                            <h3>${city}</h3>
+                            <p>${description}</p>
+                            <img src="${icon}" alt="Weather icon">
+                            <h3>${temp}°C</h3>
+                        </div>`;
+                })
+                .catch(error => {
+                    document.getElementById('weather-widget').innerHTML = 'No se pudo obtener el clima.';
+                    console.error(error);
+                });
+        }
+
+        // Mostrar error si la geolocalización falla
+        function showError(error) {
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    document.getElementById('weather-widget').innerHTML = "Usuario denegó la solicitud de geolocalización.";
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    document.getElementById('weather-widget').innerHTML = "La información de la ubicación no está disponible.";
+                    break;
+                case error.TIMEOUT:
+                    document.getElementById('weather-widget').innerHTML = "La solicitud de ubicación ha caducado.";
+                    break;
+                case error.UNKNOWN_ERROR:
+                    document.getElementById('weather-widget').innerHTML = "Un error desconocido ocurrió.";
+                    break;
+            }
+        }
+
+        // Llamar a la función para obtener la ubicación y mostrar el clima
+        getLocation();
+    </script>
     <script>
         async function initMap() {
           
