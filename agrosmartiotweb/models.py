@@ -332,8 +332,16 @@ class EmpresaOFundo(models.Model):
 
 #MODELOS DE SENSOR 
 class SensorAire(models.Model):
-    name = models.CharField(max_length=100)  # Nombre o ID del sensor
+    name = models.CharField(max_length=100, unique=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+
+    def save(self, *args, **kwargs):
+        # Generar un nombre de sensor único basado en el usuario si no se ha asignado
+        if not self.name:
+            count = SensorAire.objects.filter(user=self.user).count() + 1
+            self.name = f"{self.user.username}_sensor_{count}"
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return f"Sensor: {self.name} de {self.user.username}"
     
