@@ -934,7 +934,7 @@ from .models import TemperatureHumidityLocation, SensorAire
 
 @login_required
 def combined_data_view(request):
-    # Obtener el usuario actual
+    # Obtener el usuario actual 
     user = request.user
 
     # Obtener los sensores del usuario
