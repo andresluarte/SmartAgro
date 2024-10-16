@@ -331,19 +331,37 @@ class EmpresaOFundo(models.Model):
 
 
 #MODELOS DE SENSOR 
+import uuid
+
+
 class SensorAire(models.Model):
-    name = models.CharField(max_length=100, unique=True)
+    name = models.CharField(max_length=100, unique=True)  # Nombre único para cada sensor
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    api_key = models.CharField(max_length=64, blank=True, null=True, unique=True)  # API Key única
 
     def save(self, *args, **kwargs):
-        # Generar un nombre de sensor único basado en el usuario si no se ha asignado
+        # Generar una API Key única si no existe
+        if not self.api_key:
+            self.api_key = uuid.uuid4().hex  # Generar clave única con uuid
+         
+        # Si no hay nombre, generarlo automáticamente
         if not self.name:
+            # Garantizar que el nombre generado sea único dentro del contexto del usuario
             count = SensorAire.objects.filter(user=self.user).count() + 1
-            self.name = f"{self.user.username}_sensor_{count}"
+            unique_name = f"{self.user.username}_sensor_{count}"
+            
+            # Asegurarse de que no haya conflicto con otros nombres únicos
+            while SensorAire.objects.filter(name=unique_name).exists():
+                count += 1
+                unique_name = f"{self.user.username}_sensor_{count}"
+            
+            self.name = unique_name  # Asignar el nombre generado
+
         super().save(*args, **kwargs)
 
     def __str__(self):
         return f"Sensor: {self.name} de {self.user.username}"
+
     
 class TemperatureHumidityLocation(models.Model):
     temperature = models.FloatField()

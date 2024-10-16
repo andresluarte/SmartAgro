@@ -873,25 +873,37 @@ from .models import HumiditySoil,SensorAire
 @csrf_exempt
 def receive_data(request):
     if request.method == 'POST':
-        sensor_name = request.POST.get('sensor_id')
+        # Obtener la API Key desde la cabecera 'Authorization'
+        api_key = request.headers.get('Authorization')
+        
+        if not api_key:
+            return JsonResponse({'status': 'error', 'message': 'API Key no proporcionada'}, status=400)
+
+        # Verificar que la API Key sea válida
+        sensor = SensorAire.objects.filter(api_key=api_key).first()
+        if not sensor:
+            return JsonResponse({'status': 'error', 'message': 'API Key inválida'}, status=403)
+
+        # Obtener los datos enviados en la solicitud
         temperature = request.POST.get('temperature')
         humidity = request.POST.get('humidity')
         latitude = request.POST.get('latitude')
         longitude = request.POST.get('longitude')
 
-        sensor = SensorAire.objects.filter(name=sensor_name).first()
+        # Verificar que los datos obligatorios estén presentes
+        if not all([temperature, humidity, latitude, longitude]):
+            return JsonResponse({'status': 'error', 'message': 'Datos incompletos'}, status=400)
 
-        if sensor:
-            TemperatureHumidityLocation.objects.create(
-                temperature=temperature,
-                humidity=humidity,
-                latitude=latitude,
-                longitude=longitude,
-                sensor=sensor
-            )
-            return JsonResponse({'status': 'success'})
-        else:
-            return JsonResponse({'status': 'error', 'message': 'Sensor no encontrado'}, status=400)
+        # Crear una nueva entrada de datos asociada al sensor
+        TemperatureHumidityLocation.objects.create(
+            temperature=temperature,
+            humidity=humidity,
+            latitude=latitude,
+            longitude=longitude,
+            sensor=sensor  # Asociar los datos al sensor encontrado por la API Key
+        )
+
+        return JsonResponse({'status': 'success', 'message': 'Datos recibidos correctamente'})
 
     return JsonResponse({'status': 'error', 'message': 'Método no permitido'}, status=405)
 
