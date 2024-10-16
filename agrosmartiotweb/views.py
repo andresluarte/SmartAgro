@@ -932,6 +932,7 @@ class TemperatureHumidityAPIView(APIView):
 from django.shortcuts import render
 from .models import TemperatureHumidityLocation, SensorAire
 
+@login_required
 def combined_data_view(request):
     # Obtener el usuario actual
     user = request.user
