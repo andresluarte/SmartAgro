@@ -488,7 +488,7 @@ class DecisionEfectuadaForm(forms.ModelForm):
         fields = ['decision', 'sector', 'huerto', 'lote', 'sensor']
 
     def __init__(self, *args, **kwargs):
-        user = kwargs.pop('user')  # Obtener el usuario del contexto
+        user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
         
         # Filtrar las opciones de los campos foráneos para que solo el usuario pueda ver sus objetos
