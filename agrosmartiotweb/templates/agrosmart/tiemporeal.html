@@ -3,6 +3,7 @@
 {% block contenido %}
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>Datos Sensor</title>
     <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
@@ -12,12 +13,14 @@
             text-align: center;
             background-color: #f4f4f4;
         }
+
         .container {
             margin-top: 50px;
             max-width: 800px;
             margin-left: auto;
             margin-right: auto;
         }
+
         .section {
             margin-bottom: 20px;
             padding: 20px;
@@ -26,11 +29,13 @@
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
             word-wrap: break-word;
         }
+
         .section h3 {
             margin-bottom: 20px;
             font-size: 28px;
             color: #333;
         }
+
         .data {
             display: flex;
             justify-content: space-around;
@@ -38,6 +43,7 @@
             font-size: 24px;
             font-weight: bold;
         }
+
         .data div {
             margin: 10px;
             padding: 20px;
@@ -47,36 +53,48 @@
             flex: 1 1 45%;
             position: relative;
         }
+
         .timestamp {
             margin-top: 20px;
             font-size: 18px;
             color: #555;
         }
+
         .map-link a {
             text-decoration: none;
             color: #007BFF;
         }
+
         .map-link a:hover {
             text-decoration: underline;
         }
+
         @media (max-width: 600px) {
             .data div {
                 flex: 1 1 100%;
             }
+
             .section h3 {
-                font-size: 22px; /* Reduce el tamaño del título en móviles */
+                font-size: 22px;
+                /* Reduce el tamaño del título en móviles */
             }
+
             .section {
-                padding: 15px; /* Reduce el padding para móviles */
+                padding: 15px;
+                /* Reduce el padding para móviles */
             }
+
             .data {
-                flex-direction: column; /* Hace que el contenido se muestre en una columna en pantallas pequeñas */
+                flex-direction: column;
+                /* Hace que el contenido se muestre en una columna en pantallas pequeñas */
             }
         }
+
         #map {
             height: 500px;
             width: 100%;
         }
+
         .kpi-bar {
             height: 30px;
             border-radius: 10px;
@@ -84,6 +102,7 @@
             position: relative;
             overflow: hidden;
         }
+
         .kpi-bar span {
             display: block;
             height: 100%;
@@ -92,17 +111,17 @@
             top: 0;
             left: 0;
         }
-        
-        
-        
+
+
+
         .progress-bar {
             height: 100%;
             border-radius: 10px;
             transition: width 0.5s ease, background-color 0.5s ease;
         }
-        
     </style>
 </head>
+
 <body>
     <div class="container">
         <h3>Clima Actual</h3>
@@ -110,40 +129,40 @@
         <h3>Datos Sensor Aire Tiempo Real</h3>
         <div class="section">
             <h3>Decisiones</h3>
-        
+
             <!-- Lista de decisiones -->
             <ul>
                 {% for decision in decisions %}
-                    <li>{{ decision.fecha }} - {{ decision.sector }} - {{ decision.decision }}</li>
+                <li>{{ decision.fecha }} - {{ decision.sector }} - {{ decision.decision }}</li>
                 {% empty %}
-                    <li>No hay decisiones tomadas aún.</li>
+                <li>No hay decisiones tomadas aún.</li>
                 {% endfor %}
             </ul>
-        
+
             <!-- Botón para mostrar el formulario -->
-            <button id="agregar-decision-btn" class="btn btn-primary">Agregar Decisión</button>
-        
+            
+
             <!-- Formulario oculto inicialmente -->
-            <div id="form-decision" style="display: none;">
-                
-                <form method="post">
-                    {% csrf_token %}
-                    {{form | crispy}}
-                    <button type="submit" class="btn btn-success">Guardar Decisión</button>
-                </form>
-            </div>
+
+
+            <form method="post">
+                {% csrf_token %}
+                {{form | crispy}}
+                <button type="submit" class="btn btn-success">Guardar Decisión</button>
+            </form>
+
         </div>
         {% if messages %}
         <div class="alert alert-success">
             {% for message in messages %}
-                {{ message }}
+            {{ message }}
             {% endfor %}
         </div>
         {% endif %}
         {% if latest_data %}
         <div class="section">
             <div>
-                
+
             </div>
             <div>
                 <strong>ID del Sensor:</strong> <span>{{ sensor_id }}</span>
@@ -170,9 +189,9 @@
             <div>
                 <strong>Recomendación de humedad:</strong> <span>{{ humidity_recommendation }}</span>
             </div>
-        
+
         </div>
-        
+
 
         <div class="section">
             <h3>Ubicación Sensor</h3>
@@ -189,13 +208,14 @@
                 Última actualización: {{ latest_data.timestamp }}
             </div>
             <div class="map-link">
-                <a href="https://www.google.com/maps/search/?api=1&query={{ latest_data.latitude|urlencode }},{{ latest_data.longitude|urlencode }}" target="_blank">
+                <a href="https://www.google.com/maps/search/?api=1&query={{ latest_data.latitude|urlencode }},{{ latest_data.longitude|urlencode }}"
+                    target="_blank">
                     Ver en Google Maps
                 </a>
             </div>
         </div>
         {% else %}
-            <p>No hay datos disponibles para este sensor.</p>
+        <p>No hay datos disponibles para este sensor.</p>
         {% endif %}
     </div>
     <script>
@@ -242,7 +262,7 @@
 
         // Mostrar error si la geolocalización falla
         function showError(error) {
-            switch(error.code) {
+            switch (error.code) {
                 case error.PERMISSION_DENIED:
                     document.getElementById('weather-widget').innerHTML = "Usuario denegó la solicitud de geolocalización.";
                     break;
@@ -263,7 +283,7 @@
     </script>
     <script>
         async function initMap() {
-          
+
             var lat = "{{ latest_data.latitude|default:'0' }}".replace(',', '.');
             var lng = "{{ latest_data.longitude|default:'0' }}".replace(',', '.');
             const map = new google.maps.Map(document.getElementById('map'), {
@@ -276,12 +296,12 @@
             var longitude = parseFloat(lng);
 
             const marker = new google.maps.Marker({
-            position: { lat: latitude, lng: longitude },
-            map: map,
-            title: 'Sensor Location'
-        });
+                position: { lat: latitude, lng: longitude },
+                map: map,
+                title: 'Sensor Location'
+            });
 
-           
+
 
             var infoWindow = [];
 
@@ -290,12 +310,12 @@
             });
             infoWindow.push(infowindow);
             // Agregar un evento click al marcador para abrir el InfoWindow
-            marker.addListener('click', function() {
+            marker.addListener('click', function () {
                 // Cerrar cualquier InfoWindow abierto
-                infoWindow.forEach(function(iw) {
+                infoWindow.forEach(function (iw) {
                     iw.close();
                 });
-    
+
                 // Abrir el InfoWindow asociado con el marcador
                 infowindow.open(map, marker);
             });
@@ -308,7 +328,7 @@
             document.head.appendChild(script);
         });
 
-        
+
     </script>
 
     <script>
@@ -317,39 +337,41 @@
             // Actualiza el texto de los elementos
             document.getElementById("temperature").textContent = temperature + "°C";
             document.getElementById("humidity").textContent = humidity + "%";
-    
+
             // Calcula el porcentaje para la barra de temperatura (0 a 50 grados)
             let tempPercentage = Math.min(Math.max((temperature / 50) * 100, 0), 100);
             document.getElementById("temperature-bar").style.width = tempPercentage + "%";
-            
+
             // Cambia el color de la barra de temperatura (azul -> rojo)
             document.getElementById("temperature-bar").style.backgroundColor = `rgb(${Math.min(255, (temperature / 50) * 255)}, 0, ${Math.max(0, 255 - (temperature / 50) * 255)})`;
-    
+
             // Calcula el porcentaje para la barra de humedad (0 a 100%)
             let humidityPercentage = Math.min(Math.max(humidity, 0), 100);
             document.getElementById("humidity-bar").style.width = humidityPercentage + "%";
-            
+
             // Cambia el color de la barra de humedad (gris -> azul)
             document.getElementById("humidity-bar").style.backgroundColor = `rgb(0, ${Math.min(255, (humidity / 100) * 255)}, ${Math.min(255, (humidity / 100) * 255)})`;
         }
-    
+
         // Extraer valores de texto y convertirlos en números
         let temperatureText = document.getElementById("temperature").textContent;
         let humidityText = document.getElementById("humidity").textContent;
-    
+
         let temperature = parseFloat(temperatureText.replace("°C", "").trim());
         let humidity = parseFloat(humidityText.replace("%", "").trim());
-    
+
         // Actualiza los KPI en la carga inicial
         updateKPI(temperature, humidity);
     </script>
     <script>
         // Mostrar el formulario al hacer clic en el botón
-        
-        document.getElementById('agregar-decision-btn').addEventListener('click', function() {
-        document.getElementById('form-decision').style.display = 'block';});
+
+        document.getElementById('agregar-decision-btn').addEventListener('click', function () {
+            document.getElementById('form-decision').style.display = 'block';
+        });
     </script>
-    
+
 </body>
+
 </html>
 {% endblock %}
