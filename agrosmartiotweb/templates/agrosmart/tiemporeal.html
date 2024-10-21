@@ -140,12 +140,13 @@
             </ul>
 
             <!-- Botón para mostrar el formulario -->
-            
+            <button id="agregar-decision-btn" class="btn btn-primary">Agregar Decisión</button>
 
             <!-- Formulario oculto inicialmente -->
 
 
-            <form method="post">
+            <form action="" method="post" enctype="multipart/form-data">
+                
                 {% csrf_token %}
                 {{form | crispy}}
                 <button type="submit" class="btn btn-success">Guardar Decisión</button>
