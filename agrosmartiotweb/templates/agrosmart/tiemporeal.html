@@ -138,7 +138,25 @@
             <div>
                 <strong>Recomendación de humedad:</strong> <span>{{ humidity_recommendation }}</span>
             </div>
+            <button id="agregar-decision-btn" class="btn btn-primary">Agregar Decisión</button>
+
+            <!-- Formulario oculto por defecto -->
+            <div id="form-decision" style="display: none;">
+                <h4>Agregar Decisión Efectuada</h4>
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form.as_p }}
+                    <button type="submit" class="btn btn-success">Guardar Decisión</button>
+                </form>
+            </div>
         </div>
+        {% if messages %}
+        <div class="alert alert-success">
+            {% for message in messages %}
+                {{ message }}
+            {% endfor %}
+        </div>
+        {% endif %}
 
         <div class="section">
             <h3>Ubicación</h3>
@@ -308,6 +326,17 @@
     
         // Actualiza los KPI en la carga inicial
         updateKPI(temperature, humidity);
+    </script>
+    <script>
+        // Mostrar el formulario al hacer clic en el botón
+        document.getElementById("agregar-decision-btn").addEventListener("click", function() {
+            var formDiv = document.getElementById("form-decision");
+            if (formDiv.style.display === "none") {
+                formDiv.style.display = "block";
+            } else {
+                formDiv.style.display = "none";
+            }
+        });
     </script>
 </body>
 </html>

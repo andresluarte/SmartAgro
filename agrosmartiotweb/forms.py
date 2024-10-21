@@ -478,3 +478,21 @@ class EditColaboradorForm(forms.ModelForm):
 from django import forms
 from .models import SectorPoligon
 
+
+from django import forms
+from .models import DecisionEfectuada, Sector, Huerto, Lote, SensorAire
+
+class DecisionEfectuadaForm(forms.ModelForm):
+    class Meta:
+        model = DecisionEfectuada
+        fields = ['decision', 'sector', 'huerto', 'lote', 'sensor']
+
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user')  # Obtener el usuario del contexto
+        super().__init__(*args, **kwargs)
+        
+        # Filtrar las opciones de los campos foráneos para que solo el usuario pueda ver sus objetos
+        self.fields['sector'].queryset = Sector.objects.filter(user=user)  # Filtrar sectores del usuario
+        self.fields['huerto'].queryset = Huerto.objects.filter(user=user)  # Filtrar huertos del usuario
+        self.fields['lote'].queryset = Lote.objects.filter(user=user)  # Filtrar lotes del usuario
+        self.fields['sensor'].queryset = SensorAire.objects.filter(user=user)  # Filtrar sensores del usuario

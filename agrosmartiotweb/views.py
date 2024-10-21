@@ -957,6 +957,7 @@ def combined_data_view(request):
             'temperature_recommendation': "No tienes sensores registrados.",
             'humidity_recommendation': "",
             'sensor_id': None,
+            
         })
 
     # Obtener la última entrada de datos para los sensores del usuario
@@ -966,6 +967,7 @@ def combined_data_view(request):
     temperature_recommendation = ""
     humidity_recommendation = ""
     sensor_id = None
+
 
     if latest_data:
         # Obtener datos de temperatura y humedad
@@ -999,6 +1001,26 @@ def combined_data_view(request):
         'humidity_recommendation': humidity_recommendation,
         'sensor_id': sensor_id,
     })
+
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from .forms import DecisionEfectuadaForm
+
+@login_required
+def crear_decision(request):
+    if request.method == 'POST':
+        form = DecisionEfectuadaForm(request.POST, user=request.user)  # Pasamos el usuario autenticado
+        if form.is_valid():
+            decision = form.save(commit=False)
+            decision.created_by = request.user  # Asignar el usuario que crea la decisión
+            decision.user = request.user  # Asignar el usuario que está visualizando
+            decision.save()
+            messages.success(request, "Decisión guardada correctamente.")
+            return redirect('')  # Redirigir a una vista adecuada
+    else:
+        form = DecisionEfectuadaForm(user=request.user)  # Crear el formulario con el usuario autenticado
+
+    return render(request, 'agrosmart/tiemporeal.html', {'form': form})
 
 
 def combined_data_view_soil(request):

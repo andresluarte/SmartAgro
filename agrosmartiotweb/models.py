@@ -381,6 +381,20 @@ class HumiditySoil(models.Model):
     def __str__(self):
         return f"Humidity: {self.humiditysoil}, Timestamp: {self.timestamp}"
     
+class DecisionEfectuada(models.Model):
+    decision = models.CharField(max_length=5000)  # Campo para la decisión
+    sector = models.ForeignKey('Sector', on_delete=models.CASCADE, max_length=50)  # Clave foránea a Sector
+    huerto = models.ForeignKey('Huerto', on_delete=models.CASCADE, null=True, blank=True)  # Clave foránea a Huerto
+    lote = models.ForeignKey('Lote', on_delete=models.CASCADE, null=True, blank=True)  # Clave foránea a Lote
+    created_at = models.DateTimeField(auto_now_add=True)  # Fecha de creación automática
+    sensor = models.ForeignKey('SensorAire', on_delete=models.CASCADE, null=True, blank=True)  # Clave foránea a SensorAire
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='decisiones_tomadas', on_delete=models.CASCADE)  # Usuario que realizó la acción
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)  # Usuario que está visualizando
+
+    def __str__(self):
+        return f"Decisión: {self.decision} - Sector: {self.sector} - Huerto: {self.huerto} - Lote: {self.lote} - Sensor: {self.sensor}"
+
+    
 from django.db.models import Sum
 
 #finanzas por trabajador
