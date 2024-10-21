@@ -1002,6 +1002,7 @@ def combined_data_view(request):
         'sensor_id': sensor_id,
     })
 
+
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from .forms import DecisionEfectuadaForm
@@ -1012,21 +1013,45 @@ def crear_decision(request):
         form = DecisionEfectuadaForm(request.POST, user=request.user)  # Pasamos el usuario autenticado
         if form.is_valid():
             decision = form.save(commit=False)
+            decision.user = request.user 
             decision.created_by = request.user  # Asignar el usuario que crea la decisión
-            decision.user = request.user  # Asignar el usuario que está visualizando
+             # Asignar el usuario que está visualizando
             decision.save()
             messages.success(request, "Decisión guardada correctamente.")
-            return redirect('crear_decision')  # Redirigir a la misma vista para mostrar el formulario actualizado
+              # Redirigir a la misma vista para mostrar el formulario actualizado
     else:
         form = DecisionEfectuadaForm(user=request.user)  # Crear el formulario con el usuario autenticado
 
     # Obtener todas las decisiones del usuario autenticado
-    decisions = DecisionEfectuada.objects.filter(user=request.user).order_by('-fecha')
+    decisions = DecisionEfectuada.objects.filter(created_by=request.user).order_by('-fecha')
 
     return render(request, 'agrosmart/tiemporeal.html', {
         'form': form,
         'decisions': decisions,  # Pasar las decisiones al contexto
     })
+
+
+@user_passes_test(is_admin)
+def agregar_empresa(request):
+     
+    if EmpresaOFundo.objects.filter(created_by=request.user).exists():
+        messages.error(request, "Ya tienes una empresa registrada.")
+        return redirect('lista_empresas')  # Redirige a la list
+
+
+    if request.method == 'POST':
+        form = EmpresaOFundoForm(request.POST, request.FILES)
+        if form.is_valid():
+            empresa = form.save(commit=False)
+            empresa.user = request.user
+            empresa.created_by = request.user  # El administrador que crea la empresa
+            empresa.save()
+            messages.success(request, "Empresa registrada con éxito.")
+            return redirect('lista_empresas')  # Redirigir a una página que muestre las empresas
+    else:
+        form = EmpresaOFundoForm()
+    
+    return render(request, 'agrosmart/empresa/agregar_empresa.html', {'form': form})
 
 
 def combined_data_view_soil(request):

@@ -108,38 +108,6 @@
         <h3>Clima Actual</h3>
         <div class="section" id="weather-widget"></div>
         <h3>Datos Sensor Aire Tiempo Real</h3>
-        {% if latest_data %}
-        <div class="section">
-            <div>
-                
-            </div>
-            <div>
-                <strong>ID del Sensor:</strong> <span>{{ sensor_id }}</span>
-            </div>
-            <div>
-                <strong>Temperatura:</strong> <span id="temperature">{{ latest_data.temperature }}°C</span>
-                <div class="kpi-bar temperature-bar">
-                    <span id="temperature-bar"></span>
-                </div>
-            </div>
-            <div>
-                <strong>Humedad:</strong> <span id="humidity">{{ latest_data.humidity }}%</span>
-                <div class="kpi-bar humidity-bar">
-                    <span id="humidity-bar"></span>
-                </div>
-            </div>
-        </div>
-
-        <div class="section">
-            <h3>Recomendaciones</h3>
-            <div>
-                <strong>Recomendación de temperatura:</strong> <span>{{ temperature_recommendation }}</span>
-            </div>
-            <div>
-                <strong>Recomendación de humedad:</strong> <span>{{ humidity_recommendation }}</span>
-            </div>
-        
-        </div>
         <div class="section">
             <h3>Decisiones</h3>
         
@@ -172,6 +140,39 @@
             {% endfor %}
         </div>
         {% endif %}
+        {% if latest_data %}
+        <div class="section">
+            <div>
+                
+            </div>
+            <div>
+                <strong>ID del Sensor:</strong> <span>{{ sensor_id }}</span>
+            </div>
+            <div>
+                <strong>Temperatura:</strong> <span id="temperature">{{ latest_data.temperature }}°C</span>
+                <div class="kpi-bar temperature-bar">
+                    <span id="temperature-bar"></span>
+                </div>
+            </div>
+            <div>
+                <strong>Humedad:</strong> <span id="humidity">{{ latest_data.humidity }}%</span>
+                <div class="kpi-bar humidity-bar">
+                    <span id="humidity-bar"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>Recomendaciones</h3>
+            <div>
+                <strong>Recomendación de temperatura:</strong> <span>{{ temperature_recommendation }}</span>
+            </div>
+            <div>
+                <strong>Recomendación de humedad:</strong> <span>{{ humidity_recommendation }}</span>
+            </div>
+        
+        </div>
+        
 
         <div class="section">
             <h3>Ubicación Sensor</h3>
@@ -344,15 +345,11 @@
     </script>
     <script>
         // Mostrar el formulario al hacer clic en el botón
-        document.getElementById("agregar-decision-btn").addEventListener("click", function() {
-            var formDiv = document.getElementById("form-decision");
-            if (formDiv.style.display === "none") {
-                formDiv.style.display = "block";
-            } else {
-                formDiv.style.display = "none";
-            }
-        });
+        
+        document.getElementById('agregar-decision-btn').addEventListener('click', function() {
+        document.getElementById('form-decision').style.display = 'block';});
     </script>
+    
 </body>
 </html>
 {% endblock %}
