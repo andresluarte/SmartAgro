@@ -138,17 +138,23 @@
             <div>
                 <strong>Recomendación de humedad:</strong> <span>{{ humidity_recommendation }}</span>
             </div>
-            <button id="agregar-decision-btn" class="btn btn-primary">Agregar Decisión</button>
+            
 
-            <!-- Formulario oculto por defecto -->
+            
+
+            
+        </div>
+        <div class="section">
             <div id="form-decision" style="display: none;">
-                <h4>Agregar Decisión Efectuada</h4>
+                <h3>Desiciones</h3>
+                <h3>Agregar Desiciones</h3>
                 <form method="post">
                     {% csrf_token %}
                     {{ form.as_p }}
                     <button type="submit" class="btn btn-success">Guardar Decisión</button>
                 </form>
             </div>
+
         </div>
         {% if messages %}
         <div class="alert alert-success">
@@ -159,7 +165,7 @@
         {% endif %}
 
         <div class="section">
-            <h3>Ubicación</h3>
+            <h3>Ubicación Sensor</h3>
             <div id="map"></div>
             <div class="data">
                 <div>
