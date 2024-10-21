@@ -138,23 +138,32 @@
             <div>
                 <strong>Recomendación de humedad:</strong> <span>{{ humidity_recommendation }}</span>
             </div>
-            
-
-            
-
-            
+        
         </div>
         <div class="section">
+            <h3>Decisiones</h3>
+        
+            <!-- Lista de decisiones -->
+            <ul>
+                {% for decision in decisions %}
+                    <li>{{ decision.fecha }} - {{ decision.sector }} - {{ decision.decision }}</li>
+                {% empty %}
+                    <li>No hay decisiones tomadas aún.</li>
+                {% endfor %}
+            </ul>
+        
+            <!-- Botón para mostrar el formulario -->
+            <button id="agregar-decision-btn" class="btn btn-primary">Agregar Decisión</button>
+        
+            <!-- Formulario oculto inicialmente -->
             <div id="form-decision" style="display: none;">
-                <h3>Desiciones</h3>
-                <h3>Agregar Desiciones</h3>
+                
                 <form method="post">
                     {% csrf_token %}
                     {{ form.as_p }}
                     <button type="submit" class="btn btn-success">Guardar Decisión</button>
                 </form>
             </div>
-
         </div>
         {% if messages %}
         <div class="alert alert-success">
