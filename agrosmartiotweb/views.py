@@ -1003,34 +1003,6 @@ def combined_data_view(request):
     })
 
 
-from django.shortcuts import render, redirect
-from django.contrib.auth.decorators import login_required
-from .forms import DecisionEfectuadaForm
-from .models import DecisionEfectuada
-@login_required(login_url="my_login")
-def crear_decision(request):
-    if request.method == 'POST':
-        form = DecisionEfectuadaForm(request.POST, user=request.user)  # Pasamos el usuario autenticado
-        if form.is_valid():
-            decision = form.save(commit=False)
-            decision.user = request.user 
-            decision.created_by = request.user  # Asignar el usuario que crea la decisión
-            decision.save()
-            messages.success(request, "Decisión guardada correctamente.")
-            return redirect('gestion_jornadas')
-              # Redirigir a la misma vista para mostrar el formulario actualizado
-    else:
-        form = DecisionEfectuadaForm(user=request.user)  # Crear el formulario con el usuario autenticado
-
-    # Obtener todas las decisiones del usuario autenticado
-    
-
-    return render(request, 'agrosmart/tiemporeal.html', {
-        'form': form,
-          # Pasar las decisiones al contexto
-    })
-
-
 
 
 
