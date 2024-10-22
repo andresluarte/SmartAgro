@@ -127,7 +127,7 @@
         <h3>Clima Actual</h3>
         <div class="section" id="weather-widget"></div>
         <h3>Datos Sensor Aire Tiempo Real</h3>
-        <div class="section">
+        <div class="">
             <h3>Decisiones</h3>
         
             <!-- Lista de decisiones -->
@@ -146,7 +146,7 @@
             <div id="form-decision" style="display: none;">
                 <form action="" method="post" enctype="multipart/form-data">
                     {% csrf_token %}
-                    {{ form.as_p }}  <!-- Render simple del formulario -->
+                    {{ form }}  <!-- Render simple del formulario -->
                     <button type="submit" class="btn btn-success">Guardar Decisión</button>
                 </form>
             </div>
