@@ -1,6 +1,6 @@
 from django.contrib import admin
 from import_export import resources
-from .models import Procesos,Contacto,Trabajador,Jornada,Sector,Huerto,Lote,CustomUser,SensorAire,TemperatureHumidityLocation
+from .models import Procesos,Contacto,Trabajador,Jornada,Sector,Huerto,Lote,CustomUser,SensorAire,TemperatureHumidityLocation,DecisionEfectuada
 from import_export.fields import Field
 
 
@@ -14,7 +14,7 @@ admin.site.register(CustomUser)
 admin.site.register(Sector)
 admin.site.register(Huerto)
 admin.site.register(Lote)
-
+admin.site.register(DecisionEfectuada)
 admin.site.register(SensorAire)
 admin.site.register(TemperatureHumidityLocation)
 class ProcesosResource(resources.ModelResource):
