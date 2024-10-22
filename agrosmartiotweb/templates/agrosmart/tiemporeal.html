@@ -127,39 +127,27 @@
         <h3>Clima Actual</h3>
         <div class="section" id="weather-widget"></div>
         <h3>Datos Sensor Aire Tiempo Real</h3>
-        <div class="">
+        <div class="section">
             <h3>Decisiones</h3>
         
             <!-- Lista de decisiones -->
-            <ul>
-                {% for decision in decisions %}
-                <li>{{ decision.fecha }} - {{ decision.sector }} - {{ decision.decision }}</li>
-                {% empty %}
-                <li>No hay decisiones tomadas aún.</li>
-                {% endfor %}
-            </ul>
+           
         
             <!-- Botón para mostrar el formulario -->
-            <button id="agregar-decision-btn" class="btn btn-primary">Agregar Decisión</button>
+            
         
             <!-- Formulario oculto inicialmente -->
-            <div id="form-decision" style="display: none;">
+            
                 <form action="" method="post" enctype="multipart/form-data">
                     {% csrf_token %}
                     {{ form }}  <!-- Render simple del formulario -->
                     <button type="submit" class="btn btn-success">Guardar Decisión</button>
                 </form>
-            </div>
+            
         </div>
         
         <!-- Mostrar mensajes de éxito si los hay -->
-        {% if messages %}
-        <div class="alert alert-success">
-            {% for message in messages %}
-            {{ message }}
-            {% endfor %}
-        </div>
-        {% endif %}
+        
         
         <!-- JavaScript para mostrar/ocultar el formulario -->
         <script>
