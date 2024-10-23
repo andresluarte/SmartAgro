@@ -3,59 +3,133 @@
 {% block contenido %}
 {% load static %}
 {% load crispy_forms_tags %}
-<br>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Crear Sector</title>
+    <style>
+        /* Asegúrate de que el contenedor del mapa tenga un tamaño definido */
+        #map {
+            height: 400px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+  <h3>Crear Sector</h3>
+  <br>
 
+  <form action="" autocomplete="off" class="formularioproceso" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <br>
+    {{ form }}
+    <p> Dibuja el sector en google maps </p>
+    <div id="map"></div>
+    
+    <br><br>
 
-<div class="row">
-
-    <hr>
-
-    <div class="col-12 col-md-6 offset-md-3">
-
-        <div class="card">
-            <div class="card-body">
-                <h2> Agregar Sector </h2>
-                <p> Dibuja el sector en google maps </p>
-                <form action="" autocomplete="off" class="formularioproceso" method="post" enctype="multipart/form-data">
-                    {% csrf_token %}
-
-                    {{form | crispy}}
-
-                    <br>
-                    <br>
-
-                    <div>
-                        <input type="reset" value="Cancelar" class="btn btn-danger">
-                        &nbsp;
-                        <button type="submit" id="btnAgregar" class="btn btn-primary">Agregar Sector</button>
-                        &nbsp;
-
-
-
-                        {{mensaje}}
-
-                </form>
-                
-                
-            </div>
-            <br>
-            
-            <a href="{% url 'gestion_zona' %}">
-                <button class="btn btn-success">Volver Atrás</button>
-            </a>
-            </div>
- 
-        <div>
-
-
-
+    <div>
+      <input type="reset" value="Cancelar" class="btn btn-danger">
+      &nbsp;
+      <button type="submit" name="action" value="add_and_redirect" id="btnAgregar" class="btn btn-primary">Agregar Sector y Huertos y Lotes</button>
+      &nbsp;
+      <button type="submit" name="action" value="add_another" class="btn btn-secondary">Agregar Otro Sector</button>
+      &nbsp;
+      {{ mensaje }}
     </div>
+  </form>
+  <br>
+  <a href="{% url 'gestion_zona' %}">
+      <button class="btn btn-success">Volver Atrás</button>
+  </a>
 
-</div>
+  <script>
+    let map;
+    let drawingManager;
+    let selectedShape;
 
+    function initMap() {
+        const defaultLocation = { lat: -33.4489, lng: -70.6693 }; // Santiago, Chile
+        map = new google.maps.Map(document.getElementById("map"), {
+            center: defaultLocation,
+            zoom: 10,
+        });
 
+        drawingManager = new google.maps.drawing.DrawingManager({
+            drawingMode: google.maps.drawing.OverlayType.POLYGON,
+            drawingControl: true,
+            drawingControlOptions: {
+                position: google.maps.ControlPosition.TOP_CENTER,
+                drawingModes: ['polygon'],
+            },
+            polygonOptions: {
+                editable: true,
+                draggable: true,
+            },
+        });
 
+        drawingManager.setMap(map);
 
+        // Si hay coordenadas pasadas, dibuja el polígono
+        const coordenadas = {{ coordenadas|safe }};
+        if (coordenadas) {
+            const polygon = new google.maps.Polygon({
+                paths: JSON.parse(coordenadas),
+                editable: true,
+                draggable: true,
+            });
+            polygon.setMap(map);
+            selectedShape = polygon; // Guarda la forma seleccionada
 
-</div>
+            // Guardar las coordenadas del polígono en el campo oculto
+            document.getElementById('id_coordenadas').value = JSON.stringify(
+                selectedShape.getPath().getArray().map(coord => ({
+                    lat: coord.lat(),
+                    lng: coord.lng(),
+                }))
+            );
+        }
+
+        // Evento para capturar el polígono dibujado
+        google.maps.event.addListener(drawingManager, 'overlaycomplete', function(event) {
+            if (event.type === 'polygon') {
+                if (selectedShape) {
+                    selectedShape.setMap(null);
+                }
+                selectedShape = event.overlay;
+
+                // Guardar las coordenadas del polígono en el campo oculto
+                document.getElementById('id_coordenadas').value = JSON.stringify(
+                    selectedShape.getPath().getArray().map(coord => ({
+                        lat: coord.lat(),
+                        lng: coord.lng(),
+                    }))
+                );
+            }
+        });
+
+        // Escuchar cambios en el polígono para actualizar coordenadas en tiempo real
+        google.maps.event.addListener(selectedShape, 'set_at', updateCoordinates);
+        google.maps.event.addListener(selectedShape, 'insert_at', updateCoordinates);
+    }
+
+    function updateCoordinates() {
+        document.getElementById('id_coordenadas').value = JSON.stringify(
+            selectedShape.getPath().getArray().map(coord => ({
+                lat: coord.lat(),
+                lng: coord.lng(),
+            }))
+        );
+    }
+  </script>
+  
+  <script
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDT0QJ4JVXUrTA8mRZN_YXjy2CZDsa_vmw&callback=initMap&libraries=drawing"
+    async
+    defer
+  ></script>
+
+</body>
+</html>
 {% endblock %}

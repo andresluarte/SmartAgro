@@ -431,4 +431,29 @@ class FinanzasPorTrabajador(models.Model):
 
 
 
-    
+    from django.db import models
+from django.contrib.auth.models import User
+
+class Cosecha(models.Model):
+    foto = models.ImageField(upload_to='fundos/fotosnueva/', null=True, blank=True)
+    sector = models.ForeignKey('Sector', on_delete=models.CASCADE, max_length=50, null=True, blank=True)
+    huerto = models.ForeignKey('Huerto', on_delete=models.CASCADE, max_length=50, null=True, blank=True)
+    lote = models.ForeignKey('Lote', on_delete=models.CASCADE, max_length=50, null=True, blank=True)
+    cantidad = models.DecimalField(max_digits=10, decimal_places=2)  # Cantidad cosechada en kilos u otra medida
+    fecha_cosecha = models.DateField()  # Fecha en la que se realizó la cosecha
+    tipo_producto = models.CharField(max_length=100)  # Tipo de producto cosechado (fruta, verdura, etc.)
+    calidad = models.CharField(max_length=50, choices=[('Alta', 'Alta'), ('Media', 'Media'), ('Baja', 'Baja')], default='Media')  # Calidad de la cosecha
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='cosechas_creadas', on_delete=models.CASCADE)  # Usuario que creó el registro
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)  # Usuario asociado a la cosecha
+    fecha_creacion = models.DateTimeField(auto_now_add=True)  # Fecha en la que se creó el registro
+    ultima_modificacion = models.DateTimeField(auto_now=True)  # Fecha de la última modificación
+
+     # Usuario que está visualizando
+
+    class Meta:
+        verbose_name = "Cosecha"
+        verbose_name_plural = "Cosechas"
+        ordering = ['-fecha_cosecha']
+
+    def __str__(self):
+        return f'Cosecha de {self.tipo_producto} - {self.fecha_cosecha}'

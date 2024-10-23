@@ -1,0 +1,46 @@
+{% extends 'agrosmart/base.html' %}
+{% block contenido %}
+
+<div class="container mt-5">
+    <a href="{% url 'crear_cosecha' %}" class="btn btn-secondary">CREAR NUEVA COSECHA</a>
+    <h3>Mis Cosechas</h3>
+
+    {% if cosechas %}
+      <div class="table-responsive"> <!-- Añadido para hacer la tabla responsiva -->
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>Sector</th>
+              <th>Huerto</th>
+              <th>Lote</th>
+              <th>Cantidad</th>
+              <th>Fecha Cosecha</th>
+              <th>Tipo de Producto</th>
+              <th>Calidad</th>
+              <th>Fecha Creación</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for cosecha in cosechas %}
+              <tr>
+                <td>{{ cosecha.sector }}</td>
+                <td>{{ cosecha.huerto }}</td>
+                <td>{{ cosecha.lote }}</td>
+                <td>{{ cosecha.cantidad }} kg</td>
+                <td>{{ cosecha.fecha_cosecha }}</td>
+                <td>{{ cosecha.tipo_producto }}</td>
+                <td>{{ cosecha.calidad }}</td>
+                <td>{{ cosecha.fecha_creacion }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p>No tienes cosechas registradas.</p>
+    {% endif %}
+    
+    <a href="{% url 'crear_cosecha' %}" class="btn btn-primary mt-3">Crear Nueva Cosecha</a>
+</div>
+
+{% endblock %}

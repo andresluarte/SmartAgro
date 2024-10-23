@@ -465,9 +465,10 @@ def gestion_zona(request):
 
 from django.shortcuts import render, redirect
 from .forms import SectorForm, HuertoForm, LoteForm
-
 @login_required(login_url="my_login")
 def agregar_sector(request):
+    sectores_json = []  # Inicializa la lista de sectores
+
     if request.method == "POST":
         form = SectorForm(request.POST)
         if form.is_valid():
@@ -476,16 +477,37 @@ def agregar_sector(request):
             sector.created_by = request.user
             sector.save()
 
-            # Manejo de las acciones del formulario
-            if request.POST.get('action') == 'add_and_redirect':
-                return redirect('agregar_huerto', sector_id=sector.id)
-            elif request.POST.get('action') == 'add_another':
-                # Redirigir al mismo formulario para agregar otro sector
-                return render(request, 'agrosmart/zona/crear_sectorPoligon.html', {'form': SectorForm(), 'mensaje': 'Sector agregado exitosamente, puedes agregar otro sector.'})
+            # Almacena las coordenadas del sector creado
+            sectores_json.append({'fields': {'nombre': sector.nombre, 'coordenadas': sector.coordenadas}})
+
+            return render(request, 'agrosmart/zona/crear_sectorPoligon.html', {
+                'form': SectorForm(),
+                'mensaje': 'Sector agregado exitosamente.',
+                'sectores_json': sectores_json,  # Pasa las coordenadas del nuevo sector
+                'coordenadas': sector.coordenadas,  # Pasa las coordenadas del nuevo sector para centrar el mapa
+            })
     else:
         form = SectorForm()
-    
-    return render(request, 'agrosmart/zona/crear_sectorPoligon.html', {'form': form})
+
+    # Carga los sectores existentes si no se está agregando uno nuevo
+    sectores = Sector.objects.filter(user=request.user)  # Filtrar por usuario
+    if sectores.exists():
+        sectores_json = [{'fields': {'nombre': sector.nombre, 'coordenadas': sector.coordenadas}} for sector in sectores]
+        # Tomar la primera coordenada para centrar el mapa en el primer sector
+        coordenadas = sectores[0].coordenadas
+    else:
+        coordenadas = None  # No hay sectores, el mapa debe centrar en la ubicación actual
+
+    return render(request, 'agrosmart/zona/crear_sectorPoligon.html', {
+        'form': form,
+        'sectores_json': sectores_json,  # Pasa los sectores existentes
+        'coordenadas': coordenadas,  # Pasa coordenadas para centrar
+    })
+
+
+
+
+
 
 
 
@@ -1123,3 +1145,100 @@ def gestion_finanzas(request):
 
 
 
+
+
+from django.http import JsonResponse
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+from .models import Jornada, JornadaPorTrato, Procesos, Cosecha  # Asegúrate de importar Cosecha
+
+@login_required(login_url="my_login")
+def cuadernodecampo(request):
+    user = request.user
+    # Obtener las jornadas, jornadas por trato, procesos y cosechas para el usuario autenticado
+    jornadas = Jornada.objects.filter(user=user)
+    jornadas_por_trato = JornadaPorTrato.objects.filter(user=user)
+    procesos = Procesos.objects.filter(user=user)
+    cosechas = Cosecha.objects.filter(created_by=user)
+
+    eventos = []
+
+    # Agregar jornadas al calendario
+    for jornada in jornadas:
+        tarea_2 = f" - {jornada.nombre_tarea_2}" if jornada.nombre_tarea_2 else ""
+        tarea_3 = f" - {jornada.nombre_tarea_3}" if jornada.nombre_tarea_3 else ""
+
+        eventos.append({
+            'title': f"Jornada: {jornada.nombre_tarea_1}{tarea_2}{tarea_3} ",
+            'start': jornada.fecha.isoformat(),
+            'end': jornada.fecha.isoformat(),
+            'sector': jornada.sector.nombre if jornada.sector else 'Sin sector',
+            'trabajador': jornada.asignado.nombre,
+        })
+
+    # Agregar jornadas por trato al calendario
+    for jornada_trato in jornadas_por_trato:
+        tarea_2_trato = f" - {jornada_trato.nombre_tarea_2}" if jornada_trato.nombre_tarea_2 else ""
+        tarea_3_trato = f" - {jornada_trato.nombre_tarea_3}" if jornada_trato.nombre_tarea_3 else ""
+
+        eventos.append({
+            'title': f"Jornada por Trato: {jornada_trato.nombre_tarea_1}{tarea_2_trato}{tarea_3_trato} ",
+            'start': jornada_trato.fecha.isoformat(),
+            'end': jornada_trato.fecha.isoformat(),
+            'sector': jornada_trato.sector.nombre if jornada_trato.sector else 'Sin sector',
+            'trabajador': jornada_trato.asignado.nombre,
+        })
+
+    # Agregar procesos al calendario
+    for proceso in procesos:
+        eventos.append({
+            'title': f"Tarea: {proceso.trabajo} ",
+            'start': proceso.fecha.isoformat(),
+            'end': proceso.fecha.isoformat(),
+            'sector': proceso.sector.nombre if proceso.sector else 'Sin sector',
+            'trabajador': proceso.asignado.nombre,
+        })
+
+    # Agregar cosechas al calendario
+    for cosecha in cosechas:
+        eventos.append({
+            'title': f"Cosecha: {cosecha.tipo_producto} - {cosecha.cantidad} kg",
+            'start': cosecha.fecha_cosecha.isoformat(),
+            'end': cosecha.fecha_cosecha.isoformat(),
+            'sector': cosecha.sector.nombre if cosecha.sector else 'Sin sector',
+        })
+
+    # Verificar si la solicitud es para obtener los eventos en formato JSON (por ejemplo, desde FullCalendar)
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse(eventos, safe=False)
+    
+    # Renderizar el template HTML si no es una solicitud AJAX
+    return render(request, 'agrosmart/cuadernodecampo/cuadernodecampo.html')
+
+
+
+
+
+
+from .forms import CosechaForm
+from .models import Cosecha
+
+@login_required
+def crear_cosecha(request):
+    if request.method == 'POST':
+        form = CosechaForm(request.POST, user=request.user)
+        if form.is_valid():
+            cosecha = form.save(commit=False)
+            cosecha.created_by = request.user  # Asignar el usuario actual como el creador
+            cosecha.user = request.user  # Asignar el usuario actual como el usuario responsable
+            cosecha.save()
+            return redirect('cosechas_list')  # Redirige a una página de lista de cosechas (modifica según tu URL)
+    else:
+        form = CosechaForm(user=request.user)
+    
+    return render(request, 'agrosmart/cosecha/crear_cosecha.html', {'form': form})
+
+@login_required
+def cosechas_list(request):
+    cosechas = Cosecha.objects.filter(user=request.user)  # Filtra por usuario actual
+    return render(request, 'agrosmart/cosecha/gestion_cosecha.html', {'cosechas': cosechas})

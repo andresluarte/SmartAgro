@@ -120,6 +120,12 @@ urlpatterns = [
     path('informes/', views.informes, name = "informes"),
 
 
+    path('cuadernodecampo/', views.cuadernodecampo, name='cuadernodecampo'),
+
+    path('cosechas_list/', views.cosechas_list, name='cosechas_list'),  # Lista de cosechas
+    path('crear_cosecha', views.crear_cosecha, name='crear_cosecha'),  # Crear nueva cosecha
+
+
 
 
 ]

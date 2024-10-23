@@ -1,0 +1,13 @@
+{% extends 'agrosmart/base.html' %}
+{% block contenido %}
+
+<div class="container mt-5">
+    <h2>Crear Nueva Cosecha</h2>
+    <form method="POST">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit" class="btn btn-primary">Guardar Cosecha</button>
+    </form>
+    <a href="{% url 'cosechas_list' %}" class="btn btn-secondary mt-3">Volver a la lista</a>
+  </div>
+{% endblock %}

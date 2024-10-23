@@ -22,24 +22,28 @@
         border: 1px solid #e00000;
         padding: 10px;
     }
+
+    /* Ajustar tamaño de los gráficos */
+    #gastosChart, #gastosHorizontalesChart {
+        max-width: 400px;
+        height: 200px;
+    }
 </style>
+
+<!-- Cargar la librería Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 {% endblock js %}
 {% load humanize %}
 
 <div class="finanzas">
     <br>
     <br>
-    <div class="card ">
-        <div class="card-body ">
-            <h3> Gestión de Finanzas por Trabajador </h3>
+    <div class="card">
+        <div class="card-body">
+            <h3>Gestión de Finanzas por Trabajador</h3>
             <hr>
-            <td>
-                <br>
-                &nbsp;
-            </td>
-
             <div>
-
                 <table class="table table-striped table-hover table-responsive" style="overflow-x: auto;">
                     <tr>
                         <th>Trabajador</th>
@@ -50,23 +54,120 @@
                     {% for finanza in finanzas %}
                     <tr>
                         <td>{{ finanza.trabajador.nombre }}</td>
-                        <td>{{ finanza.total_gasto_jornadas }}</td>
-                        <td>{{ finanza.total_gasto_jornadas_por_trato }}</td>
-                        <td>{{ finanza.total_gasto_final }}</td>
+                        <td>${{ finanza.total_gasto_jornadas }}</td>
+                        <td>${{ finanza.total_gasto_jornadas_por_trato }}</td>
+                        <td>${{ finanza.total_gasto_final }}</td>
                     </tr>
                     {% endfor %}
                 </table>
-                <br>
-                <br>
-                
-
             </div>
+            <br><br>
+            
+            <!-- Gráfico de barras verticales -->
+            <canvas id="gastosChart"></canvas>
+            <br><br>
+
+            <!-- Gráfico de barras horizontales -->
+            <canvas id="gastosHorizontalesChart"></canvas>
+
         </div>
-        <br>
-
-
-        <br>
-
+        <br><br>
     </div>
 </div>
+
+<script>
+// Obtener datos desde el contexto de Django
+const trabajadores = [
+    {% for finanza in finanzas %}
+        "{{ finanza.trabajador.nombre }}",
+    {% endfor %}
+];
+const totalGastos = [
+    {% for finanza in finanzas %}
+        {{ finanza.total_gasto_final }},
+    {% endfor %}
+];
+
+// Generar colores aleatorios para las barras
+const coloresBarras = trabajadores.map(() => {
+    const randomColor = `rgba(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, 0.7)`;
+    return randomColor;
+});
+
+// Crear el gráfico de barras verticales
+const ctx = document.getElementById('gastosChart').getContext('2d');
+const gastosChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: trabajadores, // Etiquetas de los trabajadores
+        datasets: [{
+            label: 'Gastos Totales por Trabajador',
+            data: totalGastos, // Datos de los gastos totales
+            backgroundColor: coloresBarras, // Colores de fondo distintos para cada barra
+            borderColor: coloresBarras.map(color => color.replace('0.7', '1')), // Colores del borde, más opacos
+            borderWidth: 1 // Ancho del borde
+        }]
+    },
+    options: {
+        scales: {
+            y: {
+                beginAtZero: true, // Comienza el eje Y en 0
+                ticks: {
+                    callback: function(value) {
+                        return '$' + value; // Agrega el símbolo de $ a los valores
+                    }
+                }
+            }
+        },
+        plugins: {
+            tooltip: {
+                callbacks: {
+                    label: function(tooltipItem) {
+                        return '$' + tooltipItem.raw; // Agrega el símbolo de $ en los tooltips
+                    }
+                }
+            }
+        }
+    }
+});
+
+// Crear el gráfico de barras horizontales
+const ctxHorizontales = document.getElementById('gastosHorizontalesChart').getContext('2d');
+const gastosHorizontalesChart = new Chart(ctxHorizontales, {
+    type: 'bar', // Utilizamos el tipo "bar" pero con configuración horizontal
+    data: {
+        labels: trabajadores, // Etiquetas de los trabajadores
+        datasets: [{
+            label: 'Gastos Totales por Trabajador (Barras Horizontales)',
+            data: totalGastos, // Datos de los gastos totales
+            backgroundColor: coloresBarras, // Colores de fondo distintos para cada barra
+            borderColor: coloresBarras.map(color => color.replace('0.7', '1')), // Colores del borde, más opacos
+            borderWidth: 1 // Ancho del borde
+        }]
+    },
+    options: {
+        indexAxis: 'y', // Esta opción hace que las barras sean horizontales
+        scales: {
+            x: {
+                beginAtZero: true, // Comienza el eje X en 0
+                ticks: {
+                    callback: function(value) {
+                        return '$' + value; // Agrega el símbolo de $ a los valores
+                    }
+                }
+            }
+        },
+        plugins: {
+            tooltip: {
+                callbacks: {
+                    label: function(tooltipItem) {
+                        return '$' + tooltipItem.raw; // Agrega el símbolo de $ en los tooltips
+                    }
+                }
+            }
+        }
+    }
+});
+</script>
+
 {% endblock %}

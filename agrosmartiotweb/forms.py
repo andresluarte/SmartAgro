@@ -479,3 +479,22 @@ from django import forms
 from .models import SectorPoligon
 
 
+from django import forms
+from .models import Cosecha
+
+class CosechaForm(forms.ModelForm):
+    class Meta:
+        model = Cosecha
+        fields = ['sector', 'huerto', 'lote', 'cantidad', 'fecha_cosecha', 'tipo_producto', 'calidad']
+        widgets = {
+            'fecha_cosecha': forms.DateInput(attrs={'type': 'date'}),  # Añade el calendario
+        }
+
+    def __init__(self, *args, **kwargs):
+        # Captura del usuario que pasa en la vista
+        user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+        # Personalización del queryset si es necesario, por ejemplo:
+        self.fields['sector'].queryset = Sector.objects.filter(user=user)
+        self.fields['huerto'].queryset = Huerto.objects.filter(user=user)
+        self.fields['lote'].queryset = Lote.objects.filter(user=user)
