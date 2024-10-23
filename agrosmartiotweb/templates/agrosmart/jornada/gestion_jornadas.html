@@ -142,8 +142,7 @@
 
       </td>
 
-      <div class="table-container">
-        <div class="table-scroll-top"></div> <!-- Scroll superior -->
+      <div>
         <table class="table table-striped table-hover table-responsive" style="overflow-x: auto;">
           <thead>
             <tr>
@@ -198,9 +197,9 @@
                     <strong>Tarea 1:</strong> {{ jornada.nombre_tarea_1 }}
                     {% if request.path == '/gestion_jornadas_por_trato/' %}
            
-          {% else %}
-          <strong>Horario:</strong>
-          {% endif %}
+        {% else %}
+        <strong>Horario:</strong>
+        {% endif %}
                     
                     {{jornada.hora_inicio_tarea_1 }} a {{ jornada.hora_fin_tarea_1 }} <br> <strong>Cobro tarea 1:
                       $</strong> {{ jornada.cobro_tarea_1|intcomma }}

@@ -1,17 +1,18 @@
+/* Estilos para el menú lateral */
 .sidenav {
     height: 100%;
-    width: 0; /* Oculto inicialmente */
+    width: 0;
     position: fixed;
     top: 0;
-    left: 0; /* Posición a la derecha */
+    left: 0; /* Cambiamos "left" por "right" para posicionarlo a la derecha */
     background-color: #caffca;
     overflow-x: hidden;
-    transition: width 0.3s; /* Transición suave para el ancho */
-    z-index: 9999;
+    transition: 0.3s;
+    z-index: 9999; /* Asegúrate de que esté al frente de todos los demás elementos */
 }
 
 .sidenav p {
-    padding: 10px 25px;
+    padding: 30px 25px;
     text-decoration: none;
     font-size: 15px;
     color: #000000;
@@ -39,11 +40,10 @@
     cursor: pointer;
     position: fixed;
     right: 10px; /* Posición fija a la derecha */
-    
 }
 
 .bar1, .bar2, .bar3 {
-    width: 25px;
+    width: 35px;
     height: 5px;
     background-color: #333;
     margin: 6px 0;
@@ -78,6 +78,7 @@
 	
 	/* Ajusta el tamaño del logo según sea necesario */
 }
+
 
 /* Estilos adicionales según tus necesidades */
 .menu-container {
@@ -120,10 +121,6 @@ body {
 
 
 section {
-	padding:10px;
+	padding:20px;
 }
-
-
-
-
 

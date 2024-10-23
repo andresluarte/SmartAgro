@@ -19,7 +19,7 @@ label.error {
 }
 .slideshow-container {
     max-width: 100px;
-    position: absolute;
+    
     
 }
 
@@ -44,14 +44,6 @@ label.error {
 .bx-viewport.bx-viewport {
     min-height: 90px;
   }
-/* header {
-    display:flex;
-    max-height: 70px;
-    background-color: #08b522c0;
-    justify-content:space-between;
-    align-items:center;
-    /* for float if flex not supported */
-  /* } */ */
 
 
 
