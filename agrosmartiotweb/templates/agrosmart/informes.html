@@ -47,6 +47,7 @@
 
             const soilLabels = soilData.map(entry => entry.hour);
             const soilHumidity = soilData.map(entry => entry.avg_humidity_soil);
+            const soiltemperature = soilData.map(entry => entry.avg_temp);
 
             const tempHumidityChart = new Chart(document.getElementById('tempHumidityChart'), {
                 type: 'line',
@@ -81,6 +82,13 @@
                             data: soilHumidity,
                             borderColor: 'rgba(75, 192, 192, 1)',
                             backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                            fill: true
+                        },
+                        {
+                            label: 'Temperatura Promedio',
+                            data: soiltemperature,
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            backgroundColor: 'rgba(54, 162, 235, 0.2)',
                             fill: true
                         }
                     ]

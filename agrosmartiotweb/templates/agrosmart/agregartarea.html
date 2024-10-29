@@ -20,6 +20,7 @@
                 </a>
                 <form action="" class="formularioproceso" method="post" enctype="multipart/form-data">
                     {% csrf_token %}
+                    
 
                     {{form | crispy}}
 
@@ -34,8 +35,8 @@
 
 
 
-                        {{mensaje}}
-
+                        
+                    
                 </form>
                 
                 

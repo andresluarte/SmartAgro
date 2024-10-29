@@ -1,6 +1,6 @@
 import django_filters
 from django_filters import DateFromToRangeFilter
-from .models import Procesos,Trabajador,Jornada
+from .models import Procesos,Trabajador,Jornada,JornadaPorTrato
 
 
 class ProcesoFilter(django_filters.FilterSet):

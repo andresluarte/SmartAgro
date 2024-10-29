@@ -38,21 +38,7 @@ def home(request):
 
 
 
-class ProcesoListView(ListView):
-    queryset = Procesos.objects.all()
-    form_class = FormatoForm
-    template_name = 'agrosmart/gestiondetareas.html'
-    context_object_name = 'procesos'
 
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        self.filterset = ProcesoFilter(self.request.GET, queryset=queryset)
-        return self.filterset.qs
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['form'] = self.filterset.form
-        return context
     
 #exportar tarea (proceso)       
 class ExportToExcelViewProceso(View):
@@ -164,10 +150,11 @@ def modificartarea(request, id):
         if formulario.is_valid():
             formulario.save()
             messages.success(request, "Modificado Correctamente")
-            return redirect('gestiondetareas')  # Puedes redirigir a una vista después de modificar
-        data["form"] = formulario
+            return redirect('gestiondetareas')  # Redirigir a la vista deseada
+        data["form"] = formulario  # Volver a mostrar el formulario con errores
 
     return render(request, 'agrosmart/modificartarea.html', data)
+
 #Modificar Trabajador
 def modificartrabajadores(request,id):
     trabajadores = get_object_or_404(Trabajador,id=id)
@@ -413,22 +400,24 @@ def TrabajadorList(request):
     context['trabajador_page_obj'] = trabajador_page_obj
 
     return render(request, 'agrosmart/trabajadores/gestiondetrabajadores.html', context=context)
- 
+from django.core.paginator import Paginator
+from .models import Procesos
+
 def ProcesoList(request):
-    context = { }
+    context = {}
     filtered_proceso = ProcesoFilter(
         request.GET,
-        queryset=Procesos.objects.all()
-
-    ) 
+        queryset=Procesos.objects.all().order_by('-id')  # Ordenar en orden descendente para mostrar los últimos registros primero
+    )
     context['filtered_proceso'] = filtered_proceso
-    paginated_filtered_proceso = Paginator(filtered_proceso.qs,8)
+    paginated_filtered_proceso = Paginator(filtered_proceso.qs, 8)
     page_number = request.GET.get('page')
     proceso_page_obj = paginated_filtered_proceso.get_page(page_number)
 
     context['proceso_page_obj'] = proceso_page_obj
     
     return render(request, 'agrosmart/gestiondetareas.html', context=context)
+
 
 from django.core.serializers import serialize
 @login_required(login_url="my_login")
@@ -891,7 +880,7 @@ def lista_empresas(request):
 #DATOS DE SENSOR 
 
 from .models import TemperatureHumidityLocation
-from .models import HumiditySoil,SensorAire
+from .models import HumidityTemperaturaSoil,SensorAire,SensorSuelo
 @csrf_exempt
 def receive_data(request):
     if request.method == 'POST':
@@ -933,21 +922,38 @@ def receive_data(request):
 #DATOS SENSOR SUELO
 
 @csrf_exempt
+
 def receive_data_soil(request):
     if request.method == 'POST':
-        # Procesar los datos aquí
-        data = request.POST
-        humiditysoil = data.get('humiditysoil')
+        # Obtener la API Key desde la cabecera 'Authorization'
+        api_key = request.headers.get('Authorization')
+        
+        if not api_key:
+            return JsonResponse({'status': 'error', 'message': 'API Key no proporcionada'}, status=400)
 
-        if humiditysoil:
-            HumiditySoil.objects.create(
-                humiditysoil=humiditysoil,
-            )
-            return JsonResponse({"status": "success"})
-        else:
-            return JsonResponse({"message": "Missing data"}, status=400)
-    else:
-        return JsonResponse({"message": "Invalid request method"}, status=405)
+        # Verificar que la API Key sea válida
+        sensor = SensorSuelo.objects.filter(api_key=api_key).first()
+        if not sensor:
+            return JsonResponse({'status': 'error', 'message': 'API Key inválida'}, status=403)
+
+        # Obtener los datos enviados en la solicitud
+        humiditysoil = request.POST.get('humiditysoil')
+        temperature = request.POST.get('temperature')
+
+        # Verificar que los datos obligatorios estén presentes
+        if not all([humiditysoil, temperature]):
+            return JsonResponse({'status': 'error', 'message': 'Datos incompletos'}, status=400)
+
+        # Crear una nueva entrada de datos asociada al sensor
+        HumidityTemperaturaSoil.objects.create(
+            humiditysoil=humiditysoil,
+            temperature=temperature,
+            sensor=sensor  # Asociar los datos al sensor encontrado por la API Key
+        )
+
+        return JsonResponse({'status': 'success', 'message': 'Datos de humedad del suelo recibidos correctamente'})
+
+    return JsonResponse({'status': 'error', 'message': 'Método no permitido'}, status=405)
 
 
 
@@ -966,73 +972,136 @@ from .models import TemperatureHumidityLocation, SensorAire
 
 @login_required
 def combined_data_view(request):
-    # Obtener el usuario actual 
+    # Obtener el usuario actual
     user = request.user
 
-    # Obtener los sensores del usuario
+    # Obtener todos los sensores asociados al usuario
     sensors = SensorAire.objects.filter(user=user)
 
     # Comprobar si el usuario tiene sensores
     if not sensors.exists():
         return render(request, 'agrosmart/tiemporeal.html', {
-            'latest_data': None,
-            'temperature_recommendation': "No tienes sensores registrados.",
-            'humidity_recommendation': "",
-            'sensor_id': None,
-            
+            'sensor_data': [],
+            'no_sensors_message': "No tienes sensores registrados.",
         })
 
-    # Obtener la última entrada de datos para los sensores del usuario
-    latest_data = TemperatureHumidityLocation.objects.filter(sensor__in=sensors).order_by('-timestamp').first()
+    # Crear una lista para almacenar los datos de cada sensor y sus recomendaciones
+    sensor_data = []
 
-    # Inicializar las recomendaciones
-    temperature_recommendation = ""
-    humidity_recommendation = ""
-    sensor_id = None
+    for sensor in sensors:
+        # Obtener la última entrada de datos para el sensor
+        latest_data = TemperatureHumidityLocation.objects.filter(sensor=sensor).order_by('-timestamp').first()
 
+        if latest_data:
+            temperature = float(latest_data.temperature)
+            humidity = float(latest_data.humidity)
 
-    if latest_data:
-        # Obtener datos de temperatura y humedad
-        temperature = float(latest_data.temperature)
-        humidity = float(latest_data.humidity)
-        sensor_id = latest_data.sensor.id
+            # Generar recomendaciones
+            temperature_recommendation = ""
+            humidity_recommendation = ""
 
-        # Recomendaciones basadas en temperatura
-        if temperature < 0:
-            temperature_recommendation = "La temperatura es muy baja. Protege tus plantas del frío extremo."
-        elif 0 <= temperature <= 10:
-            temperature_recommendation = "La temperatura es fresca. Considera proteger las plantas del frío."
-        elif 10 < temperature <= 25:
-            temperature_recommendation = "La temperatura es óptima para las plantas de uva."
-        elif temperature > 25:
-            temperature_recommendation = "La temperatura es alta. Asegúrate de que las plantas tengan suficiente agua."
+            if temperature < 0:
+                temperature_recommendation = "La temperatura es muy baja. Protege tus plantas del frío extremo."
+            elif 0 <= temperature <= 10:
+                temperature_recommendation = "La temperatura es fresca. Considera proteger las plantas del frío."
+            elif 10 < temperature <= 25:
+                temperature_recommendation = "La temperatura es óptima para las plantas de uva."
+            elif temperature > 25:
+                temperature_recommendation = "La temperatura es alta. Asegúrate de que las plantas tengan suficiente agua."
 
-        # Recomendaciones basadas en humedad
-        if humidity < 40:
-            humidity_recommendation = "El aire está seco. Es recomendable aumentar la humedad para las plantas."
-        elif 40 <= humidity <= 70:
-            humidity_recommendation = "La humedad es adecuada para el crecimiento de las plantas de uva."
-        elif humidity > 70:
-            humidity_recommendation = "La humedad es alta. Podría haber riesgo de enfermedades fúngicas."
-    else:
-        temperature_recommendation = "No hay datos disponibles para tus sensores."
+            if humidity < 40:
+                humidity_recommendation = "El aire está seco. Es recomendable aumentar la humedad para las plantas."
+            elif 40 <= humidity <= 70:
+                humidity_recommendation = "La humedad es adecuada para el crecimiento de las plantas de uva."
+            elif humidity > 70:
+                humidity_recommendation = "La humedad es alta. Podría haber riesgo de enfermedades fúngicas."
+
+            # Agregar datos a la lista
+            sensor_data.append({
+                'sensor_id': sensor.id,
+                'latest_data': latest_data,
+                'temperature_recommendation': temperature_recommendation,
+                'humidity_recommendation': humidity_recommendation
+            })
+        else:
+            # Si no hay datos, agregar el sensor con un mensaje de falta de datos
+            sensor_data.append({
+                'sensor_id': sensor.id,
+                'latest_data': None,
+                'temperature_recommendation': "No hay datos disponibles.",
+                'humidity_recommendation': "No hay datos disponibles."
+            })
 
     return render(request, 'agrosmart/tiemporeal.html', {
-        'latest_data': latest_data,
-        'temperature_recommendation': temperature_recommendation,
-        'humidity_recommendation': humidity_recommendation,
-        'sensor_id': sensor_id,
+        'sensor_data': sensor_data,
     })
 
 
-
-
-
-
-
+@login_required
 def combined_data_view_soil(request):
-    latest_data = HumiditySoil.objects.last()
-    return render(request, 'agrosmart/tiemporealsoil.html', {'latest_data': latest_data})
+    # Obtener el usuario actual
+    user = request.user
+
+    # Obtener todos los sensores de suelo asociados al usuario
+    sensors = SensorSuelo.objects.filter(user=user)
+
+    # Comprobar si el usuario tiene sensores
+    if not sensors.exists():
+        return render(request, 'agrosmart/tiemporealsoil.html', {
+            'sensor_data': [],
+            'no_sensors_message': "No tienes sensores de suelo registrados.",
+        })
+
+    # Crear una lista para almacenar los datos de cada sensor y sus recomendaciones
+    sensor_data = []
+
+    for sensor in sensors:
+        # Obtener la última entrada de datos para el sensor
+        latest_data = HumidityTemperaturaSoil.objects.filter(sensor=sensor).order_by('-timestamp').first()
+
+        if latest_data:
+            soil_temperature = float(latest_data.temperature)
+            soil_humidity = float(latest_data.humiditysoil)
+
+            # Generar recomendaciones
+            soil_temperature_recommendation = ""
+            soil_humidity_recommendation = ""
+
+            # Recomendaciones basadas en la temperatura del suelo
+            if soil_temperature < 10:
+                soil_temperature_recommendation = "La temperatura del suelo es baja. Considera el uso de coberturas para retener el calor."
+            elif 10 <= soil_temperature <= 20:
+                soil_temperature_recommendation = "La temperatura del suelo es óptima para la mayoría de cultivos."
+            elif soil_temperature > 20:
+                soil_temperature_recommendation = "La temperatura del suelo es alta. Asegúrate de que haya suficiente humedad para evitar estrés en las plantas."
+
+            # Recomendaciones basadas en la humedad del suelo
+            if soil_humidity < 30:
+                soil_humidity_recommendation = "El suelo está muy seco. Es necesario regar para mantener la salud de las plantas."
+            elif 30 <= soil_humidity <= 60:
+                soil_humidity_recommendation = "La humedad del suelo es adecuada para el crecimiento saludable de las plantas."
+            elif soil_humidity > 60:
+                soil_humidity_recommendation = "La humedad del suelo es alta. Asegúrate de tener buen drenaje para evitar encharcamientos."
+
+            # Agregar datos a la lista
+            sensor_data.append({
+                'sensor_id': sensor.id,
+                'latest_data': latest_data,
+                'soil_temperature_recommendation': soil_temperature_recommendation,
+                'soil_humidity_recommendation': soil_humidity_recommendation
+            })
+        else:
+            # Si no hay datos, agregar el sensor con un mensaje de falta de datos
+            sensor_data.append({
+                'sensor_id': sensor.id,
+                'latest_data': None,
+                'soil_temperature_recommendation': "No hay datos disponibles.",
+                'soil_humidity_recommendation': "No hay datos disponibles."
+            })
+
+    return render(request, 'agrosmart/tiemporealsoil.html', {
+        'sensor_data': sensor_data,
+    })
 
 
 #INFORMES DE DATOS 1
@@ -1058,10 +1127,10 @@ def informes(request):
     
     # Promedio por hora para HumiditySoil
     soil_data = (
-        HumiditySoil.objects
+        HumidityTemperaturaSoil.objects
         .annotate(hour=TruncHour('timestamp'))
         .values('hour')
-        .annotate(avg_humidity_soil=Avg('humiditysoil'))
+        .annotate(avg_humidity_soil=Avg('humiditysoil'),avg_temp=Avg('temperature'),)
         .order_by('hour')
     )
 
@@ -1078,6 +1147,7 @@ def informes(request):
         {
             'hour': entry['hour'].strftime('%Y-%m-%d %H:%M:%S'),
             'avg_humidity_soil': round(entry['avg_humidity_soil'], 2),
+            'avg_temp': round(entry['avg_temp'], 2),
         } for entry in soil_data
     ]
 
@@ -1137,11 +1207,25 @@ def gestion_zonaPoligon(request):
     
 
 
-from .models import FinanzasPorTrabajador
-
+from .models import FinanzasPorTrabajador, FinanzasPorInsumosyMaquinaria,FinanzasPorMes
+from django.db.models import Sum
+@login_required
 def gestion_finanzas(request):
     finanzas = FinanzasPorTrabajador.objects.all()
-    return render(request, 'agrosmart/finanzas/gestion_finanzas.html', {'finanzas': finanzas})
+    finanzas_por_mes = FinanzasPorMes.objects.all()
+    finanzas_insumos = FinanzasPorInsumosyMaquinaria.objects.values('trabajo__trabajo__opciones_trabajo').annotate(
+        total_gasto=Sum('gasto_total')
+    )
+
+    return render(request, 'agrosmart/finanzas/gestion_finanzas.html', {
+        'finanzas': finanzas,
+        'finanzas_insumos': finanzas_insumos,
+        'finanzas_por_mes': finanzas_por_mes
+    })
+
+
+
+
 
 
 
@@ -1195,7 +1279,7 @@ def cuadernodecampo(request):
             'title': f"Tarea: {proceso.trabajo} ",
             'start': proceso.fecha.isoformat(),
             'end': proceso.fecha.isoformat(),
-            'sector': proceso.sector.nombre if proceso.sector else 'Sin sector',
+            
             'trabajador': proceso.asignado.nombre,
         })
 
@@ -1242,3 +1326,4 @@ def crear_cosecha(request):
 def cosechas_list(request):
     cosechas = Cosecha.objects.filter(user=request.user)  # Filtra por usuario actual
     return render(request, 'agrosmart/cosecha/gestion_cosecha.html', {'cosechas': cosechas})
+

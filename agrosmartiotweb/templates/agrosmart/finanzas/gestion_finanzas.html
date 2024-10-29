@@ -5,6 +5,18 @@
 {% load agrosmartiotweb %}
 {% block js %}
 <style>
+    .table-container {
+        width: 100%; /* Ancho completo */
+        max-height: 200px; /* Altura máxima para permitir el scroll */
+        overflow-y: auto; /* Desplazamiento vertical */
+        border: 1px solid #ccc; /* Borde alrededor de la tabla */
+        border-radius: 5px; /* Bordes redondeados */
+    }
+    table {
+            width: 100%; /* Ancho completo de la tabla */
+            border-collapse: collapse; /* Colapsar bordes */
+        }
+    
     .tareas-extras {
         display: flex;
         flex-wrap: wrap;
@@ -24,9 +36,16 @@
     }
 
     /* Ajustar tamaño de los gráficos */
-    #gastosChart, #gastosHorizontalesChart {
-        max-width: 400px;
-        height: 200px;
+    #gastosChart  {
+        max-width: 250px;
+        max-height: 300px;
+    }
+    #gastoTotalChart  {
+        max-width: 3000px;
+        max-height: 250px;
+
+       
+
     }
 </style>
 
@@ -62,18 +81,112 @@
             </div>
             <br><br>
             
+            
             <!-- Gráfico de barras verticales -->
             <canvas id="gastosChart"></canvas>
             <br><br>
+            
+    
 
             <!-- Gráfico de barras horizontales -->
-            <canvas id="gastosHorizontalesChart"></canvas>
-
+            
+            <h3>Finanzas por Insumos y Maquinarias</h3>
+            <hr>
+            <div>
+                <table class="table table-striped table-hover" style="margin-bottom: 5px;">
+                  
+                    <tr>
+                        <th>Trabajo</th>
+                        <th>Gasto Total</th>
+                    </tr>
+                    
+                
+                    {% for finanza in finanzas_insumos %}
+                    <tr>
+                        <td>{{ finanza.trabajo__trabajo__opciones_trabajo }}</td>
+                        <td>${{ finanza.total_gasto|floatformat:2 }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="2" class="text-center">No hay registros disponibles.</td>
+                    </tr>
+                    {% endfor %}
+                    
+                </table>
+                
+            </div>
+            <canvas id="gastoTotalChart" width="1" height="1"></canvas>
+            <h3>Finanzas por Mes</h3>
+                <hr>
+                <div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Mes/Año</th>
+                                    <th>Total Gasto Jornadas</th>
+                                    <th>Total Gasto Jornadas por Trato</th>
+                                    <th>Total Gasto Final</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for finanza in finanzas_por_mes %}
+                                <tr>
+                                    <td>{{ finanza.mes_año|date:"F Y" }}</td>
+                                    <td>{{ finanza.total_gasto_jornadas }}</td>
+                                    <td>{{ finanza.total_gasto_jornadas_por_trato }}</td>
+                                    <td>{{ finanza.total_gasto_final }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                </div>
+            </div>
+            
         </div>
         <br><br>
     </div>
 </div>
 
+<script>
+    
+    document.addEventListener("DOMContentLoaded", function() {
+        const trabajos = [{% for finanza in finanzas_insumos %}'{{ finanza.trabajo__trabajo__opciones_trabajo }}'{% if not forloop.last %}, {% endif %}{% endfor %}];
+        const gastosTotales = [{% for finanza in finanzas_insumos %}{{ finanza.total_gasto }}{% if not forloop.last %}, {% endif %}{% endfor %}];
+
+        const ctx = document.getElementById('gastoTotalChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: trabajos,
+                datasets: [{
+                    label: 'Gasto Total ($)',
+                    data: gastosTotales,
+                    backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1,
+                    barThickness: 40  // Ajusta el grosor de las barras aquí
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                scales: {
+                    x: {
+                        beginAtZero: true
+                    }
+                },
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+    });
+</script>
 <script>
 // Obtener datos desde el contexto de Django
 const trabajadores = [
@@ -168,5 +281,6 @@ const gastosHorizontalesChart = new Chart(ctxHorizontales, {
     }
 });
 </script>
+
 
 {% endblock %}

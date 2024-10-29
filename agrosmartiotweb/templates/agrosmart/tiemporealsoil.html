@@ -7,6 +7,7 @@
 <head>
     <title>Humedad del Suelo</title>
     <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -71,28 +72,71 @@
 </head>
 <body>
     <div class="container">
-        <h3>Datos Sensor 2  </h3>
-        {% if latest_data %}
-            <div class="section">
-                <h3>Humedad Suelo</h3>
-                <div class="data">
-                    
-                    <div>
-                        <strong>Humedad :</strong> <span>{{ latest_data.humiditysoil }}%</span>
-<br>
-<br>
+        <h3>Datos Sensor Suelo  </h3>
+        {% if sensor_data %}
+            {% for sensor in sensor_data %}
+                <div class="section">
+                    <h3>Sensor ID {{ sensor.sensor_id }}</h3>
+                    <div class="data">
+                        <div>
+                            <strong>Humedad Suelo:</strong> <span>{{ sensor.latest_data.humiditysoil }}%</span><br>
+                            <strong>Temperatura Suelo:</strong> <span>{{ sensor.latest_data.temperature }}°C</span><br>
+                            <strong>Últimos Datos:</strong> <span>{{ sensor.latest_data.timestamp }}</span><br><br>
 
-                        <strong>Ultimos Datos:</strong> <span>{{ latest_data.timestamp }}</span>
+                            <strong>Recomendación de Humedad:</strong> <span>{{ sensor.soil_humidity_recommendation }}</span><br>
+                            <strong>Recomendación de Temperatura:</strong> <span>{{ sensor.soil_temperature_recommendation }}</span>
+                        </div>
                     </div>
                 </div>
-            </div>
+                <p>Debug - Humedad: {{ sensor.latest_data.humiditysoil }}, Temperatura: {{ sensor.latest_data.temperature }}</p>
 
-            
-        
+                <canvas id="chart-{{ sensor.sensor_id }}" width="100" height="80"></canvas>
+            {% endfor %}
         {% else %}
-            <p>No data available.</p>
+            <p>No hay datos disponibles.</p>
         {% endif %}
+       
+
     </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            {% for sensor in sensor_data %}
+                // Configuración del gráfico para cada sensor
+                const ctx{{ sensor.sensor_id }} = document.getElementById('chart-{{ sensor.sensor_id }}').getContext('2d');
+                const chart{{ sensor.sensor_id }} = new Chart(ctx{{ sensor.sensor_id }}, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Humedad Suelo', 'Temperatura Suelo'],
+                        datasets: [{
+                            label: 'Valores en Tiempo Real',
+                            data: [Number({{ sensor.latest_data.humiditysoil }}), Number({{ sensor.latest_data.temperature }})],
+                            backgroundColor: ['#4CAF50', '#FF5722'],
+                            borderColor: ['#388E3C', '#E64A19'],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Valores (%)'
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'top'
+                            }
+                        }
+                    }
+                });
+            {% endfor %}
+        });
+    </script>
     
 </body>
 </html>

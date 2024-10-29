@@ -5,6 +5,10 @@
 
 <br>
 <br>
+<h3 style="text-align: center;">Transforma la Gestión de tus Viñedos con SmartAgro-IoT</h3>
+<p style="text-align: center;">Monitorea y optimiza las condiciones de tus cultivos en tiempo real desde cualquier lugar.</p>
+
+
 <h3 title="center">Bienvenido {{user.username}}</h3>
 <div class="slider">
     {% if empresa %}
@@ -49,6 +53,112 @@
         </div>
     {% endif %}
 </div>
+
+<div id="weather-widget"></div>
+
+<div class="card" style="text-align: center; margin-top: 20px; padding: 20px; box-shadow: 0px 4px 8px rgba(0,0,0,0.2); border-radius: 10px;">
+  <h3 style="margin-top: 20px;">¿Qué es SmartAgro-IoT?</h3>
+  <h4>Una Solución Tecnológica Innovadora para Productores Vitivinícolas</h4>
+  <p style="text-align: justify; margin: 20px;">
+    SmartAgroIoT es una plataforma inteligente que utiliza sensores IoT (Internet de las Cosas) para monitorear en tiempo real los parámetros críticos de tus viñedos, como la temperatura, humedad del suelo y nutrientes. Nuestro sistema te ayuda a tomar decisiones informadas que optimizan el rendimiento y la calidad de tus cultivos.
+  </p>
+</div>
+<div class="card" style="text-align: center; margin-top: 30px;">
+  <h3 style="margin-top: 20px;">Beneficios Clave</h3>
+  <h4>Optimiza, Ahorra y Mejora tu Producción</h4>
+  <div class="benefits-grid" style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; margin-top: 20px;">
+    
+    <!-- Beneficio 1 -->
+    <div class="benefit-item" style="width: 200px; text-align: center;">
+      <!-- Icono SVG de gráfico para monitoreo -->
+      <i class="fa-thin fa-building-wheat fa-2xl" style="color: #099024;"></i>
+      <img class="img" src="{% static 'app/img/icono-monitoreo.png' %}" alt="Default Banner 3">
+    
+      <h5>Monitoreo en tiempo real</h5>
+      <p style="text-align: justify;">Controla las condiciones de tu viñedo desde tu smartphone o computadora.</p>
+  </div>
+  
+  
+  
+    
+
+    <!-- Beneficio 2 -->
+    <div class="benefit-item" style="width: 200px; text-align: center;">
+      <!-- Icono SVG de gota de agua para ahorro -->
+      <img class="img" src="{% static 'app/img/icono-fertilizante.png' %}" alt="Default Banner 3">
+      <h5>Ahorro de agua y fertilizantes</h5>
+      <p style="text-align: justify;">Toma decisiones basadas en datos para un uso eficiente de los recursos.</p>
+  </div>
+  
+
+    <!-- Beneficio 3 -->
+    <div class="benefit-item" style="width: 200px; text-align: center;">
+      <!-- Icono SVG de racimo de uvas -->
+      <img class="img" src="{% static 'app/img/icono-cosecha2.png' %}" alt="Default Banner 3">
+      <h5>Mejora la calidad del vino</h5>
+      <p style="text-align: justify;">Un control detallado de las condiciones del viñedo se traduce en uvas de mejor calidad.</p>
+  </div>
+  
+    <!-- Beneficio 4 -->
+    <div class="benefit-item" style="width: 200px; text-align: center;">
+      <!-- Icono SVG de alerta/ notificación -->
+      <img class="img" src="{% static 'app/img/icono-cloud.png' %}" alt="Default Banner 3">
+      <h5>Alertas inmediatas</h5>
+      <p style="text-align: justify;">Recibe notificaciones cuando los parámetros críticos se desvíen de lo óptimo.</p>
+  </div>
+  
+
+    <!-- Beneficio 5 -->
+    <div class="benefit-item" style="width: 200px; text-align: center;">
+      <!-- Icono SVG de mano tocando pantalla -->
+      <img class="img" src="{% static 'app/img/icono-app.png' %}" alt="Default Banner 3">
+      <h5>Fácil de usar</h5>
+      <p style="text-align: justify;">No necesitas ser un experto en tecnología para aprovechar SmartAgro-IoT.</p>
+  </div>
+  
+    
+  </div>
+</div>
+
+<div class="card" style="text-align: center; margin-top: 20px; padding: 20px; background-color: #f9f9f9; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+  <h3 style="margin-top: 20px;">Cómo Funciona SmartAgro-IoT</h3>
+  <h4>En 3 Simples Pasos</h4>
+  <p style="margin-bottom: 20px;">Sigue estos pasos para comenzar a optimizar tu viñedo:</p>
+
+  <div style="display: flex; justify-content: space-around; flex-wrap: wrap; margin-top: 20px;">
+    <div style="flex: 1; min-width: 200px; margin: 10px; padding: 15px; background-color: #ffffff; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+      <img class="img" src="{% static 'app/img/icono-monitoreo2.png' %}" alt="Default Banner 3">
+      <h5>1. Instala los sensores</h5>
+      <p>Coloca nuestros sensores en los puntos estratégicos de tu viñedo.</p>
+      <img src="{% static 'path/to/installation-image.jpg' %}" alt="Instalación de Sensores" style="width: 100%; border-radius: 5px;">
+    </div>
+
+    <div style="flex: 1; min-width: 200px; margin: 10px; padding: 15px; background-color: #ffffff; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+      <img class="img" src="{% static 'app/img/icono-monitoreo3.png' %}" alt="Default Banner 3">
+      <h5>2. Monitorea desde tu dispositivo</h5>
+      <p>Accede a la plataforma desde cualquier dispositivo y visualiza los datos en tiempo real.</p>
+      <img src="{% static 'path/to/monitoring-image.jpg' %}" alt="Monitoreo desde Dispositivo" style="width: 100%; border-radius: 5px;">
+    </div>
+
+    <div style="flex: 1; min-width: 200px; margin: 10px; padding: 15px; background-color: #ffffff; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+      <img class="img" src="{% static 'app/img/farmer.png' %}" alt="Default Banner 3">
+      <h5>3. Toma decisiones inteligentes</h5>
+      <p>Optimiza riego, fertilización y más con la información recolectada.</p>
+      <img src="{% static 'path/to/decision-making-image.jpg' %}" alt="Toma de Decisiones" style="width: 100%; border-radius: 5px;">
+    </div>
+  </div>
+</div>
+<div class="card" style="text-align: center; margin-top: 20px; padding: 20px; background-color: #f9f9f9; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+  <h3 style="margin-top: 20px;">Lo que Dicen Nuestros Clientes</h3>
+  <h4>Casos de Éxito</h4>
+
+  <div style="margin-top: 20px; padding: 15px; background-color: #ffffff; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+    <p><strong>Rodrigo G., productor de vino:</strong> "Desde que instalamos SmartAgro-IoT, hemos reducido el consumo de agua en un 25%, mejorando a la vez la calidad de nuestras uvas."</p>
+    <p><strong>María P., productora de viñedos:</strong> "Las alertas en tiempo real me han permitido actuar de inmediato ante cambios climáticos inesperados."</p>
+  </div>
+</div>
+
+
 
 
 <div id="weather-widget"></div>

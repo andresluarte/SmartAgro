@@ -7,10 +7,13 @@ class DateInput(forms.DateInput):
 class TimePickerInput(forms.TimeInput):
     input_type = 'time'
 
+
+
 class ProcesoForm(forms.ModelForm):
+    
     class Meta:
         model = Procesos
-        fields = ["trabajo", "fecha", "hora_asignada", "sector", "huerto", "lote", "asignado", "presupuesto", "observacion"]
+        fields = ["trabajo", "fecha", "hora_asignada", "asignado", "presupuesto", "observacion"]
         widgets = {
             "fecha": DateInput,
         }
@@ -21,9 +24,7 @@ class ProcesoForm(forms.ModelForm):
         
         # Filtrar los queryset según el usuario logueado
         self.fields['asignado'].queryset = Trabajador.objects.filter(user=user)
-        self.fields['sector'].queryset = Sector.objects.filter(user=user)
-        self.fields['huerto'].queryset = Huerto.objects.filter(user=user)
-        self.fields['lote'].queryset = Lote.objects.filter(user=user)
+        
 
 class ContactoForm(forms.ModelForm):
 
@@ -35,7 +36,7 @@ class ProcesoModificarForm(forms.ModelForm):
     
     class Meta:
         model = Procesos
-        fields = ["trabajo", "fecha", "hora_asignada", "sector", "huerto", "lote", "estado", "asignado", "presupuesto", "observacion"]
+        fields = ["trabajo", "fecha", "hora_asignada", "estado", "asignado", "presupuesto", "observacion"]
         widgets = {
             "fecha": forms.SelectDateWidget,
         }
@@ -46,9 +47,7 @@ class ProcesoModificarForm(forms.ModelForm):
         
         # Filtrar los queryset según el usuario logueado
         self.fields['asignado'].queryset = Trabajador.objects.filter(user=user)
-        self.fields['sector'].queryset = Sector.objects.filter(user=user)
-        self.fields['huerto'].queryset = Huerto.objects.filter(sector__user=user)
-        self.fields['lote'].queryset = Lote.objects.filter(huerto__sector__user=user)
+      
 class TrabajadorModificarForm(forms.ModelForm):
     
     class Meta:

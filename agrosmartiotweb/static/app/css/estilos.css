@@ -103,13 +103,31 @@ img {
 /*FOOTER*/
 
 #footer {
-  
-    height:50px;
-    line-height:50px;
-    bottom:0;
-    left:0;
-    width:100%;;
+    background: linear-gradient(#ffffff90, #79ff8dc0);
+    height: 50px;
+    line-height: 50px;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    display: flex; /* Usar flexbox para alinear los elementos */
+    justify-content: center; /* Centrar horizontalmente */
+    align-items: center; /* Centrar verticalmente */
+    flex-wrap: wrap; /* Permitir que los elementos se envuelvan si es necesario */
 }
+
+.footer-icons {
+    display: flex; /* Usar flexbox para alinear los íconos */
+    justify-content: center; /* Centrar horizontalmente los íconos */
+    align-items: center; /* Centrar verticalmente los íconos */
+    margin-left: 20px; /* Espaciado entre 'Cerrar Sesión' e íconos */
+}
+
+.footer-link {
+    text-decoration: none; 
+    color: #333; 
+    margin-right: 20px; /* Espacio entre el enlace y los íconos */
+}
+
 
 
 
@@ -249,10 +267,6 @@ textarea {
 
 
 
-#footer{
-    background: linear-gradient(#f69c3c90, #08b522c0);
-
-}
 
 .bold-link {
     font-weight: bold;

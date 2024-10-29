@@ -59,7 +59,7 @@
   <br>
   <div class="card">
     <div class="card-body">
-      <h3> Gestión de Tareas </h3>
+      <h3> Insumos y Maquinaria </h3>
       <hr>
       <td>
         <div class="btn-group justify-content-end">
@@ -68,7 +68,7 @@
           </button>
           <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
 
-            <a class="dropdown-item"href="{% url 'agregartarea' %}" >Agregar Tarea</a>
+            <a class="dropdown-item"href="{% url 'agregartarea' %}" >Agregar Insumo/Maquinaria</a>
             <a class="dropdown-item" href="{% url 'gestiondetrabajadores' %}">Trabajadores</a>
             <a type="button" class="dropdown-item" data-toggle="modal" data-target="#searchModal" href="#">FILTRAR</a>
             <a class="dropdown-item" href="{% url 'exportar_a_excel_proceso' %}?{{ request.GET.urlencode }}">Exportar a
@@ -125,9 +125,7 @@
               <th>TRABAJO</th>
               <th>FECHA</th>
               <th>HORA ASIGNADA</th>
-              <th>SECTOR</th>
-              <th>HUERTO</th>
-              <th>LOTE</th>
+            
               
               <th>ESTADO</th>
               <th>ASIGNADO</th>
@@ -149,29 +147,6 @@
               <td>{{ p.trabajo }}</td>
               <td>{{ p.fecha }}</td>
               <td>{{ p.hora_asignada }}</td>
-              <td>
-                {% if p.sector %}
-                {{ p.sector}}
-                {% else %}
-                Sin Sector Asignado
-                {% endif %}
-              </td>
-              <td>
-                {% if p.huerto %}
-                {{ p.huerto}}
-                {% else %}
-                Sin Huerto Asignado
-                {% endif %}
-
-              </td>
-
-              <td>
-                {% if p.lote%}
-                {{ p.lote}}
-                {% else %}
-                Sin Lote Asignado
-                {% endif %}
-              </td>
               <td>{{ p.estado }}</td>
               <td>{{ p.asignado }}</td>
               <td>${{ p.presupuesto|floatformat:"-2" }}</td>

@@ -105,12 +105,45 @@ class Trabajador(models.Model):
     class Meta:
         ordering = ['-fecha_ingreso']
 
+from django.db import models
+from django.conf import settings
+
+from django.db import models
+
+class InsumoOpciones(models.Model):
+    OPCIONES_TRABAJO = [
+        ("Fertilizantes (urea, nitrato de amonio)", "Fertilizantes (urea, nitrato de amonio)"),
+        ("Fungicidas (azufre, Tercel 50 WP)", "Fungicidas (azufre, Tercel 50 WP)"),
+        ("Herbicidas (Roundup)", "Herbicidas (Roundup)"),
+        ("Pesticidas (Podexal)", "Pesticidas (Podexal)"),
+        ("Agua de riego", "Agua de riego"),
+        ("Postes y alambres", "Postes y alambres"),
+        ("Cintas de amarre", "Cintas de amarre"),
+        ("Semillas", "Semillas"),
+        ("Sustratos", "Sustratos"),
+        ("Aplicación de pesticidas y fertilizantes", "Aplicación de pesticidas y fertilizantes"),
+        ("Tractores, arados, sembradoras", "Tractores, arados, sembradoras"),
+        ("Sistema de riego", "Sistema de riego"),
+        ("Pulverizadores", "Pulverizadores"),
+        ("Transporte de insumos", "Transporte de insumos"),
+        ("Cosecha y acarreo de uvas", "Cosecha y acarreo de uvas"),
+        ("Otro", "Otro"),
+    ]
+
+    opciones_trabajo = models.CharField(max_length=100, choices=OPCIONES_TRABAJO)
+
+    def __str__(self):
+        return self.opciones_trabajo
+
+
+
+
+
 class Procesos(models.Model):
-    trabajo = models.CharField(max_length=50, null=True, blank=True)
+    trabajo = models.ForeignKey(InsumoOpciones, on_delete=models.CASCADE, null=True)
+    
     fecha = models.DateField(default=datetime.date.today)
-    sector = models.ForeignKey(Sector, on_delete=models.CASCADE, max_length=50, null=True, default="sin especificar", blank=True)
-    huerto = models.ForeignKey(Huerto, on_delete=models.CASCADE, max_length=50, null=True, default="sin especificar", blank=True)
-    lote = models.ForeignKey(Lote, on_delete=models.CASCADE, max_length=50, null=True, default="sin especificar", blank=True)
+    
     ESTADO_CHOICES = (
         ('Por Realizar', 'Por Realizar'),
         ('En Proceso', 'En Proceso'),
@@ -125,7 +158,11 @@ class Procesos(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)  # Actualiza aquí
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='procesos_creados', on_delete=models.CASCADE)
     def __str__(self):
-        return self.trabajo
+        return str(self.trabajo) if self.trabajo else "Sin trabajo"
+    
+    
+
+    
 
 class Contacto(models.Model):
     nombre = models.CharField(max_length=50)
@@ -145,6 +182,17 @@ class Contacto(models.Model):
         return self.nombre
 
 class Jornada(models.Model):
+    MANODEOBRACHOICES = [
+    ('PODA', 'Poda'),
+    ('DESHOJE', 'Deshoje (sacar hojas)'),
+    ('DESBROTE', 'Desbrote'),
+    ('PESTICIDAS', 'Aplicación de pesticidas'),
+    ('FERTILIZANTES', 'Aplicación de fertilizantes'),
+    ('COSECHA', 'Cosecha'),
+    ('AMARRE_GUIAS', 'Amarre de guías'),
+    ('LIMPIEZA_MALEZA', 'Limpieza de maleza'),
+    ('RIEGO', 'Riego'),
+]
     fecha_creacion = models.DateField(default=datetime.date.today, editable=False)
     hora_creacion = models.TimeField(default=datetime.datetime.now().time(), editable=False)
     asignado = models.ForeignKey(Trabajador, on_delete=models.CASCADE, max_length=50, null=True)
@@ -159,16 +207,27 @@ class Jornada(models.Model):
     )
     estado = models.CharField(max_length=15, choices=ESTADO_CHOICES, default='Por Realizar', editable=True)
     es_jornada_por_trato = models.BooleanField(default=False) 
-    nombre_tarea_1 = models.CharField(max_length=100)
+
+    nombre_tarea_1 = models.CharField(max_length=100,choices=MANODEOBRACHOICES)
+
     hora_inicio_tarea_1 = models.TimeField()
+
     hora_fin_tarea_1 = models.TimeField()
+
     cobro_tarea_1 = models.IntegerField(blank=True, null=True)
-    nombre_tarea_2 = models.CharField(max_length=100, blank=True, null=True)
+
+    nombre_tarea_2 = models.CharField(max_length=100,choices=MANODEOBRACHOICES,blank=True, null=True)
+
     hora_inicio_tarea_2 = models.TimeField(blank=True, null=True)
+    
     hora_fin_tarea_2 = models.TimeField(blank=True, null=True)
+
     cobro_tarea_2 = models.IntegerField(blank=True, null=True)
-    nombre_tarea_3 = models.CharField(max_length=100, blank=True, null=True)
-    hora_inicio_tarea_3 = models.TimeField(blank=True, null=True)
+
+    nombre_tarea_3 = models.CharField(max_length=100,choices=MANODEOBRACHOICES,blank=True, null=True)
+
+    hora_inicio_tarea_3 = models.TimeField(blank=True,  null=True)
+
     hora_fin_tarea_3 = models.TimeField(blank=True, null=True)
     cobro_tarea_3 = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     nombre_extra_1 = models.CharField(max_length=100, blank=True, null=True)
@@ -194,8 +253,7 @@ class Jornada(models.Model):
     def total_gasto_jornada_calculado(self):
         total_gasto = (self.cobro_tarea_1 or 0) + (self.cobro_tarea_2 or 0) + (self.cobro_tarea_3 or 0) + (self.gasto_extra_1 or 0) + (self.gasto_extra_2 or 0) + (self.gasto_extra_3 or 0)
         return total_gasto
-
-
+    
 
 
 from django.db import models
@@ -211,6 +269,18 @@ from django.conf import settings
 import datetime
 
 class JornadaPorTrato(models.Model):
+    MANODEOBRACHOICES = [
+    ('PODA', 'Poda'),
+    ('DESHOJE', 'Deshoje (sacar hojas)'),
+    ('DESBROTE', 'Desbrote'),
+    ('PESTICIDAS', 'Aplicación de pesticidas'),
+    ('FERTILIZANTES', 'Aplicación de fertilizantes'),
+    ('COSECHA', 'Cosecha'),
+    ('AMARRE_GUIAS', 'Amarre de guías'),
+    ('LIMPIEZA_MALEZA', 'Limpieza de maleza'),
+    ('RIEGO', 'Riego'),
+]
+
     fecha_creacion = models.DateField(default=datetime.date.today, editable=False)
     hora_creacion = models.TimeField(default=datetime.datetime.now().time(), editable=False)
     asignado = models.ForeignKey('Trabajador', on_delete=models.CASCADE, max_length=50, null=True)
@@ -227,13 +297,13 @@ class JornadaPorTrato(models.Model):
     estado = models.CharField(max_length=15, choices=ESTADO_CHOICES, default='Por Realizar', editable=True)
     
     # Tareas
-    nombre_tarea_1 = models.CharField(max_length=100)
+    nombre_tarea_1 = models.CharField(max_length=100,choices=MANODEOBRACHOICES)
     cobro_tarea_1 = models.IntegerField(blank=True, null=True)
     
-    nombre_tarea_2 = models.CharField(max_length=100, blank=True, null=True)
+    nombre_tarea_2 = models.CharField(max_length=100,choices=MANODEOBRACHOICES, blank=True, null=True)
     cobro_tarea_2 = models.IntegerField(blank=True, null=True)
     
-    nombre_tarea_3 = models.CharField(max_length=100, blank=True, null=True)
+    nombre_tarea_3 = models.CharField(max_length=100,choices=MANODEOBRACHOICES, blank=True, null=True)
     cobro_tarea_3 = models.IntegerField(blank=True, null=True)
     
     # Extras
@@ -261,6 +331,7 @@ class JornadaPorTrato(models.Model):
 
     def __str__(self):
         return f"JornadaPorTrato {self.fecha} {self.hora_creacion}"
+    
 
     @property
     def total_gasto_jornada_calculado(self):
@@ -268,7 +339,7 @@ class JornadaPorTrato(models.Model):
         total_gasto_tareas = (self.cobro_tarea_1 or 0) + (self.cobro_tarea_2 or 0) + (self.cobro_tarea_3 or 0)
         total_gastos_extras = (self.gasto_extra_1 or 0) + (self.gasto_extra_2 or 0) + (self.gasto_extra_3 or 0)
         return total_gasto_tareas + total_gastos_extras
-
+    
 
 from django.contrib.auth.models import AbstractUser, Group, Permission
 from django.db import models
@@ -362,6 +433,35 @@ class SensorAire(models.Model):
     def __str__(self):
         return f"Sensor: {self.name} de {self.user.username}"
 
+class SensorSuelo(models.Model):
+    name = models.CharField(max_length=100, unique=True)  # Nombre único para cada sensor
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    api_key = models.CharField(max_length=64, blank=True, null=True, unique=True)  # API Key única
+
+    def save(self, *args, **kwargs):
+        # Generar una API Key única si no existe
+        if not self.api_key:
+            self.api_key = uuid.uuid4().hex  # Generar clave única con uuid
+         
+        # Si no hay nombre, generarlo automáticamente
+        if not self.name:
+            # Garantizar que el nombre generado sea único dentro del contexto del usuario
+            count = SensorSuelo.objects.filter(user=self.user).count() + 1
+            unique_name = f"{self.user.username}_sensor_{count}"
+            
+            # Asegurarse de que no haya conflicto con otros nombres únicos
+            while SensorSuelo.objects.filter(name=unique_name).exists():
+                count += 1
+                unique_name = f"{self.user.username}_sensor_{count}"
+            
+            self.name = unique_name  # Asignar el nombre generado
+
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"Sensor: {self.name} de {self.user.username}"
+
+
     
 class TemperatureHumidityLocation(models.Model):
     temperature = models.FloatField()
@@ -374,12 +474,15 @@ class TemperatureHumidityLocation(models.Model):
     def __str__(self):
         return f"Sensor: {self.sensor.name}, Temp: {self.temperature}, Hum: {self.humidity}, Lat: {self.latitude}, Lon: {self.longitude}"
 
-class HumiditySoil(models.Model):
+class HumidityTemperaturaSoil(models.Model):
     humiditysoil = models.FloatField()
+    temperature = models.FloatField()
     timestamp = models.DateTimeField(auto_now_add=True)
+    sensor = models.ForeignKey(SensorSuelo, on_delete=models.CASCADE)  # Asociar datos con un sensor específico
 
-    def __str__(self):
-        return f"Humidity: {self.humiditysoil}, Timestamp: {self.timestamp}"
+    def __str__(self):        
+        return f"Sensor: {self.sensor.name}, Humidity: {self.humiditysoil}, Temperature: {self.temperature}, Timestamp: {self.timestamp}"
+
     
 class DecisionEfectuada(models.Model):
     decision = models.CharField(max_length=5000)  # Campo para la decisión
@@ -427,12 +530,39 @@ class FinanzasPorTrabajador(models.Model):
         finanzas.save()
 
 
+from django.db import models
+from django.conf import settings
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from decimal import Decimal
 
+class FinanzasPorInsumosyMaquinaria(models.Model):
+    trabajo = models.ForeignKey(Procesos, on_delete=models.CASCADE, null=True, blank=True)
+    gasto_total = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='finanzas_user')
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='finanzas_created_by')
 
+    def __str__(self):
+        return f"Finanza de {self.trabajo}"
 
+    @classmethod
+    def total_por_trabajo(cls):
+        # Agrupa los gastos totales por trabajo
+        return cls.objects.values('trabajo').annotate(total_gasto=Sum('gasto_total'))
 
-    from django.db import models
-from django.contrib.auth.models import User
+@receiver(post_save, sender=Procesos)
+def crear_finanzas(sender, instance, created, **kwargs):
+    if instance.estado == 'Terminado':
+        # Busca o crea el registro de finanzas para el trabajo
+        finanzas, created = FinanzasPorInsumosyMaquinaria.objects.get_or_create(
+            trabajo=instance,
+            defaults={'gasto_total': instance.presupuesto, 'user': instance.user, 'created_by': instance.created_by}
+        )
+        if not created:
+            # Si ya existe, suma el presupuesto al gasto total existente
+            finanzas.gasto_total += instance.presupuesto
+            finanzas.save()
+
 
 class Cosecha(models.Model):
     foto = models.ImageField(upload_to='fundos/fotosnueva/', null=True, blank=True)
@@ -457,3 +587,40 @@ class Cosecha(models.Model):
 
     def __str__(self):
         return f'Cosecha de {self.tipo_producto} - {self.fecha_cosecha}'
+
+from django.db.models.functions import TruncMonth
+
+
+class FinanzasPorMes(models.Model):
+    mes_año = models.DateField()
+    total_gasto_jornadas = models.IntegerField(blank=True, null=True, editable=False)  # Permitir nulos
+    total_gasto_jornadas_por_trato = models.IntegerField(blank=True, null=True, editable=False)  # Permitir nulos
+    total_gasto_final = models.IntegerField(blank=True, null=True, editable=False)  # Permitir nulos
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='finanzas_por_mes_creada', on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+
+    @classmethod
+    def actualizar_finanzas_por_mes(cls, fecha, creador):
+        inicio_mes = fecha.replace(day=1)
+
+        finanzas, created = cls.objects.get_or_create(
+            mes_año=inicio_mes,
+            defaults={
+                'total_gasto_jornadas': 0,
+                'total_gasto_jornadas_por_trato': 0,
+                'total_gasto_final': 0,
+                'created_by': creador,
+                'user': creador
+            }
+        )
+
+        # Usar la agregación de Django para obtener los totales
+        total_jornadas = Jornada.objects.filter(fecha__year=fecha.year, fecha__month=fecha.month).aggregate(total=Sum('total_gasto_jornada'))['total'] or 0
+        total_jornadas_por_trato = JornadaPorTrato.objects.filter(fecha__year=fecha.year, fecha__month=fecha.month).aggregate(total=Sum('total_gasto_jornada'))['total'] or 0
+
+        # Actualizar el modelo con los totales
+        finanzas.total_gasto_jornadas = total_jornadas
+        finanzas.total_gasto_jornadas_por_trato = total_jornadas_por_trato
+        finanzas.total_gasto_final = (total_jornadas or 0) + (total_jornadas_por_trato or 0)
+
+        finanzas.save()

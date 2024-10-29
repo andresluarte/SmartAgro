@@ -121,11 +121,13 @@
         }
     </style>
 </head>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDT0QJ4JVXUrTA8mRZN_YXjy2CZDsa_vmw&callback=initMap&libraries=drawing" async defer></script>
 
 <body>
     <div class="container">
         <h3>Clima Actual</h3>
-        <div class="section" id="weather-widget"></div>
+        <div class="section" id="weather-widget" style="display: flex; flex-wrap: wrap; justify-content: center;"></div>
+
         <h3>Datos Sensor Aire Tiempo Real</h3>
         
         
@@ -144,70 +146,88 @@
             });
         </script>
         
-        
-        {% if latest_data %}
-        <div class="section">
-            <div>
-
-            </div>
-            <div>
-                <strong>ID del Sensor:</strong> <span>{{ sensor_id }}</span>
-            </div>
-            <div>
-                <strong>Temperatura:</strong> <span id="temperature">{{ latest_data.temperature }}°C</span>
-                <div class="kpi-bar temperature-bar">
-                    <span id="temperature-bar"></span>
-                </div>
-            </div>
-            <div>
-                <strong>Humedad:</strong> <span id="humidity">{{ latest_data.humidity }}%</span>
-                <div class="kpi-bar humidity-bar">
-                    <span id="humidity-bar"></span>
-                </div>
-            </div>
-        </div>
-
-        <div class="section">
-            <h3>Recomendaciones</h3>
-            <div>
-                <strong>Recomendación de temperatura:</strong> <span>{{ temperature_recommendation }}</span>
-            </div>
-            <div>
-                <strong>Recomendación de humedad:</strong> <span>{{ humidity_recommendation }}</span>
-            </div>
-
-        </div>
-
-
-        <div class="section">
-            <h3>Ubicación Sensor</h3>
-            <div id="map"></div>
-            <div class="data">
+  
+        {% if sensor_data %}
+            {% for data in sensor_data %}
+            <div class="section">
+                <h4>Sensor ID: {{ data.sensor_id }}</h4>
                 <div>
-                    <strong>Latitud:</strong> <span>{{ latest_data.latitude }}</span>
+                    <strong>Temperatura:</strong> <span>{{ data.latest_data.temperature }}°C</span>
+                    <div class="kpi-bar temperature-bar">
+                        <span id="temperature-bar"></span>
+                    </div>
                 </div>
                 <div>
-                    <strong>Longitud:</strong> <span>{{ latest_data.longitude }}</span>
+                    <strong>Humedad:</strong> <span>{{ data.latest_data.humidity }}%</span>
+                    <div class="kpi-bar humidity-bar">
+                        <span id="humidity-bar"></span>
+                    </div>
+                </div>
+
+                <h5>Recomendaciones</h5>
+                <div>
+                    <strong>Temperatura:</strong> <span>{{ data.temperature_recommendation }}</span>
+                </div>
+                <div>
+                    <strong>Humedad:</strong> <span>{{ data.humidity_recommendation }}</span>
+                </div>
+
+            
+                <div class="data">
+                    <div><strong>Latitud:</strong> <span>{{ data.latest_data.latitude }}</span></div>
+                    <div><strong>Longitud:</strong> <span>{{ data.latest_data.longitude }}</span></div>
+                </div>
+                <div class="timestamp">
+                    Última actualización: {{ data.latest_data.timestamp }}
+                </div>
+                <div class="map-link">
+                    <a href="https://www.google.com/maps/search/?api=1&query={{ data.latest_data.latitude|urlencode }},{{ data.latest_data.longitude|urlencode }}"
+                        target="_blank">Ver en Google Maps</a>
                 </div>
             </div>
-            <div class="timestamp">
-                Última actualización: {{ latest_data.timestamp }}
-            </div>
-            <div class="map-link">
-                <a href="https://www.google.com/maps/search/?api=1&query={{ latest_data.latitude|urlencode }},{{ latest_data.longitude|urlencode }}"
-                    target="_blank">
-                    Ver en Google Maps
-                </a>
-            </div>
-        </div>
+            {% endfor %}
         {% else %}
-        <p>No hay datos disponibles para este sensor.</p>
+            <p>No hay datos disponibles para tus sensores.</p>
         {% endif %}
+    <h3>Mapa de Ubicaciones de Sensores</h3>
+    <div id="map" style="height: 400px; width: 100%;"></div>
     </div>
+    
     <script>
         // Tu clave de API de OpenWeatherMap
         const openWeatherApiKey = 'b2240d2305cc3984b9662c4d473df3a3';
-
+        function initMap() {
+            // Arreglo para almacenar las ubicaciones de los sensores
+            const locations = [];
+        
+            // Iterar sobre los datos de los sensores y agregar sus ubicaciones al arreglo
+            {% if sensor_data %}
+                {% for data in sensor_data %}
+                    const latitude = parseFloat("{{ data.latest_data.latitude }}");
+                    const longitude = parseFloat("{{ data.latest_data.longitude }}");
+                    if (!isNaN(latitude) && !isNaN(longitude)) {
+                        locations.push({ lat: latitude, lng: longitude, id: "{{ data.sensor_id }}" });
+                    }
+                {% endfor %}
+            {% endif %}
+        
+            // Crea un mapa centrado en la primera ubicación, si existe
+            const map = new google.maps.Map(document.getElementById("map"), {
+                zoom: 12,
+                center: locations.length > 0 ? locations[0] : { lat: 0, lng: 0 },
+            });
+        
+            // Agrega marcadores para cada ubicación
+            locations.forEach(location => {
+                new google.maps.Marker({
+                    position: { lat: location.lat, lng: location.lng },
+                    map: map,
+                    title: "Sensor ID: " + location.id,
+                });
+            });
+        }
+        
+    
         // Obtener ubicación usando la API de Geolocalización de Google
         function getLocation() {
             if (navigator.geolocation) {
@@ -216,141 +236,136 @@
                 document.getElementById('weather-widget').innerHTML = 'Geolocalización no soportada.';
             }
         }
-
-        // Mostrar el clima basado en la ubicación del usuario
+    
+        // Mostrar el clima y pronóstico basado en la ubicación del usuario
         function showWeather(position) {
             const lat = position.coords.latitude;
             const lon = position.coords.longitude;
-            const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&lang=es&appid=${openWeatherApiKey}`;
-
+            const url = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&units=metric&lang=es&appid=${openWeatherApiKey}`;
+    
             fetch(url)
                 .then(response => response.json())
                 .then(data => {
-                    const temp = data.main.temp;
-                    const description = data.weather[0].description;
-                    const city = data.name;
-                    const icon = `http://openweathermap.org/img/wn/${data.weather[0].icon}.png`;
-
-                    // Mostrar el widget del clima
-                    document.getElementById('weather-widget').innerHTML = `
-                        <div style="font-family: Arial, sans-serif; text-align: center;">
+                    const city = data.city.name;
+                    const currentWeather = data.list[0]; // Clima actual
+                    const currentTemp = currentWeather.main.temp;
+                    const currentDescription = currentWeather.weather[0].description;
+                    const currentIcon = `http://openweathermap.org/img/wn/${currentWeather.weather[0].icon}.png`;
+    
+                    // Mostrar clima actual
+                    let html = `
+                        <div style="font-family: Arial, sans-serif; text-align: center; margin: 10px;">
                             <h3>${city}</h3>
-                            <p>${description}</p>
-                            <img src="${icon}" alt="Weather icon">
-                            <h3>${temp}°C</h3>
+                            <p>${currentDescription}</p>
+                            <img src="${currentIcon}" alt="Weather icon">
+                            <h3>${currentTemp}°C</h3>
                         </div>`;
+    
+                    // Procesar el pronóstico para los próximos días
+                    const days = {};
+                    data.list.forEach(item => {
+                        const date = new Date(item.dt * 1000).toLocaleDateString();
+                        if (!days[date]) {
+                            days[date] = {
+                                temp: item.main.temp,
+                                description: item.weather[0].description,
+                                icon: `http://openweathermap.org/img/wn/${item.weather[0].icon}.png`
+                            };
+                        }
+                    });
+    
+                    // Mostrar pronóstico
+                    html += '<div style="display: flex; flex-wrap: wrap; justify-content: center;">';
+                    html += '<h3>Pronóstico para los próximos días:</h3>';
+                    
+                    // Obtener la fecha de hoy
+                    const today = new Date().toLocaleDateString();
+                    for (const date in days) {
+                        // Solo mostrar pronósticos desde mañana
+                        if (date !== today) {
+                                
+                            
+                    
+                            html += `
+                            
+                                <div style="font-family: Arial, sans-serif; text-align: center; margin: 5px; font-size: 0.8em;">
+                                    <h4 style="font-size: 1.2em;">${date}</h4>
+                                    <p style="font-size: 0.8em;">${days[date].description}</p>
+                                    <img src="${days[date].icon}" alt="Weather icon" style="width: 40px; height: 40px;">
+                                    <h4 style="font-size: 1em;">${days[date].temp}°C</h4>
+                                </div>`;
+                        }
+                    }
+                    html += '</div>';
+    
+                    document.getElementById('weather-widget').innerHTML = html;
                 })
                 .catch(error => {
                     document.getElementById('weather-widget').innerHTML = 'No se pudo obtener el clima.';
                     console.error(error);
                 });
         }
-
-        // Mostrar error si la geolocalización falla
+    
+        // Mostrar error en geolocalización
         function showError(error) {
-            switch (error.code) {
+            switch(error.code) {
                 case error.PERMISSION_DENIED:
-                    document.getElementById('weather-widget').innerHTML = "Usuario denegó la solicitud de geolocalización.";
+                    alert("El usuario negó la solicitud de geolocalización.");
                     break;
                 case error.POSITION_UNAVAILABLE:
-                    document.getElementById('weather-widget').innerHTML = "La información de la ubicación no está disponible.";
+                    alert("La información de ubicación no está disponible.");
                     break;
                 case error.TIMEOUT:
-                    document.getElementById('weather-widget').innerHTML = "La solicitud de ubicación ha caducado.";
+                    alert("La solicitud de ubicación ha expirado.");
                     break;
                 case error.UNKNOWN_ERROR:
-                    document.getElementById('weather-widget').innerHTML = "Un error desconocido ocurrió.";
+                    alert("Ha ocurrido un error desconocido.");
                     break;
             }
         }
-
-        // Llamar a la función para obtener la ubicación y mostrar el clima
+    
+        // Llama a la función para obtener la ubicación al cargar la página
         getLocation();
     </script>
     <script>
-        async function initMap() {
-
-            var lat = "{{ latest_data.latitude|default:'0' }}".replace(',', '.');
-            var lng = "{{ latest_data.longitude|default:'0' }}".replace(',', '.');
-            const map = new google.maps.Map(document.getElementById('map'), {
-                center: { lat: parseFloat(lat), lng: parseFloat(lng) },
-
-                zoom: 19,
-                mapId: 'DEMO_MAP_ID'
-            });
-            var latitude = parseFloat(lat);
-            var longitude = parseFloat(lng);
-
-            const marker = new google.maps.Marker({
-                position: { lat: latitude, lng: longitude },
-                map: map,
-                title: 'Sensor Location'
-            });
-
-
-
-            var infoWindow = [];
-
-            var infowindow = new google.maps.InfoWindow({
-                content: '<div><strong>Ubicación Sensor</strong></div>',
-            });
-            infoWindow.push(infowindow);
-            // Agregar un evento click al marcador para abrir el InfoWindow
-            marker.addListener('click', function () {
-                // Cerrar cualquier InfoWindow abierto
-                infoWindow.forEach(function (iw) {
-                    iw.close();
-                });
-
-                // Abrir el InfoWindow asociado con el marcador
-                infowindow.open(map, marker);
-            });
+        const data = {
+            latest_data: {
+                temperature: 45, // Ejemplo de temperatura
+                humidity: 70 // Ejemplo de humedad
+            }
+        };
+    
+        const temperatureBar = document.getElementById('temperature-bar');
+        const humidityBar = document.getElementById('humidity-bar');
+    
+        // Calcular el ancho en función del valor
+        temperatureBar.style.width = data.latest_data.temperature + '%';
+        humidityBar.style.width = data.latest_data.humidity + '%';
+    
+        // Función para crear un gradiente de color basado en el valor
+        function getGradientColor(value, type) {
+            let color;
+            if (type === 'temperature') {
+                // Gradiente para temperatura: azul (0°C) a rojo (100°C)
+                const red = Math.min(255, (value / 100) * 255);
+                const blue = 255 - red;
+                color = `rgb(${red}, 0, ${blue})`;
+            } else if (type === 'humidity') {
+                // Gradiente para humedad: azul (0%) a naranja (100%)
+                const red = Math.min(255, (value / 100) * 255);
+                const green = 165; // Naranja
+                color = `rgb(${red}, ${green}, 0)`;
+            }
+            return color;
         }
-
-        window.addEventListener('load', () => {
-            const script = document.createElement('script');
-            script.src = "https://maps.googleapis.com/maps/api/js?key=AIzaSyDT0QJ4JVXUrTA8mRZN_YXjy2CZDsa_vmw&callback=initMap&libraries=marker&v=beta";
-            script.defer = true;
-            document.head.appendChild(script);
-        });
-
-
+    
+        // Asignar el color de fondo usando gradiente
+        temperatureBar.style.background = getGradientColor(data.latest_data.temperature, 'temperature');
+        humidityBar.style.background = getGradientColor(data.latest_data.humidity, 'humidity');
     </script>
-
-    <script>
-        // Función para actualizar los KPI en base a los valores de temperatura y humedad
-        function updateKPI(temperature, humidity) {
-            // Actualiza el texto de los elementos
-            document.getElementById("temperature").textContent = temperature + "°C";
-            document.getElementById("humidity").textContent = humidity + "%";
-
-            // Calcula el porcentaje para la barra de temperatura (0 a 50 grados)
-            let tempPercentage = Math.min(Math.max((temperature / 50) * 100, 0), 100);
-            document.getElementById("temperature-bar").style.width = tempPercentage + "%";
-
-            // Cambia el color de la barra de temperatura (azul -> rojo)
-            document.getElementById("temperature-bar").style.backgroundColor = `rgb(${Math.min(255, (temperature / 50) * 255)}, 0, ${Math.max(0, 255 - (temperature / 50) * 255)})`;
-
-            // Calcula el porcentaje para la barra de humedad (0 a 100%)
-            let humidityPercentage = Math.min(Math.max(humidity, 0), 100);
-            document.getElementById("humidity-bar").style.width = humidityPercentage + "%";
-
-            // Cambia el color de la barra de humedad (gris -> azul)
-            document.getElementById("humidity-bar").style.backgroundColor = `rgb(0, ${Math.min(255, (humidity / 100) * 255)}, ${Math.min(255, (humidity / 100) * 255)})`;
-        }
-
-        // Extraer valores de texto y convertirlos en números
-        let temperatureText = document.getElementById("temperature").textContent;
-        let humidityText = document.getElementById("humidity").textContent;
-
-        let temperature = parseFloat(temperatureText.replace("°C", "").trim());
-        let humidity = parseFloat(humidityText.replace("%", "").trim());
-
-        // Actualiza los KPI en la carga inicial
-        updateKPI(temperature, humidity);
-    </script>
+    
+    
    
-</body>
 
 </html>
 {% endblock %}
