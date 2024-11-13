@@ -1113,9 +1113,11 @@ from django.db.models.functions import TruncHour, Cast
 import json
 
 def informes(request):
+    user = request.user
     # Promedio por hora para TemperatureHumidityLocation
     temp_humidity_data = (
-        TemperatureHumidityLocation.objects
+        TemperatureHumidityLocation.objects.filter(user=user)
+    
         .annotate(hour=TruncHour('timestamp'))
         .values('hour')
         .annotate(
@@ -1127,7 +1129,7 @@ def informes(request):
     
     # Promedio por hora para HumiditySoil
     soil_data = (
-        HumidityTemperaturaSoil.objects
+        HumidityTemperaturaSoil.objects.filter(user=user)
         .annotate(hour=TruncHour('timestamp'))
         .values('hour')
         .annotate(avg_humidity_soil=Avg('humiditysoil'),avg_temp=Avg('temperature'),)

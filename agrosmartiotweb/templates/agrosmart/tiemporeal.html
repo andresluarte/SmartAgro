@@ -125,10 +125,9 @@
 
 <body>
     <div class="container">
-        <h3>Clima Actual</h3>
-        <div class="section" id="weather-widget" style="display: flex; flex-wrap: wrap; justify-content: center;"></div>
+        
 
-        <h3>Datos Sensor Aire Tiempo Real</h3>
+        <h3>Datos Sensor Aire en Tiempo Real</h3>
         
         
         <!-- Mostrar mensajes de éxito si los hay -->
@@ -148,47 +147,46 @@
         
   
         {% if sensor_data %}
-            {% for data in sensor_data %}
-            <div class="section">
-                <h4>Sensor ID: {{ data.sensor_id }}</h4>
-                <div>
-                    <strong>Temperatura:</strong> <span>{{ data.latest_data.temperature }}°C</span>
-                    <div class="kpi-bar temperature-bar">
-                        <span id="temperature-bar"></span>
-                    </div>
-                </div>
-                <div>
-                    <strong>Humedad:</strong> <span>{{ data.latest_data.humidity }}%</span>
-                    <div class="kpi-bar humidity-bar">
-                        <span id="humidity-bar"></span>
-                    </div>
-                </div>
-
-                <h5>Recomendaciones</h5>
-                <div>
-                    <strong>Temperatura:</strong> <span>{{ data.temperature_recommendation }}</span>
-                </div>
-                <div>
-                    <strong>Humedad:</strong> <span>{{ data.humidity_recommendation }}</span>
-                </div>
-
-            
-                <div class="data">
-                    <div><strong>Latitud:</strong> <span>{{ data.latest_data.latitude }}</span></div>
-                    <div><strong>Longitud:</strong> <span>{{ data.latest_data.longitude }}</span></div>
-                </div>
-                <div class="timestamp">
-                    Última actualización: {{ data.latest_data.timestamp }}
-                </div>
-                <div class="map-link">
-                    <a href="https://www.google.com/maps/search/?api=1&query={{ data.latest_data.latitude|urlencode }},{{ data.latest_data.longitude|urlencode }}"
-                        target="_blank">Ver en Google Maps</a>
-                </div>
+    {% for data in sensor_data %}
+    <div class="section">
+        <h4>Sensor ID: {{ data.sensor_id }}</h4>
+        <div>
+            <strong>Temperatura:</strong> <span>{{ data.latest_data.temperature }}°C</span>
+            <div class="kpi-bar temperature-bar">
+                <span class="temperature-bar-inner" style="display: block; height: 100%;"></span>
             </div>
-            {% endfor %}
-        {% else %}
-            <p>No hay datos disponibles para tus sensores.</p>
-        {% endif %}
+        </div>
+        <div>
+            <strong>Humedad:</strong> <span>{{ data.latest_data.humidity }}%</span>
+            <div class="kpi-bar humidity-bar">
+                <span class="humidity-bar-inner" style="display: block; height: 100%;"></span>
+            </div>
+        </div>
+
+        <h5>Recomendaciones</h5>
+        <div>
+            <strong>Temperatura:</strong> <span>{{ data.temperature_recommendation }}</span>
+        </div>
+        <div>
+            <strong>Humedad:</strong> <span>{{ data.humidity_recommendation }}</span>
+        </div>
+
+        <div class="data">
+            <div><strong>Latitud:</strong> <span>{{ data.latest_data.latitude }}</span></div>
+            <div><strong>Longitud:</strong> <span>{{ data.latest_data.longitude }}</span></div>
+        </div>
+        <div class="timestamp">
+            Última actualización: {{ data.latest_data.timestamp }}
+        </div>
+        <div class="map-link">
+            <a href="https://www.google.com/maps/search/?api=1&query={{ data.latest_data.latitude|urlencode }},{{ data.latest_data.longitude|urlencode }}"
+                target="_blank">Ver en Google Maps</a>
+        </div>
+    </div>
+    {% endfor %}
+{% else %}
+    <p>No hay datos disponibles para tus sensores.</p>
+{% endif %}
     <h3>Mapa de Ubicaciones de Sensores</h3>
     <div id="map" style="height: 400px; width: 100%;"></div>
     </div>
@@ -327,42 +325,7 @@
         // Llama a la función para obtener la ubicación al cargar la página
         getLocation();
     </script>
-    <script>
-        const data = {
-            latest_data: {
-                temperature: 45, // Ejemplo de temperatura
-                humidity: 70 // Ejemplo de humedad
-            }
-        };
     
-        const temperatureBar = document.getElementById('temperature-bar');
-        const humidityBar = document.getElementById('humidity-bar');
-    
-        // Calcular el ancho en función del valor
-        temperatureBar.style.width = data.latest_data.temperature + '%';
-        humidityBar.style.width = data.latest_data.humidity + '%';
-    
-        // Función para crear un gradiente de color basado en el valor
-        function getGradientColor(value, type) {
-            let color;
-            if (type === 'temperature') {
-                // Gradiente para temperatura: azul (0°C) a rojo (100°C)
-                const red = Math.min(255, (value / 100) * 255);
-                const blue = 255 - red;
-                color = `rgb(${red}, 0, ${blue})`;
-            } else if (type === 'humidity') {
-                // Gradiente para humedad: azul (0%) a naranja (100%)
-                const red = Math.min(255, (value / 100) * 255);
-                const green = 165; // Naranja
-                color = `rgb(${red}, ${green}, 0)`;
-            }
-            return color;
-        }
-    
-        // Asignar el color de fondo usando gradiente
-        temperatureBar.style.background = getGradientColor(data.latest_data.temperature, 'temperature');
-        humidityBar.style.background = getGradientColor(data.latest_data.humidity, 'humidity');
-    </script>
     
     
    
