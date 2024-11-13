@@ -1113,11 +1113,14 @@ from django.db.models.functions import TruncHour, Cast
 import json
 
 def informes(request):
-    user = request.user
-    # Promedio por hora para TemperatureHumidityLocation
+    # Obtener sensores asociados al usuario autenticado
+    user_sensors_air = SensorAire.objects.filter(user=request.user)
+    user_sensors_soil = SensorSuelo.objects.filter(user=request.user)
+
+    # Promedio por hora para TemperatureHumidityLocation (sensores de aire)
     temp_humidity_data = (
-        TemperatureHumidityLocation.objects.filter(user=user)
-    
+        TemperatureHumidityLocation.objects
+        .filter(sensor__in=user_sensors_air)  # Filtrar solo los datos de los sensores del usuario
         .annotate(hour=TruncHour('timestamp'))
         .values('hour')
         .annotate(
@@ -1126,17 +1129,21 @@ def informes(request):
         )
         .order_by('hour')
     )
-    
-    # Promedio por hora para HumiditySoil
+
+    # Promedio por hora para HumidityTemperaturaSoil (sensores de suelo)
     soil_data = (
-        HumidityTemperaturaSoil.objects.filter(user=user)
+        HumidityTemperaturaSoil.objects
+        .filter(sensor__in=user_sensors_soil)
         .annotate(hour=TruncHour('timestamp'))
         .values('hour')
-        .annotate(avg_humidity_soil=Avg('humiditysoil'),avg_temp=Avg('temperature'),)
+        .annotate(
+            avg_humidity_soil=Avg('humiditysoil'),
+            avg_temp=Avg('temperature')
+        )
         .order_by('hour')
     )
 
-    # Redondear los valores
+    # Redondear los valores de los datos
     temp_humidity_data = [
         {
             'hour': entry['hour'].strftime('%Y-%m-%d %H:%M:%S'),
@@ -1144,7 +1151,7 @@ def informes(request):
             'avg_humidity': round(entry['avg_humidity'], 2),
         } for entry in temp_humidity_data
     ]
-    
+
     soil_data = [
         {
             'hour': entry['hour'].strftime('%Y-%m-%d %H:%M:%S'),
@@ -1157,7 +1164,7 @@ def informes(request):
         'temp_humidity_data': json.dumps(temp_humidity_data),
         'soil_data': json.dumps(soil_data),
     }
-    
+
     return render(request, 'agrosmart/informes.html', context)
 
 
