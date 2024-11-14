@@ -18,6 +18,13 @@ class ProcesoFilter(django_filters.FilterSet):
                   'observacion':['exact'],
                   
                   'hora_asignada': ['exact']}
+        
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)  # Extraer el usuario de kwargs, si está presente
+        super().__init__(*args, **kwargs)
+            
+        
+
 
 
 class TrabajadorFilter(django_filters.FilterSet):

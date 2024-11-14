@@ -403,20 +403,37 @@ def TrabajadorList(request):
 from django.core.paginator import Paginator
 from .models import Procesos
 
+@login_required(login_url="my_login")
 def ProcesoList(request):
-    context = {}
-    filtered_proceso = ProcesoFilter(
-        request.GET,
-        queryset=Procesos.objects.all().order_by('-id')  # Ordenar en orden descendente para mostrar los últimos registros primero
-    )
-    context['filtered_proceso'] = filtered_proceso
-    paginated_filtered_proceso = Paginator(filtered_proceso.qs, 8)
+    user = request.user
+    
+    # Filtrado según el tipo de usuario
+    if user.is_superuser:
+        queryset = Procesos.objects.all()
+    elif user.user_type == 'admin':
+        queryset = Procesos.objects.filter(user=user)
+    elif user.user_type == 'colaborador':
+        admin_user = user.created_by
+        queryset = Procesos.objects.filter(user__in=[user, admin_user])
+    elif user.user_type == 'agricultor':
+        colaborador_user = user.created_by
+        admin_user = colaborador_user.created_by if colaborador_user else None
+        queryset = Procesos.objects.filter(user__in=[user, colaborador_user, admin_user])
+    else:
+        queryset = Procesos.objects.none()
+
+    # Aplicando el filtro de búsqueda
+    filtered_proceso = ProcesoFilter(request.GET, queryset=queryset, user=user)
+
+    # Paginación
+    context = {'filtered_proceso': filtered_proceso}
+    paginated_filtered_proceso = Paginator(filtered_proceso.qs, 8)  # Número de elementos por página
     page_number = request.GET.get('page')
     proceso_page_obj = paginated_filtered_proceso.get_page(page_number)
-
     context['proceso_page_obj'] = proceso_page_obj
-    
+
     return render(request, 'agrosmart/gestiondetareas.html', context=context)
+
 
 
 from django.core.serializers import serialize
@@ -1110,6 +1127,10 @@ from django.db.models.functions import TruncHour
 from django.shortcuts import render
 from django.db.models import Count, FloatField, Value
 from django.db.models.functions import TruncHour, Cast
+from django.db.models.functions import TruncMinute
+from django.utils import timezone
+from datetime import timedelta
+
 import json
 
 def informes(request):
@@ -1128,6 +1149,19 @@ def informes(request):
             avg_humidity=Avg('humidity')
         )
         .order_by('hour')
+    )
+
+    last_hour_data_air=(
+        TemperatureHumidityLocation.objects
+        .filter(sensor__in=user_sensors_air, timestamp__gte=timezone.now()-timedelta(hours=1))
+        .annotate(minute=TruncMinute('timestamp'))
+        .values('minute')
+        .annotate(
+            avg_temp_hour=Avg('temperature'),
+            avg_humidity_hour=Avg('humidity')
+        )
+        .order_by('minute')
+
     )
 
     # Promedio por hora para HumidityTemperaturaSoil (sensores de suelo)
@@ -1163,8 +1197,10 @@ def informes(request):
     context = {
         'temp_humidity_data': json.dumps(temp_humidity_data),
         'soil_data': json.dumps(soil_data),
+      
+        
     }
-
+    
     return render(request, 'agrosmart/informes.html', context)
 
 
@@ -1220,9 +1256,21 @@ from .models import FinanzasPorTrabajador, FinanzasPorInsumosyMaquinaria,Finanza
 from django.db.models import Sum
 @login_required
 def gestion_finanzas(request):
-    finanzas = FinanzasPorTrabajador.objects.all()
-    finanzas_por_mes = FinanzasPorMes.objects.all()
-    finanzas_insumos = FinanzasPorInsumosyMaquinaria.objects.values('trabajo__trabajo__opciones_trabajo').annotate(
+    user = request.user
+    
+    # Filtrar las finanzas relacionadas con el usuario autenticado
+    finanzas = FinanzasPorTrabajador.objects.filter(
+        trabajador__user=user  # Si hay una relación entre Trabajador y Usuario
+    )
+    
+    finanzas_por_mes = FinanzasPorMes.objects.filter(
+        user=user
+    )
+    
+    # Filtrar FinanzasPorInsumosyMaquinaria por el usuario autenticado
+    finanzas_insumos = FinanzasPorInsumosyMaquinaria.objects.filter(
+        user=user
+    ).values('trabajo__trabajo__opciones_trabajo').annotate(
         total_gasto=Sum('gasto_total')
     )
 
@@ -1231,10 +1279,6 @@ def gestion_finanzas(request):
         'finanzas_insumos': finanzas_insumos,
         'finanzas_por_mes': finanzas_por_mes
     })
-
-
-
-
 
 
 
