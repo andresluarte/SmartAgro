@@ -323,12 +323,14 @@ def JornadaList(request):
         queryset = Jornada.objects.none()
 
     filtered_jornadas = JornadaFilter(request.GET, queryset=queryset, user=user)
+    print(filtered_jornadas.qs)
 
     context = {'filtered_jornadas': filtered_jornadas}
     paginated_filtered_jornadas = Paginator(filtered_jornadas.qs, 3)
     page_number = request.GET.get('page')
     jornada_page_obj = paginated_filtered_jornadas.get_page(page_number)
     context['jornada_page_obj'] = jornada_page_obj
+    
 
     return render(request, 'agrosmart/jornada/gestion_jornadas.html', context=context)
 
@@ -352,12 +354,14 @@ def jornada_por_trato_list(request):
         queryset = JornadaPorTrato.objects.none()
 
     # Aquí puedes aplicar cualquier filtrado adicional relacionado con 'trato'
-    filtered_jornadas = JornadaFilter(request.GET, queryset=queryset, user=user)
+    filtered_jornadas = JornadaPorTratoFilter(request.GET, queryset=queryset, user=user)
 
     # Configuramos la paginación
     paginated_filtered_jornadas = Paginator(filtered_jornadas.qs, 3)
     page_number = request.GET.get('page')
     jornada_page_obj = paginated_filtered_jornadas.get_page(page_number)
+
+
 
     # Pasamos el contexto a la plantilla
     context = {
@@ -917,9 +921,10 @@ def receive_data(request):
         humidity = request.POST.get('humidity')
         latitude = request.POST.get('latitude')
         longitude = request.POST.get('longitude')
+        fecha_registro = request.POST.get('fecha_registro')
 
         # Verificar que los datos obligatorios estén presentes
-        if not all([temperature, humidity, latitude, longitude]):
+        if not all([temperature, humidity, latitude, longitude,fecha_registro]):
             return JsonResponse({'status': 'error', 'message': 'Datos incompletos'}, status=400)
 
         # Crear una nueva entrada de datos asociada al sensor
@@ -928,7 +933,8 @@ def receive_data(request):
             humidity=humidity,
             latitude=latitude,
             longitude=longitude,
-            sensor=sensor  # Asociar los datos al sensor encontrado por la API Key
+            sensor=sensor,
+            fecha_registro=fecha_registro  # Asociar los datos al sensor encontrado por la API Key
         )
 
         return JsonResponse({'status': 'success', 'message': 'Datos recibidos correctamente'})
@@ -956,16 +962,19 @@ def receive_data_soil(request):
         # Obtener los datos enviados en la solicitud
         humiditysoil = request.POST.get('humiditysoil')
         temperature = request.POST.get('temperature')
+        fecha_registro = request.POST.get('fecha_registro')
+
 
         # Verificar que los datos obligatorios estén presentes
-        if not all([humiditysoil, temperature]):
+        if not all([humiditysoil, temperature,fecha_registro]):
             return JsonResponse({'status': 'error', 'message': 'Datos incompletos'}, status=400)
 
         # Crear una nueva entrada de datos asociada al sensor
         HumidityTemperaturaSoil.objects.create(
             humiditysoil=humiditysoil,
             temperature=temperature,
-            sensor=sensor  # Asociar los datos al sensor encontrado por la API Key
+            sensor=sensor,
+            fecha_registro=fecha_registro  # Asociar los datos al sensor encontrado por la API Key
         )
 
         return JsonResponse({'status': 'success', 'message': 'Datos de humedad del suelo recibidos correctamente'})
@@ -1151,9 +1160,10 @@ def informes(request):
         .order_by('hour')
     )
 
-    last_hour_data_air=(
+    # Datos de la última hora para temperatura y humedad del aire
+    last_hour_data_air = (
         TemperatureHumidityLocation.objects
-        .filter(sensor__in=user_sensors_air, timestamp__gte=timezone.now()-timedelta(hours=1))
+        .filter(sensor__in=user_sensors_air, timestamp__gte=timezone.now() - timedelta(hours=1))
         .annotate(minute=TruncMinute('timestamp'))
         .values('minute')
         .annotate(
@@ -1161,7 +1171,6 @@ def informes(request):
             avg_humidity_hour=Avg('humidity')
         )
         .order_by('minute')
-
     )
 
     # Promedio por hora para HumidityTemperaturaSoil (sensores de suelo)
@@ -1194,9 +1203,18 @@ def informes(request):
         } for entry in soil_data
     ]
 
+    last_hour_data_air = [
+        {
+            'minute': entry['minute'].strftime('%Y-%m-%d %H:%M:%S'),
+            'avg_temp_hour': round(entry['avg_temp_hour'], 2),
+            'avg_humidity_hour': round(entry['avg_humidity_hour'], 2),
+        } for entry in last_hour_data_air
+    ]
+
     context = {
         'temp_humidity_data': json.dumps(temp_humidity_data),
         'soil_data': json.dumps(soil_data),
+        'last_hour_data_air': json.dumps(last_hour_data_air),
       
         
     }

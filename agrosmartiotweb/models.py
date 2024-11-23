@@ -469,7 +469,9 @@ class TemperatureHumidityLocation(models.Model):
     latitude = models.FloatField()
     longitude = models.FloatField()
     timestamp = models.DateTimeField(auto_now_add=True)
-    sensor = models.ForeignKey(SensorAire, on_delete=models.CASCADE)  # Asociar datos con un sensor específico
+    sensor = models.ForeignKey(SensorAire, on_delete=models.CASCADE)
+    fecha_registro = models.DateTimeField(null=True, blank=True)
+      # Asociar datos con un sensor específico
 
     def __str__(self):
         return f"Sensor: {self.sensor.name}, Temp: {self.temperature}, Hum: {self.humidity}, Lat: {self.latitude}, Lon: {self.longitude}"
@@ -478,8 +480,8 @@ class HumidityTemperaturaSoil(models.Model):
     humiditysoil = models.FloatField()
     temperature = models.FloatField()
     timestamp = models.DateTimeField(auto_now_add=True)
-    sensor = models.ForeignKey(SensorSuelo, on_delete=models.CASCADE)  # Asociar datos con un sensor específico
-
+    sensor = models.ForeignKey(SensorSuelo, on_delete=models.CASCADE)
+    fecha_registro = models.DateTimeField(null=True, blank=True) 
     def __str__(self):        
         return f"Sensor: {self.sensor.name}, Humidity: {self.humiditysoil}, Temperature: {self.temperature}, Timestamp: {self.timestamp}"
 

@@ -74,9 +74,6 @@ class JornadaFilter(django_filters.FilterSet):
             self.filters['huerto'].queryset = Huerto.objects.filter(user=user)
             self.filters['asignado'].queryset = Trabajador.objects.filter(user=user)
 
-
-
-
 class JornadaPorTratoFilter(django_filters.FilterSet):
     total_gasto_jornada = django_filters.RangeFilter(
         label='Gasto Total Jornada Desde $ : Y HASTA $ :',

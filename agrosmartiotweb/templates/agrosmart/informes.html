@@ -31,6 +31,9 @@
     <br>
     <h3>Temperatura y Humedad</h3>
     <canvas id="tempHumidityChart"></canvas>
+    
+    <h3>Temperatura y Humedad Aire Última Hora</h3>
+    <canvas id="lastHourTempHumidityChart"></canvas>
 <br>
 
     <h3>Humedad del Suelo</h3>
@@ -40,15 +43,24 @@
         document.addEventListener('DOMContentLoaded', function() {
             const tempHumidityData = JSON.parse('{{ temp_humidity_data|escapejs }}');
             const soilData = JSON.parse('{{ soil_data|escapejs }}');
-
+            const lastHourDataAir = JSON.parse('{{ last_hour_data_air|escapejs }}');
+    
+            // Datos para gráficos de Promedio por Hora de Aire
             const tempHumidityLabels = tempHumidityData.map(entry => entry.hour);
             const tempHumidityTemp = tempHumidityData.map(entry => entry.avg_temp);
             const tempHumidityHum = tempHumidityData.map(entry => entry.avg_humidity);
-
+    
+            // Datos para gráficos de Promedio por Hora de Suelo
             const soilLabels = soilData.map(entry => entry.hour);
             const soilHumidity = soilData.map(entry => entry.avg_humidity_soil);
-            const soiltemperature = soilData.map(entry => entry.avg_temp);
-
+            const soilTemperature = soilData.map(entry => entry.avg_temp);
+    
+            // Datos para el gráfico de la última hora
+            const lastHourLabels = lastHourDataAir.map(entry => entry.minute);
+            const lastHourTemp = lastHourDataAir.map(entry => entry.avg_temp_hour);
+            const lastHourHumidity = lastHourDataAir.map(entry => entry.avg_humidity_hour);
+    
+            // Gráfico de Temperatura y Humedad Promedio por Hora (Aire)
             const tempHumidityChart = new Chart(document.getElementById('tempHumidityChart'), {
                 type: 'line',
                 data: {
@@ -71,7 +83,8 @@
                     ]
                 }
             });
-
+    
+            // Gráfico de Humedad y Temperatura del Suelo
             const soilHumidityChart = new Chart(document.getElementById('soilHumidityChart'), {
                 type: 'line',
                 data: {
@@ -86,9 +99,33 @@
                         },
                         {
                             label: 'Temperatura Promedio',
-                            data: soiltemperature,
+                            data: soilTemperature,
                             borderColor: 'rgba(54, 162, 235, 1)',
                             backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                            fill: true
+                        }
+                    ]
+                }
+            });
+    
+            // Gráfico de Temperatura y Humedad del Aire de la Última Hora
+            const lastHourTempHumidityChart = new Chart(document.getElementById('lastHourTempHumidityChart'), {
+                type: 'line',
+                data: {
+                    labels: lastHourLabels,
+                    datasets: [
+                        {
+                            label: 'Temperatura Última Hora',
+                            data: lastHourTemp,
+                            borderColor: 'rgba(255, 206, 86, 1)',
+                            backgroundColor: 'rgba(255, 206, 86, 0.2)',
+                            fill: true
+                        },
+                        {
+                            label: 'Humedad Última Hora',
+                            data: lastHourHumidity,
+                            borderColor: 'rgba(153, 102, 255, 1)',
+                            backgroundColor: 'rgba(153, 102, 255, 0.2)',
                             fill: true
                         }
                     ]
