@@ -40,10 +40,6 @@
 <!-- Incluir los estilos de Bootstrap -->
 
 <!-- Bootstrap CSS -->
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KyZXEAg3QhqLMpG8r+8fhAXLRH9rRJZv7iVThzF5iVGkEkC3f5iGq1lCj4VwhYFB" crossorigin="anonymous">
-
-<!-- Bootstrap JS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js" integrity="sha384-VVo8u6f5xXHQMoO+zLfLprMf3yXjKMTKCRvhIChsn1A9MCnT9GuLCScfsfs5B+vg" crossorigin="anonymous"></script>
 
 
 <div class="jornadas">
@@ -82,9 +78,13 @@
 
 
             <a class="dropdown-item" href="{% url 'gestiondetrabajadores' %}">Trabajadores</a>
-            <a type="button" class="dropdown-item" data-toggle="modal" data-target="#searchModal" href="#">FILTRAR</a>
-            <a class="dropdown-item" href="{% url 'exportar_a_excel_jornada' %}?{{ request.GET.urlencode }}">Exportar a
-              Excel</a>
+            <a type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#searchModal" href="#">FILTRAR</a>
+            {% if request.path == '/gestion_jornadas_por_trato/' %}
+                <a class="dropdown-item" href="{% url 'exportar_a_excel_jornada_por_trato' %}?{{ request.GET.urlencode }}">Exportar a Excel</a>
+            {% else %}
+                <a class="dropdown-item" href="{% url 'exportar_a_excel_jornada' %}?{{ request.GET.urlencode }}">Exportar a Excel</a>
+            {% endif %}
+
 
             <a class="dropdown-item" href="{% url 'gestion_jornadas' %}">Limpiar Filtro</a>
 
@@ -97,33 +97,33 @@
 
 
 
-          <div class="modal fade" id="searchModal" tabindex="-1" role="dialog" aria-labelledby="searchModalLabel"
-              aria-hidden="true">
-            <div class="modal-dialog" role="document">
-                  <div class="modal-content">
-                      <div class="modal-header">
-                        <h5 class="modal-title" id="searchModalLabel">Filtrar Jornadas</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                          <span aria-hidden="true">&times;</span>
-                        </button>
-                      </div>
-                      <div class="modal-body">
-                        <form method="get">
-                          {{filtered_jornadas.form.as_p}}
-                          </div>
-                          <br>
-                          <div class="form-row">
-                            <div class="form-group col-md-6">
-                              <button type="submit" class="btn btn-success">Filtrar</button>
+            <div class="modal fade" id="searchModal" tabindex="-1" role="dialog" aria-labelledby="searchModalLabel"
+                aria-hidden="true">
+              <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                          <h5 class="modal-title" id="searchModalLabel">Filtrar Jornadas</h5>
+                          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                          </button>
+                        </div>
+                        <div class="modal-body">
+                          <form method="get">
+                            {{filtered_jornadas.form.as_p}}
                             </div>
+                            <br>
+                            <div class="form-row">
+                              <div class="form-group col-md-6">
+                                <button type="submit" class="btn btn-success">Filtrar</button>
+                              </div>
 
 
-                          </div>
-                        </form>
+                            </div>
+                          </form>
+                    </div>
                   </div>
-                </div>
+              </div>
             </div>
-        </div>
 
 
 

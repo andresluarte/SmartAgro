@@ -13,6 +13,7 @@ urlpatterns = [
     path('api/', views.ProcesoListAPIView.as_view(),),
     path('exportar_proceso/', views.ExportToExcelViewProceso.as_view(), name='exportar_a_excel_proceso'),
     path('exportar_jornada/', views.ExportToExcelViewJornada.as_view(), name='exportar_a_excel_jornada'),
+    path('exportar_jornada_por_trato/', views.ExportToExcelViewJornadaPorTrato.as_view(), name='exportar_a_excel_jornada_por_trato'),
     path('exportar_trabajador/', views.ExportToExcelViewTrabajador.as_view(), name='exportar_a_excel_trabajador'),
 
 

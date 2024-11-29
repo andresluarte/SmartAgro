@@ -147,43 +147,95 @@
         
   
         {% if sensor_data %}
-    {% for data in sensor_data %}
-    <div class="section">
-        <h4>Sensor ID: {{ data.sensor_id }}</h4>
-        <div>
-            <strong>Temperatura:</strong> <span>{{ data.latest_data.temperature }}°C</span>
-            <div class="kpi-bar temperature-bar">
-                <span class="temperature-bar-inner" style="display: block; height: 100%;"></span>
+        {% for data in sensor_data %}
+        <div class="section">
+            <h4>Sensor ID: {{ data.sensor_id }}</h4>
+            <div>
+                <strong>Temperatura:</strong> <span>{{ data.latest_data.temperature }}°C</span>
+                <div class="kpi-bar temperature-bar">
+                    <span class="temperature-bar-inner" style="display: block; height: 100%;"></span>
+                </div>
             </div>
-        </div>
-        <div>
-            <strong>Humedad:</strong> <span>{{ data.latest_data.humidity }}%</span>
-            <div class="kpi-bar humidity-bar">
-                <span class="humidity-bar-inner" style="display: block; height: 100%;"></span>
+            <div>
+                <strong>Humedad:</strong> <span>{{ data.latest_data.humidity }}%</span>
+                <div class="kpi-bar humidity-bar">
+                    <span class="humidity-bar-inner" style="display: block; height: 100%;"></span>
+                </div>
             </div>
+    
+            {% comment %} <h5>Recomendaciones</h5>
+            <div>
+                <strong>Temperatura:</strong> <span>{{ data.temperature_recommendation }}</span>
+            </div>
+            <div>
+                <strong>Humedad:</strong> <span>{{ data.humidity_recommendation }}</span>
+            </div> {% endcomment %}
+            <div class="chart-container" style="position: relative; height: 200px; width: 100%;">
+                <canvas id="sensorChart{{ data.sensor_id }}"></canvas>
+            </div>
+    
+    
+            <div class="data">
+                <div><strong>Latitud:</strong> <span>{{ data.latest_data.latitude }}</span></div>
+                <div><strong>Longitud:</strong> <span>{{ data.latest_data.longitude }}</span></div>
+            </div>
+            <div class="timestamp">
+                Última actualización: {{ data.latest_data.timestamp }}
+            </div>
+            <div class="map-link">
+                <a href="https://www.google.com/maps/search/?api=1&query={{ data.latest_data.latitude|urlencode }},{{ data.latest_data.longitude|urlencode }}" target="_blank">Ver en Google Maps</a>
+            </div>
+    
+            <!-- Gráfico de temperatura y humedad promediado por hora -->
+            
+            <script>
+                var ctx = document.getElementById('sensorChart{{ data.sensor_id }}').getContext('2d');
+                var chart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: {{ data.hours|safe }},
+                        datasets: [
+                            {
+                                label: 'Temperatura Promedio',
+                                borderColor: 'rgb(255, 99, 132)',
+                                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                                data: {{ data.hourly_temperature|safe }},
+                                fill: false,
+                                borderWidth: 2
+                            },
+                            {
+                                label: 'Humedad Promedio',
+                                borderColor: 'rgb(54, 162, 235)',
+                                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                                data: {{ data.hourly_humidity|safe }},
+                                fill: false,
+                                borderWidth: 2
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Hora'
+                                }
+                            },
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Valor'
+                                }
+                            }
+                        }
+                    }
+                });
+            </script>
         </div>
-
-        <h5>Recomendaciones</h5>
-        <div>
-            <strong>Temperatura:</strong> <span>{{ data.temperature_recommendation }}</span>
-        </div>
-        <div>
-            <strong>Humedad:</strong> <span>{{ data.humidity_recommendation }}</span>
-        </div>
-
-        <div class="data">
-            <div><strong>Latitud:</strong> <span>{{ data.latest_data.latitude }}</span></div>
-            <div><strong>Longitud:</strong> <span>{{ data.latest_data.longitude }}</span></div>
-        </div>
-        <div class="timestamp">
-            Última actualización: {{ data.latest_data.timestamp }}
-        </div>
-        <div class="map-link">
-            <a href="https://www.google.com/maps/search/?api=1&query={{ data.latest_data.latitude|urlencode }},{{ data.latest_data.longitude|urlencode }}"
-                target="_blank">Ver en Google Maps</a>
-        </div>
-    </div>
     {% endfor %}
+    
 {% else %}
     <p>No hay datos disponibles para tus sensores.</p>
 {% endif %}

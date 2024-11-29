@@ -20,7 +20,7 @@ from django.views import View
 from django.core.paginator import Paginator
 
 #resource exportar excel
-from .admin import ProcesosResource,JornadasResource,TrabajadorResource
+from .admin import ProcesosResource,JornadasResource,TrabajadorResource,JornadasPorTratoResource
 
 
 from django.shortcuts import render
@@ -57,35 +57,62 @@ class ExportToExcelViewProceso(View):
         return response
     
 #exportar excel jornada
+
+
 class ExportToExcelViewJornada(View):
+    def get_queryset(self, request):
+        user = request.user
+        if user.is_superuser:
+            queryset = Jornada.objects.all()
+        elif user.user_type == 'admin':
+            queryset = Jornada.objects.filter(user=user)
+        elif user.user_type == 'colaborador':
+            admin_user = user.created_by
+            queryset = Jornada.objects.filter(user__in=[user, admin_user])
+        elif user.user_type == 'agricultor':
+            colaborador_user = user.created_by
+            admin_user = colaborador_user.created_by if colaborador_user else None
+            queryset = Jornada.objects.filter(user__in=[user, colaborador_user, admin_user])
+        else:
+            queryset = Jornada.objects.none()
+
+        # Aplicar filtros adicionales
+        return JornadaFilter(request.GET, queryset=queryset, user=user).qs
+
     def get(self, request):
-        queryset = JornadaFilter(request.GET, queryset=Jornada.objects.all()).qs
+        queryset = self.get_queryset(request)
         dataset = JornadasResource().export(queryset=queryset)
         response = HttpResponse(dataset.xls, content_type='application/vnd.ms-excel')
-        response['Content-Disposition'] = 'attachment; filename="Jornada.xls"'
+        response['Content-Disposition'] = 'attachment; filename="Jornadas.xls"'
         return response
+    
+class ExportToExcelViewJornadaPorTrato(View):
+    def get_queryset(self, request):
+        user = request.user
+        if user.is_superuser:
+            queryset = JornadaPorTrato.objects.all()
+        elif user.user_type == 'admin':
+            queryset = JornadaPorTrato.objects.filter(user=user)
+        elif user.user_type == 'colaborador':
+            admin_user = user.created_by
+            queryset = JornadaPorTrato.objects.filter(user__in=[user, admin_user])
+        elif user.user_type == 'agricultor':
+            colaborador_user = user.created_by
+            admin_user = colaborador_user.created_by if colaborador_user else None
+            queryset = JornadaPorTrato.objects.filter(user__in=[user, colaborador_user, admin_user])
+        else:
+            queryset = JornadaPorTrato.objects.none()
 
-    def post(self, request):
-        queryset = JornadaFilter(request.POST, queryset=Jornada.objects.all()).qs
-        dataset = JornadasResource().export(queryset=queryset)
-        response = HttpResponse(dataset.xls, content_type='application/vnd.ms-excel')
-        response['Content-Disposition'] = 'attachment; filename="Jornada.xls"'
-        return response
+        # Aplicar filtros adicionales
+        return JornadaPorTratoFilter(request.GET, queryset=queryset, user=user).qs
 
-class ExportToExcelViewJornadaporTrato(View):
     def get(self, request):
-        queryset = JornadaPorTratoFilter(request.GET, queryset=JornadaPorTrato.objects.all()).qs
-        dataset = JornadasResource().export(queryset=queryset)
+        queryset = self.get_queryset(request)
+        dataset = JornadasPorTratoResource().export(queryset=queryset)
         response = HttpResponse(dataset.xls, content_type='application/vnd.ms-excel')
-        response['Content-Disposition'] = 'attachment; filename="Jornada.xls"'
+        response['Content-Disposition'] = 'attachment; filename="Jornadas.xls"'
         return response
 
-    def post(self, request):
-        queryset = JornadaPorTratoFilter(request.POST, queryset=JornadaPorTrato.objects.all()).qs
-        dataset = JornadasResource().export(queryset=queryset)
-        response = HttpResponse(dataset.xls, content_type='application/vnd.ms-excel')
-        response['Content-Disposition'] = 'attachment; filename="Jornada.xls"'
-        return response
 
 
 #exportar trabajador
@@ -330,6 +357,7 @@ def JornadaList(request):
     page_number = request.GET.get('page')
     jornada_page_obj = paginated_filtered_jornadas.get_page(page_number)
     context['jornada_page_obj'] = jornada_page_obj
+    
     
 
     return render(request, 'agrosmart/jornada/gestion_jornadas.html', context=context)
@@ -996,71 +1024,84 @@ class TemperatureHumidityAPIView(APIView):
 from django.shortcuts import render
 from .models import TemperatureHumidityLocation, SensorAire
 
+from django.db.models import Avg
+from datetime import timedelta
+from django.utils import timezone
+
 @login_required
 def combined_data_view(request):
-    # Obtener el usuario actual
     user = request.user
-
-    # Obtener todos los sensores asociados al usuario
     sensors = SensorAire.objects.filter(user=user)
 
-    # Comprobar si el usuario tiene sensores
     if not sensors.exists():
         return render(request, 'agrosmart/tiemporeal.html', {
             'sensor_data': [],
             'no_sensors_message': "No tienes sensores registrados.",
         })
 
-    # Crear una lista para almacenar los datos de cada sensor y sus recomendaciones
     sensor_data = []
-
     for sensor in sensors:
-        # Obtener la última entrada de datos para el sensor
         latest_data = TemperatureHumidityLocation.objects.filter(sensor=sensor).order_by('-timestamp').first()
-
         if latest_data:
             temperature = float(latest_data.temperature)
             humidity = float(latest_data.humidity)
 
-            # Generar recomendaciones
-            temperature_recommendation = ""
-            humidity_recommendation = ""
+            # Recomendaciones
+            temperature_recommendation = get_temperature_recommendation(temperature)
+            humidity_recommendation = get_humidity_recommendation(humidity)
 
-            if temperature < 0:
-                temperature_recommendation = "La temperatura es muy baja. Protege tus plantas del frío extremo."
-            elif 0 <= temperature <= 10:
-                temperature_recommendation = "La temperatura es fresca. Considera proteger las plantas del frío."
-            elif 10 < temperature <= 25:
-                temperature_recommendation = "La temperatura es óptima para las plantas de uva."
-            elif temperature > 25:
-                temperature_recommendation = "La temperatura es alta. Asegúrate de que las plantas tengan suficiente agua."
+            # Calcular el promedio de las últimas 24 horas por hora
+            twenty_four_hours_ago = timezone.now() - timedelta(hours=24)
+            hourly_data = TemperatureHumidityLocation.objects.filter(
+                sensor=sensor, timestamp__gte=twenty_four_hours_ago
+            ).values('timestamp__hour').annotate(
+                avg_temperature=Avg('temperature'),
+                avg_humidity=Avg('humidity')
+            ).order_by('timestamp__hour')
 
-            if humidity < 40:
-                humidity_recommendation = "El aire está seco. Es recomendable aumentar la humedad para las plantas."
-            elif 40 <= humidity <= 70:
-                humidity_recommendation = "La humedad es adecuada para el crecimiento de las plantas de uva."
-            elif humidity > 70:
-                humidity_recommendation = "La humedad es alta. Podría haber riesgo de enfermedades fúngicas."
+            hourly_temperature = [data['avg_temperature'] for data in hourly_data]
+            hourly_humidity = [data['avg_humidity'] for data in hourly_data]
+            hours = [data['timestamp__hour'] for data in hourly_data]
 
-            # Agregar datos a la lista
             sensor_data.append({
                 'sensor_id': sensor.id,
                 'latest_data': latest_data,
                 'temperature_recommendation': temperature_recommendation,
-                'humidity_recommendation': humidity_recommendation
+                'humidity_recommendation': humidity_recommendation,
+                'hourly_temperature': hourly_temperature,
+                'hourly_humidity': hourly_humidity,
+                'hours': hours
             })
         else:
-            # Si no hay datos, agregar el sensor con un mensaje de falta de datos
             sensor_data.append({
                 'sensor_id': sensor.id,
                 'latest_data': None,
                 'temperature_recommendation': "No hay datos disponibles.",
-                'humidity_recommendation': "No hay datos disponibles."
+                'humidity_recommendation': "No hay datos disponibles.",
+                'hourly_temperature': [],
+                'hourly_humidity': [],
+                'hours': [],
             })
 
-    return render(request, 'agrosmart/tiemporeal.html', {
-        'sensor_data': sensor_data,
-    })
+    return render(request, 'agrosmart/tiemporeal.html', {'sensor_data': sensor_data})
+
+def get_temperature_recommendation(temperature):
+    if temperature < 0:
+        return "La temperatura es muy baja. Protege tus plantas del frío extremo."
+    elif 0 <= temperature <= 10:
+        return "La temperatura es fresca. Considera proteger las plantas del frío."
+    elif 10 < temperature <= 25:
+        return "La temperatura es óptima para las plantas de uva."
+    elif temperature > 25:
+        return "La temperatura es alta. Asegúrate de que las plantas tengan suficiente agua."
+
+def get_humidity_recommendation(humidity):
+    if humidity < 40:
+        return "El aire está seco. Es recomendable aumentar la humedad para las plantas."
+    elif 40 <= humidity <= 70:
+        return "La humedad es adecuada para el crecimiento de las plantas de uva."
+    elif humidity > 70:
+        return "La humedad es alta. Podría haber riesgo de enfermedades fúngicas."
 
 
 @login_required

@@ -1,6 +1,6 @@
 from django.contrib import admin
 from import_export import resources
-from .models import Procesos,Contacto,Trabajador,Jornada,Sector,Huerto,Lote,CustomUser,SensorAire,TemperatureHumidityLocation,DecisionEfectuada,HumidityTemperaturaSoil,SensorSuelo
+from .models import Procesos,Contacto,Trabajador,Jornada,Sector,Huerto,Lote,CustomUser,SensorAire,TemperatureHumidityLocation,DecisionEfectuada,HumidityTemperaturaSoil,SensorSuelo,JornadaPorTrato
 from import_export.fields import Field
 
 
@@ -54,6 +54,27 @@ class JornadasResource(resources.ModelResource):
     def dehydrate(self, row):
         # Aquí puedes realizar alguna transformación adicional si es necesario
         return row
+
+class JornadasPorTratoResource(resources.ModelResource):
+    asignado_nombre = Field(attribute='asignado__nombre', column_name='Asignado')
+    sector_nombre = Field(attribute='sector__nombre', column_name='Sector')
+    huerto_nombre = Field(attribute='huerto__nombre', column_name='Huerto')
+    lote_nombre = Field(attribute='lote__nombre', column_name='Lote')
+    
+    
+
+    class Meta:
+        model = JornadaPorTrato
+        fields = ['asignado_nombre',  'fecha', 'nombre_tarea_1', 
+                   'cobro_tarea_1', 'nombre_tarea_2',  'cobro_tarea_2', 'nombre_tarea_3', 'cobro_tarea_3','total_gasto_jornada','estado','detalle_gasto_total_tareas','detalle_gastos_total_extras'
+
+                  'nombre_extra_1','gasto_extra_1','nombre_extra_2','gasto_extra_2','nombre_extra_3','gasto_extra_3','nombre_extra_1','gasto_extra_1','nombre_extra_2','gasto_extra_2','nombre_extra_3','gasto_extra_3',
+                  'observacion']
+    
+    def dehydrate(self, row):
+        # Aquí puedes realizar alguna transformación adicional si es necesario
+        return row
+
 
 
 class TrabajadorResource(resources.ModelResource):
