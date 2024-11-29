@@ -381,6 +381,13 @@
         {% endfor %}
     });
 </script>
+<script>
+    // Función para recargar la página cada 8 minutos (480,000 milisegundos)
+    setTimeout(function() {
+        location.reload(); // Recarga la página
+    }, 480000); // 480,000 milisegundos = 8 minutos
+</script>
+
 {% else %}
     <p>No hay datos disponibles para tus sensores.</p>
 {% endif %}
