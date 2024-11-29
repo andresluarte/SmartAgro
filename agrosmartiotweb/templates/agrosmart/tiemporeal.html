@@ -134,6 +134,65 @@
             max-width: 100%; /* Asegurarse de que el gráfico no desborde */
             max-height: 100%; /* Limitar altura máxima */
         }
+        /* Estilo general del contenedor */
+        .sensor-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 15px;
+            padding: 20px;
+            background: #f0f0f0;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            max-width: 300px;
+            margin: auto;
+        }
+
+        /* Estilo para cada ítem de los datos */
+        .sensor-data-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-radius: 8px;
+            background: #ffffff;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            transition: transform 0.3s ease;
+        }
+
+        /* Efecto hover para resaltar los datos cuando se pasa el mouse */
+        .sensor-data-item:hover {
+            transform: scale(0.05);
+        }
+
+        /* Estilo de la etiqueta (Temperatura, Humedad) */
+        .sensor-label {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        /* Estilo de los valores */
+        .sensor-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #ffffff;
+            padding: 5px 10px;
+            border-radius: 8px;
+        }
+
+        /* Colores personalizados para temperatura y humedad */
+        .temperature {
+            background: linear-gradient(90deg, rgba(170, 100, 80, 1) 0%, rgba(230, 190, 110, 1) 100%);
+        }
+
+        .humidity {
+            background: linear-gradient(90deg, rgba(120, 150, 180, 1) 0%, rgba(170, 190, 160, 1) 100%);
+        }
+
+
+
     </style>
     
 </head>
@@ -166,11 +225,19 @@
     {% for data in sensor_data %}
         <div class="section">
             <h4>Sensor ID: {{ data.sensor_id }}</h4>
-            <div>
-                <strong>Temperatura:</strong> <span>{{ data.latest_data.temperature }}°C</span>
+            <div class="">
+                <div class="sensor-data-item">
+                    <strong class="sensor-label">Temperatura:</strong>
+                    <span class="sensor-value temperature">{{ data.latest_data.temperature }}°C</span>
+                </div>
+                <div class="sensor-data-item">
+                    <strong class="sensor-label">Humedad:</strong>
+                    <span class="sensor-value humidity">{{ data.latest_data.humidity }}%</span>
+                </div>
             </div>
-            <div>
-                <strong>Humedad:</strong> <span>{{ data.latest_data.humidity }}%</span>
+
+            <div class="sensor-aire-chart-container" style="position: relative; width: 100%; height: 200px;">
+                <canvas id="sensor-aire-chart-{{ data.sensor_id }}"></canvas>
             </div>
             <div class="data">
             <div><strong>Latitud:</strong> <span>{{ data.latest_data.latitude }}</span></div>
@@ -185,6 +252,7 @@
         <div class="timestamp">
             Última actualización: {{ data.latest_data.fecha_registro }}
         </div>
+        <h5>Datos Sensor Ultimas 24 Horas</h>
       
 
         
@@ -253,6 +321,66 @@
             {% endfor %}
         });
     </script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        {% for data in sensor_data %}
+        const ctxAire{{ data.sensor_id }} = document.getElementById('sensor-aire-chart-{{ data.sensor_id }}').getContext('2d');
+        
+        new Chart(ctxAire{{ data.sensor_id }}, {
+            type: 'bar',
+            data: {
+                labels: ['Temperatura', 'Humedad'],
+                datasets: [{
+                    label: 'Sensor Aire y Humedad',
+                    data: [
+                        Number({{ data.latest_data.temperature|default:0 }}),
+                        Number({{ data.latest_data.humidity|default:0 }})
+                    ],
+                    backgroundColor: ['#FF4081', '#00BCD4'], // Colores actualizados (rosa brillante y azul)
+                    borderColor: ['#F50057', '#018786'], // Bordes oscuros
+                    borderWidth: 1
+                    
+                    
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Valores'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Parámetros'
+                        },
+                        // Ajustamos el porcentaje de las barras en el eje X
+                        categoryPercentage: 0.5, // Reduce el espacio ocupado por las barras
+                        barPercentage: 0.5 // Reduce aún más el ancho de las barras
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        labels: {
+                            font: {
+                                size: 14,
+                                weight: 'bold'
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        {% endfor %}
+    });
+</script>
 {% else %}
     <p>No hay datos disponibles para tus sensores.</p>
 {% endif %}
