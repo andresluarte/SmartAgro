@@ -37,6 +37,9 @@ class TrabajadorFilter(django_filters.FilterSet):
                   
                   'trabajo_a_realizar':['exact']
                 }
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)  # Extraer el usuario de kwargs, si está presente
+        super().__init__(*args, **kwargs)
 
 
 from .models import Jornada, Trabajador, Sector, Huerto, Lote,JornadaPorTrato

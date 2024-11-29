@@ -65,8 +65,9 @@
           <a href="{% url 'agregartrabajador' %}" class="btn btn-secondary">Agregar Trabajador</a>
 
 
-          <a type="button" class="dropdown-item" data-toggle="modal" data-target="#searchModal" href="#">FILTRAR</a>
-
+          
+          <a type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#searchModal" href="#">FILTRAR</a>
+          
           <a class="dropdown-item" href="{% url 'exportar_a_excel_trabajador' %}?{{ request.GET.urlencode }}">Exportar a
             Excel</a>
 
@@ -91,7 +92,7 @@
             <div class="modal-content">
               <div class="modal-header">
                 <h5 class="modal-title" id="searchModalLabel">Filtrar Trabajadores</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
                   <span aria-hidden="true">&times;</span>
                 </button>
               </div>
@@ -102,6 +103,7 @@
               <br>
               <div class="form-row">
                 <div class="form-group col-md-6">
+                  &nbsp; &nbsp;  &nbsp;  
                   <button type="submit" class="btn btn-success">Filtrar</button>
                 </div>
 

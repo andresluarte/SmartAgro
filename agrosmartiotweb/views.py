@@ -42,19 +42,39 @@ def home(request):
     
 #exportar tarea (proceso)       
 class ExportToExcelViewProceso(View):
+    def get_queryset(self, request):
+        user = request.user
+        if user.is_superuser:
+            queryset = Procesos.objects.all()
+        elif user.user_type == 'admin':
+            queryset = Procesos.objects.filter(user=user)
+        elif user.user_type == 'colaborador':
+            admin_user = user.created_by
+            queryset = Procesos.objects.filter(user__in=[user, admin_user])
+        elif user.user_type == 'agricultor':
+            colaborador_user = user.created_by
+            admin_user = colaborador_user.created_by if colaborador_user else None
+            queryset = Procesos.objects.filter(user__in=[user, colaborador_user, admin_user])
+        else:
+            queryset = Procesos.objects.none()
+
+        # Aplicar filtros adicionales usando ProcesoFilter
+        return ProcesoFilter(request.GET, queryset=queryset, user=user).qs
+
     def get(self, request):
-        queryset = ProcesoFilter(request.GET, queryset=Procesos.objects.all()).qs
+        queryset = self.get_queryset(request)
         dataset = ProcesosResource().export(queryset=queryset)
         response = HttpResponse(dataset.xls, content_type='application/vnd.ms-excel')
         response['Content-Disposition'] = 'attachment; filename="procesos.xls"'
         return response
 
     def post(self, request):
-        queryset = ProcesoFilter(request.POST, queryset=Procesos.objects.all()).qs
+        queryset = self.get_queryset(request)
         dataset = ProcesosResource().export(queryset=queryset)
         response = HttpResponse(dataset.xls, content_type='application/vnd.ms-excel')
         response['Content-Disposition'] = 'attachment; filename="procesos.xls"'
         return response
+
     
 #exportar excel jornada
 
@@ -110,28 +130,46 @@ class ExportToExcelViewJornadaPorTrato(View):
         queryset = self.get_queryset(request)
         dataset = JornadasPorTratoResource().export(queryset=queryset)
         response = HttpResponse(dataset.xls, content_type='application/vnd.ms-excel')
-        response['Content-Disposition'] = 'attachment; filename="Jornadas.xls"'
+        response['Content-Disposition'] = 'attachment; filename="Jornada_Por_Trato.xls"'
         return response
 
 
 
 #exportar trabajador
 class ExportToExcelViewTrabajador(View):
+    def get_queryset(self, request):
+        user = request.user
+        if user.is_superuser:
+            queryset = Trabajador.objects.all()
+        elif user.user_type == 'admin':
+            queryset = Trabajador.objects.filter(created_by=user)
+        elif user.user_type == 'colaborador':
+            admin_user = user.created_by
+            queryset = Trabajador.objects.filter(created_by__in=[user, admin_user])
+        elif user.user_type == 'agricultor':
+            colaborador_user = user.created_by
+            admin_user = colaborador_user.created_by if colaborador_user else None
+            queryset = Trabajador.objects.filter(created_by__in=[user, colaborador_user, admin_user])
+        else:
+            queryset = Trabajador.objects.none()
+
+        # Aplicar filtros adicionales usando TrabajadorFilter
+        return TrabajadorFilter(request.GET, queryset=queryset, user=user).qs
+
     def get(self, request):
-        queryset = TrabajadorFilter(request.GET, queryset=Trabajador.objects.all()).qs
+        queryset = self.get_queryset(request)
         dataset = TrabajadorResource().export(queryset=queryset)
         response = HttpResponse(dataset.xls, content_type='application/vnd.ms-excel')
-        response['Content-Disposition'] = 'attachment; filename="trabajador.xls"'
+        response['Content-Disposition'] = 'attachment; filename="trabajadores.xls"'
         return response
 
     def post(self, request):
-        queryset = TrabajadorFilter(request.POST, queryset=Jornada.objects.all()).qs
+        queryset = self.get_queryset(request)
         dataset = TrabajadorResource().export(queryset=queryset)
         response = HttpResponse(dataset.xls, content_type='application/vnd.ms-excel')
-        response['Content-Disposition'] = 'attachment; filename="Jornada.xls"'
+        response['Content-Disposition'] = 'attachment; filename="trabajadores.xls"'
         return response
 
-    
 class ProcesoListAPIView(ListAPIView):
     queryset = Procesos.objects.all()
     serializer_class = ProcesoSerializer
