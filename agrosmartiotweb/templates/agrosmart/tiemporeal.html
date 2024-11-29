@@ -175,10 +175,17 @@
             <div class="data">
             <div><strong>Latitud:</strong> <span>{{ data.latest_data.latitude }}</span></div>
             <div><strong>Longitud:</strong> <span>{{ data.latest_data.longitude }}</span></div>
+            
         </div>
+        <div class="map-link">
+            <a href="https://www.google.com/maps/search/?api=1&query={{ data.latest_data.latitude|urlencode }},{{ data.latest_data.longitude|urlencode }}"
+                target="_blank">Ver en Google Maps</a>
+        </div>
+     
         <div class="timestamp">
             Última actualización: {{ data.latest_data.fecha_registro }}
         </div>
+      
 
         
             <!-- Gráfico -->
