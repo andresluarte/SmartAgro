@@ -76,12 +76,12 @@
                     {% if empresa.logo %}
                         <img src="{{ empresa.logo.url }}" alt="Logo Empresa" class="logo-small">
                     {% else %}
-                        <img src="{% static 'images/default-logo.png' %}" alt="Logo Predeterminado" class="logo-small">
+                        
                     {% endif %}
                     <span class="empresa-nombre">Fundo: {{ empresa.nombre }}</span>
                 </div>
             {% endif %}
-            {% endif %}
+           
             <a href="{% url 'home' %}">Inicio</a>
 
             <span onclick="toggleSubMenu('sensoresSubMenu')">
