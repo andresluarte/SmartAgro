@@ -119,7 +119,23 @@
             border-radius: 10px;
             transition: width 0.5s ease, background-color 0.5s ease;
         }
+    
+  
+        .chart-container {
+            display: flex; /* Usar flexbox para centrar */
+            justify-content: center; /* Centrar horizontalmente */
+            align-items: center; /* Centrar verticalmente */
+            height: 200px; /* Altura del contenedor */
+            width: 100%; /* Ancho del contenedor */
+            margin: 10px auto; /* Añadir espacio alrededor del contenedor */
+        }
+    
+        canvas {
+            max-width: 100%; /* Asegurarse de que el gráfico no desborde */
+            max-height: 100%; /* Limitar altura máxima */
+        }
     </style>
+    
 </head>
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDT0QJ4JVXUrTA8mRZN_YXjy2CZDsa_vmw&callback=initMap&libraries=drawing" async defer></script>
 
@@ -147,59 +163,38 @@
         
   
         {% if sensor_data %}
-        {% for data in sensor_data %}
+    {% for data in sensor_data %}
         <div class="section">
             <h4>Sensor ID: {{ data.sensor_id }}</h4>
             <div>
                 <strong>Temperatura:</strong> <span>{{ data.latest_data.temperature }}°C</span>
-                <div class="kpi-bar temperature-bar">
-                    <span class="temperature-bar-inner" style="display: block; height: 100%;"></span>
-                </div>
             </div>
             <div>
                 <strong>Humedad:</strong> <span>{{ data.latest_data.humidity }}%</span>
-                <div class="kpi-bar humidity-bar">
-                    <span class="humidity-bar-inner" style="display: block; height: 100%;"></span>
-                </div>
             </div>
-    
-            {% comment %} <h5>Recomendaciones</h5>
-            <div>
-                <strong>Temperatura:</strong> <span>{{ data.temperature_recommendation }}</span>
-            </div>
-            <div>
-                <strong>Humedad:</strong> <span>{{ data.humidity_recommendation }}</span>
-            </div> {% endcomment %}
+
+            <!-- Gráfico -->
             <div class="chart-container" style="position: relative; height: 200px; width: 100%;">
                 <canvas id="sensorChart{{ data.sensor_id }}"></canvas>
             </div>
-    
-    
-            <div class="data">
-                <div><strong>Latitud:</strong> <span>{{ data.latest_data.latitude }}</span></div>
-                <div><strong>Longitud:</strong> <span>{{ data.latest_data.longitude }}</span></div>
-            </div>
-            <div class="timestamp">
-                Última actualización: {{ data.latest_data.timestamp }}
-            </div>
-            <div class="map-link">
-                <a href="https://www.google.com/maps/search/?api=1&query={{ data.latest_data.latitude|urlencode }},{{ data.latest_data.longitude|urlencode }}" target="_blank">Ver en Google Maps</a>
-            </div>
-    
-            <!-- Gráfico de temperatura y humedad promediado por hora -->
-            
-            <script>
-                var ctx = document.getElementById('sensorChart{{ data.sensor_id }}').getContext('2d');
-                var chart = new Chart(ctx, {
+        </div>
+    {% endfor %}
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const initChart = (canvasId, labels, temperatureData, humidityData) => {
+                const ctx = document.getElementById(canvasId).getContext('2d');
+                new Chart(ctx, {
                     type: 'line',
                     data: {
-                        labels: {{ data.hours|safe }},
+                        labels: labels,
                         datasets: [
                             {
                                 label: 'Temperatura Promedio',
                                 borderColor: 'rgb(255, 99, 132)',
                                 backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                                data: {{ data.hourly_temperature|safe }},
+                                data: temperatureData,
                                 fill: false,
                                 borderWidth: 2
                             },
@@ -207,7 +202,7 @@
                                 label: 'Humedad Promedio',
                                 borderColor: 'rgb(54, 162, 235)',
                                 backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                                data: {{ data.hourly_humidity|safe }},
+                                data: humidityData,
                                 fill: false,
                                 borderWidth: 2
                             }
@@ -232,13 +227,21 @@
                         }
                     }
                 });
-            </script>
-        </div>
-    {% endfor %}
-    
+            };
+
+            // Inicializar gráficos para cada sensor
+            {% for data in sensor_data %}
+                const labels_{{ data.sensor_id }} = {{ data.hours|escapejs }};
+                const temperatureData_{{ data.sensor_id }} = {{ data.hourly_temperature|escapejs }};
+                const humidityData_{{ data.sensor_id }} = {{ data.hourly_humidity|escapejs }};
+                initChart('sensorChart{{ data.sensor_id }}', labels_{{ data.sensor_id }}, temperatureData_{{ data.sensor_id }}, humidityData_{{ data.sensor_id }});
+            {% endfor %}
+        });
+    </script>
 {% else %}
     <p>No hay datos disponibles para tus sensores.</p>
 {% endif %}
+
     
     </div>
     
