@@ -72,10 +72,15 @@
             {% if user.is_authenticated %}
             <a class="bold-link">Usuario: {{ user.username }}</a>
             {% if empresa %}
-            <div class="empresa-info">
-                <img src="{{ empresa.logo.url }}" alt="Logo Empresa" class="logo-small">
-                <span class="empresa-nombre">Fundo: {{ empresa.nombre }}</span>
-            </div>
+                <div class="empresa-info">
+                    {% if empresa.logo %}
+                        <img src="{{ empresa.logo.url }}" alt="Logo Empresa" class="logo-small">
+                    {% else %}
+                        <img src="{% static 'images/default-logo.png' %}" alt="Logo Predeterminado" class="logo-small">
+                    {% endif %}
+                    <span class="empresa-nombre">Fundo: {{ empresa.nombre }}</span>
+                </div>
+            {% endif %}
             {% endif %}
             <a href="{% url 'home' %}">Inicio</a>
 

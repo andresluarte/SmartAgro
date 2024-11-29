@@ -116,34 +116,8 @@
                 
             </div>
             <canvas id="gastoTotalChart" width="1" height="1"></canvas>
-            <h3>Finanzas por Mes</h3>
-                <hr>
-                <div>
-                    <div class="table-container">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Mes/Año</th>
-                                    <th>Total Gasto Jornadas</th>
-                                    <th>Total Gasto Jornadas por Trato</th>
-                                    <th>Total Gasto Final</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for finanza in finanzas_por_mes %}
-                                <tr>
-                                    <td>{{ finanza.mes_año|date:"F Y" }}</td>
-                                    <td>{{ finanza.total_gasto_jornadas }}</td>
-                                    <td>{{ finanza.total_gasto_jornadas_por_trato }}</td>
-                                    <td>{{ finanza.total_gasto_final }}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                    
-                </div>
-            </div>
+           
+            
             
         </div>
         <br><br>
