@@ -1028,7 +1028,7 @@ from django.db.models import Avg
 from datetime import timedelta
 from django.utils import timezone
 
-@login_required
+
 def combined_data_view(request):
     user = request.user
     sensors = SensorAire.objects.filter(user=user)
@@ -1041,7 +1041,8 @@ def combined_data_view(request):
 
     sensor_data = []
     for sensor in sensors:
-        latest_data = TemperatureHumidityLocation.objects.filter(sensor=sensor).order_by('-timestamp').first()
+        # Obtener el dato más reciente basado en fecha_registro
+        latest_data = TemperatureHumidityLocation.objects.filter(sensor=sensor).order_by('-fecha_registro').first()
         if latest_data:
             temperature = float(latest_data.temperature)
             humidity = float(latest_data.humidity)
@@ -1050,18 +1051,19 @@ def combined_data_view(request):
             temperature_recommendation = get_temperature_recommendation(temperature)
             humidity_recommendation = get_humidity_recommendation(humidity)
 
-            # Calcular el promedio de las últimas 24 horas por hora
+            # Calcular el promedio de las últimas 24 horas por hora usando fecha_registro
             twenty_four_hours_ago = timezone.now() - timedelta(hours=24)
             hourly_data = TemperatureHumidityLocation.objects.filter(
-                sensor=sensor, timestamp__gte=twenty_four_hours_ago
-            ).values('timestamp__hour').annotate(
+                sensor=sensor, fecha_registro__gte=twenty_four_hours_ago
+            ).values('fecha_registro__hour').annotate(
                 avg_temperature=Avg('temperature'),
                 avg_humidity=Avg('humidity')
-            ).order_by('timestamp__hour')
+            ).order_by('fecha_registro__hour')
 
+            # Preparar datos para el gráfico
             hourly_temperature = [data['avg_temperature'] for data in hourly_data]
             hourly_humidity = [data['avg_humidity'] for data in hourly_data]
-            hours = [data['timestamp__hour'] for data in hourly_data]
+            hours = [data['fecha_registro__hour'] for data in hourly_data]
 
             sensor_data.append({
                 'sensor_id': sensor.id,
@@ -1102,6 +1104,7 @@ def get_humidity_recommendation(humidity):
         return "La humedad es adecuada para el crecimiento de las plantas de uva."
     elif humidity > 70:
         return "La humedad es alta. Podría haber riesgo de enfermedades fúngicas."
+
 
 
 @login_required

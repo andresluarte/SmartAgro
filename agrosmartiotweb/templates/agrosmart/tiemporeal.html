@@ -177,12 +177,10 @@
             <div><strong>Longitud:</strong> <span>{{ data.latest_data.longitude }}</span></div>
         </div>
         <div class="timestamp">
-            Última actualización: {{ data.latest_data.timestamp }}
-        </div>
-        <div class="timestamp">
-            Última actualización Registro: {{ data.fecha_registro }}
+            Última actualización: {{ data.latest_data.fecha_registro }}
         </div>
 
+        
             <!-- Gráfico -->
             <div class="chart-container" style="position: relative; height: 200px; width: 100%;">
                 <canvas id="sensorChart{{ data.sensor_id }}"></canvas>
