@@ -14,6 +14,7 @@ import os
 from pathlib import Path
 import django_heroku
 import pytz
+from django.contrib.messages import constants as message_constants
 AUTH_USER_MODEL = 'agrosmartiotweb.CustomUser'
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -91,12 +92,24 @@ WSGI_APPLICATION = 'agrosmartiot.wsgi.application'
 import dj_database_url
 import os
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),  # Ubicación del archivo de la base de datos
+#     }
+# }
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),  # Ubicación del archivo de la base de datos
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'de2racke075i6q',
+        'USER': 'udhkbqf94vj8sj',
+        'PASSWORD': 'pffb7a290903a2f5066a12b53f03ac65a9fac2699696d580b93290a3734d68bf0',  # Reemplaza 'tu_contraseña' con la contraseña de tu usuario PostgreSQL
+        'HOST': 'cd5gks8n4kb20g.cluster-czrs8kj4isg7.us-east-1.rds.amazonaws.com',
+        'PORT': '5432',
     }
 }
+
 # settings.py
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
@@ -135,10 +148,11 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-
+MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'
+MESSAGE_LEVEL = message_constants.DEBUG
 # Kafka
-KAFKA_SERVER = 'localhost:9092'
-KAFKA_TOPIC = 'temperatura-topic'
+#KAFKA_SERVER = 'localhost:9092'
+#KAFKA_TOPIC = 'temperatura-topic'
 
 # Django Heroku settings
 
@@ -146,6 +160,6 @@ SESSION_COOKIE_SECURE = False  # Si no estás usando HTTPS, asegúrate de que es
 CSRF_COOKIE_SECURE = False     # Asegúrate de que sea False en desarrollo
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 
-ALLOWED_HOSTS = ['web-production-3711.up.railway.app', 'localhost', '127.0.0.1']
-
+ALLOWED_HOSTS = []
+django_heroku.settings(locals())
 CSRF_TRUSTED_ORIGINS = ['https://web-production-3711.up.railway.app']

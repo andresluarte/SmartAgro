@@ -46,6 +46,20 @@
     window.location.href = "{% url 'gestiondetareas' %}";
   }
 </script>
+
+    {% if messages %}
+        {% for m in messages %}
+        <script>
+            Swal.fire({
+                title: "Excelente",
+                text: "{{ m }}",  <!-- El mensaje de éxito -->
+                icon: "success"
+            });
+        </script>
+        {% endfor %}
+    {% endif %}
+
+
 {% endblock js %}
 {% load humanize %}
 
@@ -69,7 +83,11 @@
           <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
 
             <a class="dropdown-item"href="{% url 'agregartarea' %}" >Agregar Insumo/Maquinaria</a>
-            <a class="dropdown-item" href="{% url 'gestiondetrabajadores' %}">Trabajadores</a>
+            {% if request.user.user_type == 'superuser' or request.user.user_type == 'admin' or request.user.user_type == 'colaborador' %}
+                <a class="dropdown-item" href="{% url 'gestiondetrabajadores' %}">Trabajadores</a>
+            {% endif %}
+
+        
             <a type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#searchModal" href="#">FILTRAR</a>
             <a class="dropdown-item" href="{% url 'exportar_a_excel_proceso' %}?{{ request.GET.urlencode }}">Exportar a
               Excel</a>
@@ -92,24 +110,25 @@
                   
                     <span aria-hidden="true">&times;</span>
                   </button>
+                  <form method="get">
+                    {{ filtered_proceso.form.as_p }}
+                    </div>
+                    <br>
+                    <div class="form-row">
+                      <div class="form-group col-md-6">
+                        <button type="submit" class="btn btn-success">Filtrar</button>
+                      </div>
+  
+  
+                    </div>
+                  </form>
                 </div>
-                <form method="get">
-                  {{ filtered_proceso.form.as_p }}
-                </form>
-                <br>
-                <div class="form-row">
-                  <div class="form-group col-md-6">
-                    <button type="submit" class="btn btn-success">Filtrar</button>
-                  </div>
-
-
-                </div>
-                </form>
+                
+                
               </div>
             </div>
           </div>
-        </div>
-        </div>
+     
         <br>
         &nbsp;
 
@@ -122,7 +141,7 @@
         <table class="table table-striped table-hover table-responsive" style="overflow-x: auto;">
           <thead>
             <tr>
-              <th>TRABAJO</th>
+              <th>Insumo/Maquinaria</th>
               <th>FECHA</th>
               <th>HORA ASIGNADA</th>
             
@@ -136,6 +155,13 @@
 
 
 
+              
+             
+              {% if request.user.user_type == 'superuser' or request.user.user_type == 'admin' or request.user.user_type == 'colaborador' %}
+             
+              <th>CREADO POR</th>
+              {% endif %}
+
               <th>Opciones</th>
 
 
@@ -144,31 +170,27 @@
           <tbody>
             {% for p in proceso_page_obj %}
             <tr>
-              <td>{{ p.trabajo }}</td>
-              <td>{{ p.fecha }}</td>
-              <td>{{ p.hora_asignada }}</td>
-              <td>{{ p.estado }}</td>
-              <td>{{ p.asignado }}</td>
-              <td>${{ p.presupuesto|floatformat:"-2" }}</td>
-              <td>{{ p.observacion }}</td>
-
-
-
-
-
-
-              <td>
-                <a href="{% url 'modificartarea' p.id %}" class="btn btn-warning">Modificar</a>
-              </td>
-              <td>
-                <a href="#" onclick="eliminarProceso({{ p.id }})" class="btn btn-danger">Eliminar </a>
-              </td>
-
-
+                <td>{{ p.trabajo }}</td>
+                <td>{{ p.fecha }}</td>
+                <td>{{ p.hora_asignada }}</td>
+                <td>{{ p.estado }}</td>
+                <td>{{ p.asignado }}</td>
+                <td>${{ p.presupuesto|floatformat:"-2" }}</td>
+                <td>{{ p.observacion }}</td>
+                {% if request.user.user_type == 'superuser' or request.user.user_type == 'admin' or request.user.user_type == 'colaborador' %}
+                    
+                    <td>{{ p.created_by }}</td>
+                {% endif %}
+                <td>
+                    <a href="{% url 'modificartarea' p.id %}" class="btn btn-warning">Modificar</a>
+                    <br>
+                    <br>
+                    <a href="#" onclick="eliminarProceso({{ p.id }})" class="btn btn-danger">Eliminar</a>
+                </td>
 
             </tr>
             {% endfor %}
-          </tbody>
+        </tbody>
         </table>
       </div>
     </div>

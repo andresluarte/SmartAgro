@@ -138,7 +138,7 @@
             <th>CANTIDAD Compras Insumos/Maquinarias</th>
             <th>CANTIDAD JORNADAS</th>
             
-            
+            <th>Creado Por</th>
             <th>Opciones</th>
             
 
@@ -178,7 +178,7 @@
             
             
             
-           
+            <td>{{ t.created_by }}</td>
             <td>
               <a href="{% url 'modificartrabajadores' t.id %}" class="btn btn-warning">Modificar</a>
             </td>
@@ -187,6 +187,8 @@
               <a href="#" onclick="eliminarTrabajador({{ t.id }})" class="btn btn-danger">Eliminar </a>
               </td>
             </td>
+            
+            
             
             
             

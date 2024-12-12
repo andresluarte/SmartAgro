@@ -20,14 +20,13 @@ admin.site.register(SensorSuelo)
 admin.site.register(HumidityTemperaturaSoil)
 admin.site.register(TemperatureHumidityLocation)
 class ProcesosResource(resources.ModelResource):
-    sector_nombre = Field(attribute='sector__nombre', column_name='Sector')
-    lote_nombre = Field(attribute='lote__nombre', column_name='Lote')
-    huerto_nombre = Field(attribute='huerto__nombre', column_name='Huerto')
+
     asignado_nombre = Field(attribute='asignado__nombre', column_name='Asignado')
+    trabajo = Field(attribute='trabajo__opciones_trabajo', column_name='Trabajo Nombre')
 
     class Meta:
         model = Procesos
-        fields = ("trabajo", "fecha", "hora_asignada", "sector_nombre", "lote_nombre", "huerto_nombre", "estado", "asignado_nombre", "presupuesto", 'hora_creacion')
+        fields = ("trabajo_nombre", "fecha", "hora_asignada",  "estado", "asignado_nombre", "presupuesto",'observacion','hora_creacion')
     
     def dehydrate(self, row):
         # Aquí puedes realizar alguna transformación adicional si es necesario

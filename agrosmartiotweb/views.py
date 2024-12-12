@@ -47,19 +47,25 @@ class ExportToExcelViewProceso(View):
         if user.is_superuser:
             queryset = Procesos.objects.all()
         elif user.user_type == 'admin':
-            queryset = Procesos.objects.filter(user=user)
+        # El admin puede ver los procesos de sus subordinados
+            subordinates = CustomUser.objects.filter(created_by=user)
+            queryset = Procesos.objects.filter(user__in=[user] + list(subordinates))
         elif user.user_type == 'colaborador':
+            # Obtener el admin del colaborador
             admin_user = user.created_by
-            queryset = Procesos.objects.filter(user__in=[user, admin_user])
-        elif user.user_type == 'agricultor':
-            colaborador_user = user.created_by
-            admin_user = colaborador_user.created_by if colaborador_user else None
-            queryset = Procesos.objects.filter(user__in=[user, colaborador_user, admin_user])
+            # Obtener todos los usuarios que fueron creados por el admin
+            subordinates = CustomUser.objects.filter(created_by=admin_user)
+            # El colaborador puede ver sus procesos, los procesos de su admin y los procesos de los usuarios subordinados
+            queryset = Procesos.objects.filter(user__in=[user, admin_user] + list(subordinates))
+        elif user.user_type == 'agricultor' or user.user_type == 'ayudante':
+            # Agricultor y Ayudante solo pueden ver lo que han creado
+            queryset = Procesos.objects.filter(user=user)
         else:
             queryset = Procesos.objects.none()
 
         # Aplicar filtros adicionales usando ProcesoFilter
         return ProcesoFilter(request.GET, queryset=queryset, user=user).qs
+
 
     def get(self, request):
         queryset = self.get_queryset(request)
@@ -439,8 +445,14 @@ def jornada_por_trato_list(request):
 
 
 
+from django.http import HttpResponseForbidden
+
 @login_required(login_url="my_login")
 def TrabajadorList(request):
+    # Limitar acceso solo a superuser, admin y colaborador
+    if not (request.user.is_superuser or request.user.user_type in ['admin', 'colaborador']):
+        return HttpResponseForbidden("No tienes permiso para acceder a esta vista.")
+    
     if request.user.is_superuser:
         queryset = Trabajador.objects.all()
     elif request.user.user_type == 'admin':
@@ -449,11 +461,6 @@ def TrabajadorList(request):
         # Colaborador puede ver sus propios trabajadores y los de su admin
         admin_user = request.user.created_by
         queryset = Trabajador.objects.filter(created_by__in=[request.user, admin_user])
-    elif request.user.user_type == 'agricultor':
-        # Agricultor puede ver los trabajadores creados por su colaborador y su administrador
-        colaborador_user = request.user.created_by
-        admin_user = colaborador_user.created_by if colaborador_user else None
-        queryset = Trabajador.objects.filter(created_by__in=[colaborador_user, admin_user])
     else:
         queryset = Trabajador.objects.none()
 
@@ -470,39 +477,49 @@ def TrabajadorList(request):
     context['trabajador_page_obj'] = trabajador_page_obj
 
     return render(request, 'agrosmart/trabajadores/gestiondetrabajadores.html', context=context)
+
 from django.core.paginator import Paginator
 from .models import Procesos
 
 @login_required(login_url="my_login")
+
 def ProcesoList(request):
     user = request.user
     
-    # Filtrado según el tipo de usuario
     if user.is_superuser:
         queryset = Procesos.objects.all()
     elif user.user_type == 'admin':
-        queryset = Procesos.objects.filter(user=user)
+        # El admin puede ver los procesos de sus subordinados
+        subordinates = CustomUser.objects.filter(created_by=user)
+        queryset = Procesos.objects.filter(user__in=[user] + list(subordinates))
     elif user.user_type == 'colaborador':
+        # Obtener el admin del colaborador
         admin_user = user.created_by
-        queryset = Procesos.objects.filter(user__in=[user, admin_user])
-    elif user.user_type == 'agricultor':
-        colaborador_user = user.created_by
-        admin_user = colaborador_user.created_by if colaborador_user else None
-        queryset = Procesos.objects.filter(user__in=[user, colaborador_user, admin_user])
+        # Obtener todos los usuarios que fueron creados por el admin
+        subordinates = CustomUser.objects.filter(created_by=admin_user)
+        # El colaborador puede ver sus procesos, los procesos de su admin y los procesos de los usuarios subordinados
+        queryset = Procesos.objects.filter(user__in=[user, admin_user] + list(subordinates))
+    elif user.user_type in ['agricultor', 'ayudante']:
+        queryset = Procesos.objects.filter(user=user)
     else:
         queryset = Procesos.objects.none()
 
     # Aplicando el filtro de búsqueda
     filtered_proceso = ProcesoFilter(request.GET, queryset=queryset, user=user)
+    
+    # Ordenando por fecha de creación en orden descendente
+    queryset = filtered_proceso.qs.order_by('-hora_creacion')
 
     # Paginación
     context = {'filtered_proceso': filtered_proceso}
-    paginated_filtered_proceso = Paginator(filtered_proceso.qs, 8)  # Número de elementos por página
+    paginated_filtered_proceso = Paginator(queryset, 4)  # Número de elementos por página
     page_number = request.GET.get('page')
     proceso_page_obj = paginated_filtered_proceso.get_page(page_number)
     context['proceso_page_obj'] = proceso_page_obj
 
     return render(request, 'agrosmart/gestiondetareas.html', context=context)
+
+
 
 
 
@@ -1354,6 +1371,7 @@ def gestion_zonaPoligon(request):
 
 from .models import FinanzasPorTrabajador, FinanzasPorInsumosyMaquinaria,FinanzasPorMes
 from django.db.models import Sum
+from django.db.models import Q
 @login_required
 def gestion_finanzas(request):
     user = request.user
@@ -1368,11 +1386,28 @@ def gestion_finanzas(request):
     )
     
     # Filtrar FinanzasPorInsumosyMaquinaria por el usuario autenticado
-    finanzas_insumos = FinanzasPorInsumosyMaquinaria.objects.filter(
-        user=user
-    ).values('trabajo__trabajo__opciones_trabajo').annotate(
-        total_gasto=Sum('gasto_total')
-    )
+    if user.user_type == 'admin':
+    # Admin: ve sus propias finanzas y las de sus colaboradores y trabajadores
+        finanzas_insumos = FinanzasPorInsumosyMaquinaria.objects.filter(
+            Q(user=user) | Q(user__created_by=user)  # El admin ve sus propias finanzas y las de sus colaboradores
+        ).values('trabajo__trabajo__opciones_trabajo').annotate(
+            total_gasto=Sum('gasto_total')
+        )
+    elif user.user_type == 'colaborador':
+        # Colaborador: ve sus propias finanzas, las de los trabajadores asignados por él, y las del administrador
+        finanzas_insumos = FinanzasPorInsumosyMaquinaria.objects.filter(
+            Q(user=user) | Q(user__created_by=user) | Q(user__created_by__created_by=user)  # El colaborador ve sus finanzas, las del admin y de los ayudantes/agricultores
+        ).values('trabajo__trabajo__opciones_trabajo').annotate(
+            total_gasto=Sum('gasto_total')
+        )
+
+    elif user.user_type in ['ayudante', 'agricultor']:
+        # Ayudante o Agricultor: solo ve sus propias finanzas
+        finanzas_insumos = FinanzasPorInsumosyMaquinaria.objects.filter(
+            user=user
+        ).values('trabajo__trabajo__opciones_trabajo').annotate(
+            total_gasto=Sum('gasto_total')
+        )
 
     return render(request, 'agrosmart/finanzas/gestion_finanzas.html', {
         'finanzas': finanzas,

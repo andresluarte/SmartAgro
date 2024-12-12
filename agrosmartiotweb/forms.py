@@ -9,21 +9,55 @@ class TimePickerInput(forms.TimeInput):
 
 
 
+from django import forms
+from .models import Procesos
+from django.forms.widgets import DateInput
+
 class ProcesoForm(forms.ModelForm):
-    
     class Meta:
         model = Procesos
         fields = ["trabajo", "fecha", "hora_asignada", "asignado", "presupuesto", "observacion"]
         widgets = {
-            "fecha": DateInput,
+            "fecha": forms.DateInput(attrs={
+                "type": "date"  # Asegura que el navegador use el selector de fecha
+            }),
+            "presupuesto": forms.TextInput(attrs={
+                "placeholder": "Monto Asignado para Compra de Insumo/Maquinaria"
+            }),
+            "observacion": forms.TextInput(attrs={
+                "placeholder": "Ej : Compra debe ser con factura"
+            }),
         }
+        labels = {
+            "trabajo": "Insumo/Maquinaria",
+        }
+
 
     def __init__(self, *args, **kwargs):
         user = kwargs.pop('user')  # Extrae el usuario de los kwargs
         super().__init__(*args, **kwargs)
-        
-        # Filtrar los queryset según el usuario logueado
-        self.fields['asignado'].queryset = Trabajador.objects.filter(user=user)
+
+        # Filtrar los trabajadores asignados según el tipo de usuario
+        if user.user_type == 'superuser':
+            # Si el usuario es superusuario, puede ver todos los trabajadores
+            self.fields['asignado'].queryset = Trabajador.objects.all()
+        elif user.user_type == 'admin':
+    # Si el usuario es admin, puede ver los trabajadores que creó directamente
+            self.fields['asignado'].queryset = Trabajador.objects.filter(created_by=user)
+
+        elif user.user_type == 'colaborador':
+            colaborador_user = user.created_by
+            admin_user = colaborador_user.created_by if colaborador_user else None
+            self.fields['asignado'].queryset = Trabajador.objects.filter(created_by__in=[colaborador_user])
+        elif user.user_type == 'agricultor' or user.user_type == 'ayudante':
+            # Si el usuario es agricultor o ayudante, puede ver los trabajadores creados por su colaborador y su admin
+            colaborador_user = user.created_by  # El colaborador es quien creó al agricultor/ayudante
+            admin_user = colaborador_user.created_by if colaborador_user else None  # El admin es quien creó al colaborador
+            self.fields['asignado'].queryset = Trabajador.objects.filter(created_by__in=[colaborador_user, admin_user])
+        else:
+            # Si el usuario no tiene un tipo definido, no podrá ver ningún trabajador
+            self.fields['asignado'].queryset = Trabajador.objects.none()
+
         
 
 class ContactoForm(forms.ModelForm):
@@ -33,20 +67,47 @@ class ContactoForm(forms.ModelForm):
         fields = '__all__'
 
 class ProcesoModificarForm(forms.ModelForm):
-    
     class Meta:
         model = Procesos
         fields = ["trabajo", "fecha", "hora_asignada", "estado", "asignado", "presupuesto", "observacion"]
         widgets = {
             "fecha": forms.SelectDateWidget,
+        
+            "presupuesto": forms.TextInput(attrs={
+                "placeholder": "Monto Asignado para Compra de Insumo/Maquinaria"
+            }),
+            "observacion": forms.TextInput(attrs={
+                "placeholder": "Ej:Compra debe ser con factura"
+            }),
+        }
+        labels = {
+            "trabajo": "Insumo/Maquinaria",
         }
 
     def __init__(self, *args, **kwargs):
         user = kwargs.pop('user')  # Extrae el usuario de los kwargs
         super().__init__(*args, **kwargs)
-        
-        # Filtrar los queryset según el usuario logueado
-        self.fields['asignado'].queryset = Trabajador.objects.filter(user=user)
+
+        # Filtrar los trabajadores asignados según el tipo de usuario
+        if user.user_type == 'superuser':
+            # Si el usuario es superusuario, puede ver todos los trabajadores
+            self.fields['asignado'].queryset = Trabajador.objects.all()
+        elif user.user_type == 'admin':
+    # Si el usuario es admin, puede ver los trabajadores que creó directamente
+            self.fields['asignado'].queryset = Trabajador.objects.filter(created_by=user)
+
+        elif user.user_type == 'colaborador':
+            colaborador_user = user.created_by
+            admin_user = colaborador_user.created_by if colaborador_user else None
+            self.fields['asignado'].queryset = Trabajador.objects.filter(created_by__in=[colaborador_user])
+        elif user.user_type == 'agricultor' or user.user_type == 'ayudante':
+            # Si el usuario es agricultor o ayudante, puede ver los trabajadores creados por su colaborador y su admin
+            colaborador_user = user.created_by  # El colaborador es quien creó al agricultor/ayudante
+            admin_user = colaborador_user.created_by if colaborador_user else None  # El admin es quien creó al colaborador
+            self.fields['asignado'].queryset = Trabajador.objects.filter(created_by__in=[colaborador_user, admin_user])
+        else:
+            # Si el usuario no tiene un tipo definido, no podrá ver ningún trabajador
+            self.fields['asignado'].queryset = Trabajador.objects.none()
       
 class TrabajadorModificarForm(forms.ModelForm):
     

@@ -152,8 +152,8 @@ class Procesos(models.Model):
     estado = models.CharField(max_length=15, choices=ESTADO_CHOICES, default='Por Realizar', editable=True)
     asignado = models.ForeignKey(Trabajador, on_delete=models.CASCADE, max_length=50, null=True)
     hora_asignada = models.TimeField(null=True)
-    hora_creacion = models.TimeField(default=datetime.datetime.now().time(), editable=False)
-    presupuesto = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    hora_creacion = models.DateTimeField(default=datetime.datetime.now, editable=False)
+    presupuesto = models.DecimalField(max_digits=10, decimal_places=2, null=False, blank=False)
     observacion = models.CharField(max_length=100, null=True, blank=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)  # Actualiza aquí
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='procesos_creados', on_delete=models.CASCADE)
@@ -561,10 +561,9 @@ def crear_finanzas(sender, instance, created, **kwargs):
             defaults={'gasto_total': instance.presupuesto, 'user': instance.user, 'created_by': instance.created_by}
         )
         if not created:
-            # Si ya existe, suma el presupuesto al gasto total existente
-            finanzas.gasto_total += instance.presupuesto
+            # Si ya existe, actualiza el gasto total con el presupuesto actual
+            finanzas.gasto_total = instance.presupuesto
             finanzas.save()
-
 
 class Cosecha(models.Model):
     foto = models.ImageField(upload_to='fundos/fotosnueva/', null=True, blank=True)
