@@ -82,7 +82,7 @@
      line-height: 1.5;
      color: #55595c;
      text-align: left;
-     background-color: #fff
+     background-color: #ffffff
  }
  
  [tabindex="-1"]:focus:not(:focus-visible) {
@@ -236,7 +236,7 @@
  caption {
      padding-top: 0.75rem;
      padding-bottom: 0.75rem;
-     color: #919aa1;
+     color: #ffffff;
      text-align: left;
      caption-side: bottom
  }

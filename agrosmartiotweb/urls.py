@@ -121,6 +121,7 @@ urlpatterns = [
     
     path('tiemporeal/', views.combined_data_view, name='tiemporeal'),
     path('informes/', views.informes, name = "informes"),
+        path('informesporsensor/', views.informesporsensor, name = "informesporsensor"),
 
 
     path('cuadernodecampo/', views.cuadernodecampo, name='cuadernodecampo'),

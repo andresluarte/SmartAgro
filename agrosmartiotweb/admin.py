@@ -22,11 +22,12 @@ admin.site.register(TemperatureHumidityLocation)
 class ProcesosResource(resources.ModelResource):
 
     asignado_nombre = Field(attribute='asignado__nombre', column_name='Asignado')
-    trabajo = Field(attribute='trabajo__opciones_trabajo', column_name='Trabajo Nombre')
+    trabajo = Field(attribute='trabajo', column_name='Trabajo Nombre')
+    presupuesto = Field(attribute='presupuesto', column_name='Presupuesto')
 
     class Meta:
         model = Procesos
-        fields = ("trabajo_nombre", "fecha", "hora_asignada",  "estado", "asignado_nombre", "presupuesto",'observacion','hora_creacion')
+        fields = ("trabajo", "fecha", "hora_asignada",  "estado", "asignado_nombre", "presupuesto",'observacion','hora_creacion')
     
     def dehydrate(self, row):
         # Aquí puedes realizar alguna transformación adicional si es necesario

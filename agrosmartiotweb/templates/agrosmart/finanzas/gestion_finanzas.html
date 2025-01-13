@@ -94,16 +94,13 @@
             <hr>
             <div>
                 <table class="table table-striped table-hover" style="margin-bottom: 5px;">
-                  
                     <tr>
-                        <th>Trabajo</th>
+                        <th>Insumo/Maquinaria</th>
                         <th>Gasto Total</th>
                     </tr>
-                    
-                
                     {% for finanza in finanzas_insumos %}
                     <tr>
-                        <td>{{ finanza.trabajo__trabajo__opciones_trabajo }}</td>
+                        <td>{{ finanza.trabajo__trabajo }}</td>
                         <td>${{ finanza.total_gasto|floatformat:2 }}</td>
                     </tr>
                     {% empty %}
@@ -111,9 +108,7 @@
                         <td colspan="2" class="text-center">No hay registros disponibles.</td>
                     </tr>
                     {% endfor %}
-                    
                 </table>
-                
             </div>
             <canvas id="gastoTotalChart" width="1" height="1"></canvas>
            
@@ -124,43 +119,6 @@
     </div>
 </div>
 
-<script>
-    
-    document.addEventListener("DOMContentLoaded", function() {
-        const trabajos = [{% for finanza in finanzas_insumos %}'{{ finanza.trabajo__trabajo__opciones_trabajo }}'{% if not forloop.last %}, {% endif %}{% endfor %}];
-        const gastosTotales = [{% for finanza in finanzas_insumos %}{{ finanza.total_gasto }}{% if not forloop.last %}, {% endif %}{% endfor %}];
-
-        const ctx = document.getElementById('gastoTotalChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: trabajos,
-                datasets: [{
-                    label: 'Gasto Total ($)',
-                    data: gastosTotales,
-                    backgroundColor: 'rgba(75, 192, 192, 0.6)',
-                    borderColor: 'rgba(75, 192, 192, 1)',
-                    borderWidth: 1,
-                    barThickness: 40  // Ajusta el grosor de las barras aquí
-                }]
-            },
-            options: {
-                indexAxis: 'y',
-                scales: {
-                    x: {
-                        beginAtZero: true
-                    }
-                },
-                responsive: true,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                }
-            }
-        });
-    });
-</script>
 <script>
 // Obtener datos desde el contexto de Django
 const trabajadores = [

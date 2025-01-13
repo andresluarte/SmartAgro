@@ -22,6 +22,20 @@
     border: 1px solid #e00000;
     padding: 10px;
   }
+  .resaltar-titulo {
+    font-size: 1.2em; /* Tamaño del título */
+    font-weight: bold; /* Texto en negrita */
+    color: #2a9d8f; /* Color distintivo para los títulos */
+    text-transform: uppercase; /* Convertir en mayúsculas */
+    margin-right: 5px; /* Espaciado entre título y datos */
+  }
+
+  .resaltar-dato {
+      font-size: 1.1em; /* Tamaño del dato */
+      font-weight: normal; /* Peso normal para diferenciar del título */
+      color: #264653; /* Color para los datos */
+  }
+
 </style>
 
 
@@ -170,7 +184,8 @@
           <tbody>
             {% for jornada in jornada_page_obj %} 
             <tr>
-              <td>{{ jornada.asignado }}</td>
+              <td><span style="font-size: 1.5em; font-weight: bold;">{{ jornada.asignado }}</span></td>
+
 
 
               <td>
@@ -202,39 +217,44 @@
               <td>
                 <div class="tareas-extras">
                   <div class="tarea-extra-item">
-                    <strong>Tarea 1:</strong> {{ jornada.nombre_tarea_1 }}
+                    <strong class="resaltar-titulo">Tarea 1:</strong> <span class="resaltar-dato">{{ jornada.nombre_tarea_1 }}</span>
                     {% if request.path == '/gestion_jornadas_por_trato/' %}
-           
-        {% else %}
-        <strong>Horario:</strong>
-        {% endif %}
-                    
-                    {{jornada.hora_inicio_tarea_1 }} a {{ jornada.hora_fin_tarea_1 }} <br> <strong>Cobro tarea 1:
-                      $</strong> {{ jornada.cobro_tarea_1|intcomma }}
+                    {% else %}
+                    <strong class="resaltar-titulo">Horario:</strong>
+                    {% endif %}
+                    <span class="resaltar-dato">{{ jornada.hora_inicio_tarea_1 }} a {{ jornada.hora_fin_tarea_1 }}</span> 
+                    <br> 
+                    <strong class="resaltar-titulo">Cobro tarea 1: $</strong> 
+                    <span class="resaltar-dato">{{ jornada.cobro_tarea_1|intcomma }}</span>
                   </div>
                   {% if jornada.nombre_tarea_2 %}
                   <div class="tarea-extra-item">
-                    <strong>Tarea 2:</strong> {{ jornada.nombre_tarea_2 }} {% if request.path == '/gestion_jornadas_por_trato/' %}
-           
+                    <strong class="resaltar-titulo">Tarea 2:</strong> <span class="resaltar-dato">{{ jornada.nombre_tarea_2 }}</span>
+                    {% if request.path == '/gestion_jornadas_por_trato/' %}
                     {% else %}
-                    <strong>Horario:</strong>
+                    <strong class="resaltar-titulo">Horario:</strong>
                     {% endif %}
-                    {{jornada.hora_inicio_tarea_2 }} a {{ jornada.hora_fin_tarea_2 }} <br> <strong>Cobro tarea 2:
-                      $</strong> {{ jornada.cobro_tarea_2|intcomma }}
+                    <span class="resaltar-dato">{{ jornada.hora_inicio_tarea_2 }} a {{ jornada.hora_fin_tarea_2 }}</span> 
+                    <br> 
+                    <strong class="resaltar-titulo">Cobro tarea 2: $</strong> 
+                    <span class="resaltar-dato">{{ jornada.cobro_tarea_2|intcomma }}</span>
                   </div>
                   {% endif %}
                   {% if jornada.nombre_tarea_3 %}
                   <div class="tarea-extra-item">
-                    <strong>Tarea 3:</strong> {{ jornada.nombre_tarea_3 }} {% if request.path == '/gestion_jornadas_por_trato/' %}
-           
+                    <strong class="resaltar-titulo">Tarea 3:</strong> <span class="resaltar-dato">{{ jornada.nombre_tarea_3 }}</span>
+                    {% if request.path == '/gestion_jornadas_por_trato/' %}
                     {% else %}
-                    <strong>Horario:</strong>
+                    <strong class="resaltar-titulo">Horario:</strong>
                     {% endif %}
-                    {{jornada.hora_inicio_tarea_3 }} a {{ jornada.hora_fin_tarea_3 }} <br> <strong>Cobro tarea 3:
-                      $</strong> {{ jornada.cobro_tarea_3|intcomma }}
+                    <span class="resaltar-dato">{{ jornada.hora_inicio_tarea_3 }} a {{ jornada.hora_fin_tarea_3 }}</span> 
+                    <br> 
+                    <strong class="resaltar-titulo">Cobro tarea 3: $</strong> 
+                    <span class="resaltar-dato">{{ jornada.cobro_tarea_3|intcomma }}</span>
                   </div>
                   {% endif %}
                 </div>
+                
               </td>
 
               <td>

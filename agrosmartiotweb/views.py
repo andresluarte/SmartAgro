@@ -9,6 +9,7 @@ from django.http import JsonResponse,HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.decorators import user_passes_test
+
 #llamada de filtros
 from .forms import FiltroEstado
 from .filters import ProcesoFilter,TrabajadorFilter,JornadaFilter,JornadaPorTratoFilter
@@ -508,7 +509,8 @@ def ProcesoList(request):
     filtered_proceso = ProcesoFilter(request.GET, queryset=queryset, user=user)
     
     # Ordenando por fecha de creación en orden descendente
-    queryset = filtered_proceso.qs.order_by('-hora_creacion')
+    queryset = filtered_proceso.qs.order_by('-fecha_creacion', '-hora_creacion')
+
 
     # Paginación
     context = {'filtered_proceso': filtered_proceso}
@@ -1102,9 +1104,7 @@ def combined_data_view(request):
             temperature = float(latest_data.temperature)
             humidity = float(latest_data.humidity)
 
-            # Recomendaciones
-            temperature_recommendation = get_temperature_recommendation(temperature)
-            humidity_recommendation = get_humidity_recommendation(humidity)
+        
 
             # Calcular el promedio de las últimas 24 horas por hora usando fecha_registro
             twenty_four_hours_ago = timezone.now() - timedelta(hours=24)
@@ -1123,8 +1123,7 @@ def combined_data_view(request):
             sensor_data.append({
                 'sensor_id': sensor.id,
                 'latest_data': latest_data,
-                'temperature_recommendation': temperature_recommendation,
-                'humidity_recommendation': humidity_recommendation,
+                'sensor_name':sensor.name,
                 'hourly_temperature': hourly_temperature,
                 'hourly_humidity': hourly_humidity,
                 'hours': hours
@@ -1133,8 +1132,7 @@ def combined_data_view(request):
             sensor_data.append({
                 'sensor_id': sensor.id,
                 'latest_data': None,
-                'temperature_recommendation': "No hay datos disponibles.",
-                'humidity_recommendation': "No hay datos disponibles.",
+
                 'hourly_temperature': [],
                 'hourly_humidity': [],
                 'hours': [],
@@ -1142,23 +1140,7 @@ def combined_data_view(request):
 
     return render(request, 'agrosmart/tiemporeal.html', {'sensor_data': sensor_data})
 
-def get_temperature_recommendation(temperature):
-    if temperature < 0:
-        return "La temperatura es muy baja. Protege tus plantas del frío extremo."
-    elif 0 <= temperature <= 10:
-        return "La temperatura es fresca. Considera proteger las plantas del frío."
-    elif 10 < temperature <= 25:
-        return "La temperatura es óptima para las plantas de uva."
-    elif temperature > 25:
-        return "La temperatura es alta. Asegúrate de que las plantas tengan suficiente agua."
 
-def get_humidity_recommendation(humidity):
-    if humidity < 40:
-        return "El aire está seco. Es recomendable aumentar la humedad para las plantas."
-    elif 40 <= humidity <= 70:
-        return "La humedad es adecuada para el crecimiento de las plantas de uva."
-    elif humidity > 70:
-        return "La humedad es alta. Podría haber riesgo de enfermedades fúngicas."
 
 
 
@@ -1188,40 +1170,21 @@ def combined_data_view_soil(request):
             soil_temperature = float(latest_data.temperature)
             soil_humidity = float(latest_data.humiditysoil)
 
-            # Generar recomendaciones
-            soil_temperature_recommendation = ""
-            soil_humidity_recommendation = ""
-
+       
             # Recomendaciones basadas en la temperatura del suelo
-            if soil_temperature < 10:
-                soil_temperature_recommendation = "La temperatura del suelo es baja. Considera el uso de coberturas para retener el calor."
-            elif 10 <= soil_temperature <= 20:
-                soil_temperature_recommendation = "La temperatura del suelo es óptima para la mayoría de cultivos."
-            elif soil_temperature > 20:
-                soil_temperature_recommendation = "La temperatura del suelo es alta. Asegúrate de que haya suficiente humedad para evitar estrés en las plantas."
-
-            # Recomendaciones basadas en la humedad del suelo
-            if soil_humidity < 30:
-                soil_humidity_recommendation = "El suelo está muy seco. Es necesario regar para mantener la salud de las plantas."
-            elif 30 <= soil_humidity <= 60:
-                soil_humidity_recommendation = "La humedad del suelo es adecuada para el crecimiento saludable de las plantas."
-            elif soil_humidity > 60:
-                soil_humidity_recommendation = "La humedad del suelo es alta. Asegúrate de tener buen drenaje para evitar encharcamientos."
-
+          
             # Agregar datos a la lista
             sensor_data.append({
                 'sensor_id': sensor.id,
                 'latest_data': latest_data,
-                'soil_temperature_recommendation': soil_temperature_recommendation,
-                'soil_humidity_recommendation': soil_humidity_recommendation
+
             })
         else:
             # Si no hay datos, agregar el sensor con un mensaje de falta de datos
             sensor_data.append({
                 'sensor_id': sensor.id,
                 'latest_data': None,
-                'soil_temperature_recommendation': "No hay datos disponibles.",
-                'soil_humidity_recommendation': "No hay datos disponibles."
+
             })
 
     return render(request, 'agrosmart/tiemporealsoil.html', {
@@ -1321,6 +1284,176 @@ def informes(request):
     return render(request, 'agrosmart/informes.html', context)
 
 
+import plotly.graph_objects as go
+from django.shortcuts import render
+from django.db.models import Avg
+from django.db.models.functions import TruncHour
+from .models import SensorAire, SensorSuelo, TemperatureHumidityLocation, HumidityTemperaturaSoil
+import json
+from datetime import timedelta
+from django.utils import timezone
+
+def informesporsensor(request):
+    # Obtener sensores asociados al usuario autenticado
+    user_sensors_air = SensorAire.objects.filter(user=request.user)
+    user_sensors_soil = SensorSuelo.objects.filter(user=request.user)
+
+    # Crear una lista para almacenar los gráficos
+    charts = []
+
+    # Datos para los sensores de aire
+    for sensor in user_sensors_air:
+        temp_humidity_data = (
+            TemperatureHumidityLocation.objects
+            .filter(sensor=sensor)  # Filtrar solo los datos de este sensor
+            .annotate(hour=TruncHour('timestamp'))
+            .values('hour')
+            .annotate(
+                avg_temp=Avg('temperature'),
+                avg_humidity=Avg('humidity')
+            )
+            .order_by('hour')
+        )
+        
+        # Preparar los datos para el gráfico
+        hours = [entry['hour'].strftime('%Y-%m-%d %H:%M:%S') for entry in temp_humidity_data]
+        avg_temps = [entry['avg_temp'] for entry in temp_humidity_data]
+        avg_humidities = [entry['avg_humidity'] for entry in temp_humidity_data]
+
+        # Crear gráfico interactivo con Plotly
+        fig = go.Figure()
+
+        fig.add_trace(go.Scatter(
+            x=hours,
+            y=avg_temps,
+            mode='lines+markers',
+            name='Temperatura Promedio',
+            line=dict(color='red', width=2),
+            marker=dict(size=8, color='red')
+        ))
+
+        fig.add_trace(go.Scatter(
+            x=hours,
+            y=avg_humidities,
+            mode='lines+markers',
+            name='Humedad Promedio',
+            line=dict(color='blue', width=2),
+            marker=dict(size=8, color='blue')
+        ))
+
+        # Personalización del gráfico
+        fig.update_layout(
+            title=f'Sensor de Aire: {sensor.name}',
+            xaxis_title='Hora',
+            yaxis_title='Valor',
+            template='plotly',  # Fondo blanco
+            autosize=True,
+            margin=dict(l=40, r=40, t=40, b=150),  # Ajustar márgenes para evitar que los títulos de los ejes se sobrepongan
+            showlegend=True,
+            hovermode='closest',  # Mejor visualización de los puntos en el gráfico
+            plot_bgcolor='white',  # Fondo blanco para el gráfico
+            paper_bgcolor='white',  # Fondo blanco para el área fuera del gráfico
+            font=dict(color='black'),  # Color de fuente negro para los textos
+            xaxis=dict(
+                tickangle=45,  # Rotar las etiquetas del eje X para que no se sobrepongan
+                ticks='outside',  # Ticks fuera para que no se sobrepongan con los textos
+            ),
+            yaxis=dict(
+                ticks='outside',  # Ticks fuera para el eje Y
+            ),
+            legend=dict(
+                orientation='h',  # Colocar la leyenda horizontal
+                yanchor='top',  # Fijar la leyenda arriba
+                y=-0.2,  # Mover la leyenda fuera del gráfico, debajo
+                xanchor='center',
+                x=0.5  # Centrar la leyenda debajo del gráfico
+            ),
+        )
+
+
+
+        # Convertir la figura a HTML y agregarla a la lista de gráficos
+        graph_html = fig.to_html(full_html=False)
+        charts.append(graph_html)
+
+    # Datos para los sensores de suelo
+    for sensor in user_sensors_soil:
+        soil_data = (
+            HumidityTemperaturaSoil.objects
+            .filter(sensor=sensor)
+            .annotate(hour=TruncHour('timestamp'))
+            .values('hour')
+            .annotate(
+                avg_humidity_soil=Avg('humiditysoil'),
+                avg_temp=Avg('temperature')
+            )
+            .order_by('hour')
+        )
+        
+        # Preparar los datos para el gráfico
+        hours = [entry['hour'].strftime('%Y-%m-%d %H:%M:%S') for entry in soil_data]
+        avg_humidity_soil = [entry['avg_humidity_soil'] for entry in soil_data]
+        avg_temp_soil = [entry['avg_temp'] for entry in soil_data]
+
+        # Crear gráfico interactivo con Plotly
+        fig = go.Figure()
+
+        fig.add_trace(go.Scatter(
+            x=hours,
+            y=avg_temp_soil,
+            mode='lines+markers',
+            name='Temperatura Promedio Suelo',
+            line=dict(color='green', width=2),
+            marker=dict(size=8, color='green')
+        ))
+
+        fig.add_trace(go.Scatter(
+            x=hours,
+            y=avg_humidity_soil,
+            mode='lines+markers',
+            name='Humedad Promedio Suelo',
+            line=dict(color='orange', width=2),
+            marker=dict(size=8, color='orange')
+        ))
+
+        # Personalización del gráfico
+        fig.update_layout(
+            title=f'Sensor de Suelo: {sensor.name}',
+            xaxis_title='Hora',
+            yaxis_title='Valor',
+            template='plotly',  # Fondo blanco
+            autosize=True,
+            margin=dict(l=40, r=40, t=40, b=150),  # Ajustar márgenes para evitar que los títulos de los ejes se sobrepongan
+            showlegend=True,
+            hovermode='closest',  # Mejor visualización de los puntos en el gráfico
+            plot_bgcolor='white',  # Fondo blanco para el gráfico
+            paper_bgcolor='white',  # Fondo blanco para el área fuera del gráfico
+            font=dict(color='black'),  # Color de fuente negro para los textos
+            xaxis=dict(
+                tickangle=45,  # Rotar las etiquetas del eje X para que no se sobrepongan
+                ticks='outside',  # Ticks fuera para que no se sobrepongan con los textos
+            ),
+            yaxis=dict(
+                ticks='outside',  # Ticks fuera para el eje Y
+            ),
+            legend=dict(
+                orientation='h',  # Colocar la leyenda horizontal
+                yanchor='top',  # Fijar la leyenda arriba
+                y=-0.2,  # Mover la leyenda fuera del gráfico, debajo
+                xanchor='center',
+                x=0.5  # Centrar la leyenda debajo del gráfico
+            ),
+        )
+
+        # Convertir la figura a HTML y agregarla a la lista de gráficos
+        graph_html = fig.to_html(full_html=False)
+        charts.append(graph_html)
+
+    context = {
+        'charts': charts
+    }
+
+    return render(request, 'agrosmart/informesporsensor.html', context)
 
 from django.shortcuts import render, redirect
 from .forms import SectorPoligonForm
@@ -1390,14 +1523,14 @@ def gestion_finanzas(request):
     # Admin: ve sus propias finanzas y las de sus colaboradores y trabajadores
         finanzas_insumos = FinanzasPorInsumosyMaquinaria.objects.filter(
             Q(user=user) | Q(user__created_by=user)  # El admin ve sus propias finanzas y las de sus colaboradores
-        ).values('trabajo__trabajo__opciones_trabajo').annotate(
+        ).values('trabajo__trabajo').annotate(
             total_gasto=Sum('gasto_total')
         )
     elif user.user_type == 'colaborador':
         # Colaborador: ve sus propias finanzas, las de los trabajadores asignados por él, y las del administrador
         finanzas_insumos = FinanzasPorInsumosyMaquinaria.objects.filter(
             Q(user=user) | Q(user__created_by=user) | Q(user__created_by__created_by=user)  # El colaborador ve sus finanzas, las del admin y de los ayudantes/agricultores
-        ).values('trabajo__trabajo__opciones_trabajo').annotate(
+        ).values('trabajo__trabajo').annotate(
             total_gasto=Sum('gasto_total')
         )
 
@@ -1405,7 +1538,7 @@ def gestion_finanzas(request):
         # Ayudante o Agricultor: solo ve sus propias finanzas
         finanzas_insumos = FinanzasPorInsumosyMaquinaria.objects.filter(
             user=user
-        ).values('trabajo__trabajo__opciones_trabajo').annotate(
+        ).values('trabajo__trabajo').annotate(
             total_gasto=Sum('gasto_total')
         )
 

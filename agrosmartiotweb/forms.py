@@ -16,11 +16,12 @@ from django.forms.widgets import DateInput
 class ProcesoForm(forms.ModelForm):
     class Meta:
         model = Procesos
-        fields = ["trabajo", "fecha", "hora_asignada", "asignado", "presupuesto", "observacion"]
+        fields = ["trabajo", "fecha_compra", "asignado", "presupuesto", "observacion"]
         widgets = {
-            "fecha": forms.DateInput(attrs={
+            "fecha_compra": forms.DateInput(attrs={
                 "type": "date"  # Asegura que el navegador use el selector de fecha
             }),
+           
             "presupuesto": forms.TextInput(attrs={
                 "placeholder": "Monto Asignado para Compra de Insumo/Maquinaria"
             }),
@@ -66,19 +67,40 @@ class ContactoForm(forms.ModelForm):
         model = Contacto
         fields = '__all__'
 
+class CustomTimePickerInput(DateInput):
+    def __init__(self, attrs=None, format=None):
+        super().__init__(attrs={'type': 'time', 'step': '1800', 'list': 'horas-permitidas'})
+    
+    def render(self, name, value, attrs=None, renderer=None):
+        rendered = super().render(name, value, attrs, renderer)
+        rendered += '<datalist id="horas-permitidas">'
+        for hora in HORAS_PERMITIDAS:
+            rendered += f'<option value="{hora}">'
+        rendered += '</datalist>'
+        return rendered
+
+from django import forms
+from .models import Procesos
+
 class ProcesoModificarForm(forms.ModelForm):
     class Meta:
         model = Procesos
-        fields = ["trabajo", "fecha", "hora_asignada", "estado", "asignado", "presupuesto", "observacion"]
+        fields = ["trabajo", "estado","fecha_compra", "asignado", "presupuesto", "observacion"]
         widgets = {
-            "fecha": forms.SelectDateWidget,
-        
-            "presupuesto": forms.TextInput(attrs={
-                "placeholder": "Monto Asignado para Compra de Insumo/Maquinaria"
+            "fecha_compra": forms.DateInput(attrs={
+                "type": "date"  # Asegura que el navegador use el selector de fecha
+            }),
+           
+            
+            "presupuesto": forms.NumberInput(attrs={
+                "placeholder": "Monto Asignado para Compra de Insumo/Maquinaria",
+                "min": "0",
+                "step": "0.01",
             }),
             "observacion": forms.TextInput(attrs={
-                "placeholder": "Ej:Compra debe ser con factura"
+                "placeholder": "Ej: Compra debe ser con factura"
             }),
+     
         }
         labels = {
             "trabajo": "Insumo/Maquinaria",
@@ -87,28 +109,29 @@ class ProcesoModificarForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         user = kwargs.pop('user')  # Extrae el usuario de los kwargs
         super().__init__(*args, **kwargs)
+   
 
-        # Filtrar los trabajadores asignados según el tipo de usuario
+        # Configurar queryset según tipo de usuario
         if user.user_type == 'superuser':
-            # Si el usuario es superusuario, puede ver todos los trabajadores
             self.fields['asignado'].queryset = Trabajador.objects.all()
         elif user.user_type == 'admin':
-    # Si el usuario es admin, puede ver los trabajadores que creó directamente
             self.fields['asignado'].queryset = Trabajador.objects.filter(created_by=user)
-
         elif user.user_type == 'colaborador':
             colaborador_user = user.created_by
+            self.fields['asignado'].queryset = Trabajador.objects.filter(created_by=colaborador_user)
+        elif user.user_type in ['agricultor', 'ayudante']:
+            colaborador_user = user.created_by
             admin_user = colaborador_user.created_by if colaborador_user else None
-            self.fields['asignado'].queryset = Trabajador.objects.filter(created_by__in=[colaborador_user])
-        elif user.user_type == 'agricultor' or user.user_type == 'ayudante':
-            # Si el usuario es agricultor o ayudante, puede ver los trabajadores creados por su colaborador y su admin
-            colaborador_user = user.created_by  # El colaborador es quien creó al agricultor/ayudante
-            admin_user = colaborador_user.created_by if colaborador_user else None  # El admin es quien creó al colaborador
             self.fields['asignado'].queryset = Trabajador.objects.filter(created_by__in=[colaborador_user, admin_user])
         else:
-            # Si el usuario no tiene un tipo definido, no podrá ver ningún trabajador
             self.fields['asignado'].queryset = Trabajador.objects.none()
-      
+
+    def clean_presupuesto(self):
+        presupuesto = self.cleaned_data.get("presupuesto")
+        if presupuesto is None or presupuesto < 0:
+            raise forms.ValidationError("El presupuesto debe ser un número positivo.")
+        return presupuesto
+
 class TrabajadorModificarForm(forms.ModelForm):
     
     class Meta:
@@ -124,20 +147,36 @@ class TrabajadorModificarForm(forms.ModelForm):
 class FiltroEstado(forms.Form):
     estado = forms.CharField()
 
-class TrabajadorForm(forms.ModelForm): 
-
+class TrabajadorForm(forms.ModelForm):
     class Meta:
         model = Trabajador
-        fields = ['foto','nombre','rut','tipo_contraro','fecha_ingreso', 'fecha_termino_contrato','cobro','trabajo_a_realizar']
-        widgets={
-            "fecha_ingreso":DateInput(),
+        fields = [
+            'foto', 'nombre', 'rut', 'tipo_contraro',
+            'fecha_ingreso', 'fecha_termino_contrato', 'cobro', 'trabajo_a_realizar'
+        ]
+        widgets = {
+            "fecha_ingreso": DateInput(),
             "fecha_termino_contrato": DateInput(),
-   
         }
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # Establece un valor predeterminado para el campo fecha_termino_contrato
-        self.fields['fecha_termino_contrato'].initial = 'Sin Fecha Termino'  
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        tipo_contraro = cleaned_data.get('tipo_contraro')
+        fecha_termino_contrato = cleaned_data.get('fecha_termino_contrato')
+
+        # Validar que 'fecha_termino_contrato' sea obligatorio solo para "Plazo fijo"
+        if tipo_contraro == 'Plazo fijo' and not fecha_termino_contrato:
+            raise ValidationError({
+                'fecha_termino_contrato': 'Este campo es obligatorio para contratos a plazo fijo.'
+            })
+
+        # Asegurarse de que 'fecha_termino_contrato' esté en blanco para otros tipos de contrato
+        if tipo_contraro != 'Plazo fijo' and fecha_termino_contrato:
+            raise ValidationError({
+                'fecha_termino_contrato': 'Este campo debe estar vacío para contratos que no sean a plazo fijo.'
+            })
+        
+        return cleaned_data
 ####formato
 
 FORMAT_CHOICES = (
@@ -159,17 +198,7 @@ HORAS_PERMITIDAS = [
     '19:30', '20:00', '20:30', '21:00', '21:30', '22:00', '22:30', '23:00',
 ]
 
-class CustomTimePickerInput(DateInput):
-    def __init__(self, attrs=None, format=None):
-        super().__init__(attrs={'type': 'time', 'step': '1800', 'list': 'horas-permitidas'})
-    
-    def render(self, name, value, attrs=None, renderer=None):
-        rendered = super().render(name, value, attrs, renderer)
-        rendered += '<datalist id="horas-permitidas">'
-        for hora in HORAS_PERMITIDAS:
-            rendered += f'<option value="{hora}">'
-        rendered += '</datalist>'
-        return rendered
+
 
 
 from django import forms
@@ -186,7 +215,7 @@ class JornadaForm(forms.ModelForm):
                   'nombre_extra_1', 'gasto_extra_1', 'nombre_extra_2', 'gasto_extra_2', 'nombre_extra_3', 'gasto_extra_3', 
                   'observacion']
         widgets = {
-            "fecha": DateInput(),
+            "fecha": forms.DateInput(attrs={'type': 'date'}),
             "hora_inicio_tarea_1": CustomTimePickerInput(),
             "hora_fin_tarea_1": CustomTimePickerInput(),
             "hora_inicio_tarea_2": CustomTimePickerInput(),

@@ -143,7 +143,7 @@
             <tr>
               <th>Insumo/Maquinaria</th>
               <th>FECHA</th>
-              <th>HORA ASIGNADA</th>
+       
             
               
               <th>ESTADO</th>
@@ -171,8 +171,8 @@
             {% for p in proceso_page_obj %}
             <tr>
                 <td>{{ p.trabajo }}</td>
-                <td>{{ p.fecha }}</td>
-                <td>{{ p.hora_asignada }}</td>
+                <td>{{ p.fecha_compra }}</td>
+              
                 <td>{{ p.estado }}</td>
                 <td>{{ p.asignado }}</td>
                 <td>${{ p.presupuesto|floatformat:"-2" }}</td>

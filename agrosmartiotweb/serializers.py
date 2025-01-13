@@ -6,7 +6,7 @@ class ProcesoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Procesos
         fields = (
-            'trabajo_nombre',
+            'trabajo',
             'estado',
     
             'huerto_nombre',

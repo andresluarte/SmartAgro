@@ -8,6 +8,8 @@ from django.core.exceptions import ValidationError
 import datetime
 import requests
 import json
+
+
 # Validador de RUT chileno
 def validate_rut(value):
     rut_pattern = r'^\d{1,8}-[\dKk]$'
@@ -138,11 +140,54 @@ class InsumoOpciones(models.Model):
 
 
 
-
+from django.utils import timezone
 class Procesos(models.Model):
-    trabajo = models.ForeignKey(InsumoOpciones, on_delete=models.CASCADE, null=True)
+    OPCIONES_TRABAJO = [
+    ("Fertilizantes (urea, nitrato de amonio)", "Fertilizantes (urea, nitrato de amonio)"),
+    ("Fungicidas (azufre, Tercel 50 WP)", "Fungicidas (azufre, Tercel 50 WP)"),
+    ("Herbicidas (Roundup)", "Herbicidas (Roundup)"),
+    ("Pesticidas (Podexal)", "Pesticidas (Podexal)"),
+    ("Agua de riego", "Agua de riego"),
+    ("Postes y alambres", "Postes y alambres"),
+    ("Cintas de amarre", "Cintas de amarre"),
+    ("Semillas", "Semillas"),
+    ("Sustratos", "Sustratos"),
+    ("Aplicación de pesticidas y fertilizantes", "Aplicación de pesticidas y fertilizantes"),
+    ("Tractores, arados, sembradoras", "Tractores, arados, sembradoras"),
+    ("Sistema de riego", "Sistema de riego"),
+    ("Pulverizadores", "Pulverizadores"),
+    ("Transporte de insumos", "Transporte de insumos"),
+    ("Cosecha y acarreo de uvas", "Cosecha y acarreo de uvas"),
+    ("Herramientas de poda", "Herramientas de poda"),
+    ("Invernaderos", "Invernaderos"),
+    ("Tuberías y conexiones", "Tuberías y conexiones"),
+    ("Control biológico (insectos benéficos, trampas)", "Control biológico (insectos benéficos, trampas)"),
+    ("Mallas anti-granizo o anti-insectos", "Mallas anti-granizo o anti-insectos"),
+    ("Mantenimiento de maquinaria", "Mantenimiento de maquinaria"),
+    ("Aceites y lubricantes", "Aceites y lubricantes"),
+    ("Capacitación técnica", "Capacitación técnica"),
+    ("Automatización agrícola", "Automatización agrícola"),
+    ("Sensores y drones", "Sensores y drones"),
+    ("Análisis de suelo y agua", "Análisis de suelo y agua"),
+    ("Compostaje y abonos orgánicos", "Compostaje y abonos orgánicos"),
+    ("Material para viveros", "Material para viveros"),
+    ("Construcción de terrazas", "Construcción de terrazas"),
+    ("Control de malezas manual", "Control de malezas manual"),
+    ("Equipos de protección personal (EPP)", "Equipos de protección personal (EPP)"),
+    ("Material de embalaje", "Material de embalaje"),
+    ("Almacenamiento y silos", "Almacenamiento y silos"),
+    ("Iluminación para cultivos (LEDs)", "Iluminación para cultivos (LEDs)"),
+    ("Fertilizantes foliares", "Fertilizantes foliares"),
+    ("Tanques de almacenamiento", "Tanques de almacenamiento"),
+    ("Energías renovables (paneles solares, generadores)", "Energías renovables (paneles solares, generadores)"),
+    ("Reparación de instalaciones", "Reparación de instalaciones"),
+    ("Caminos y accesos agrícolas", "Caminos y accesos agrícolas"),
+    ("Diques y reservorios de agua", "Diques y reservorios de agua"),
+    ("Otro", "Otro"),
+    ]
     
-    fecha = models.DateField(default=datetime.date.today)
+    trabajo = models.CharField(max_length=100,choices=OPCIONES_TRABAJO)
+    fecha_compra = models.DateField(null=True)
     
     ESTADO_CHOICES = (
         ('Por Realizar', 'Por Realizar'),
@@ -151,8 +196,8 @@ class Procesos(models.Model):
     )
     estado = models.CharField(max_length=15, choices=ESTADO_CHOICES, default='Por Realizar', editable=True)
     asignado = models.ForeignKey(Trabajador, on_delete=models.CASCADE, max_length=50, null=True)
-    hora_asignada = models.TimeField(null=True)
-    hora_creacion = models.DateTimeField(default=datetime.datetime.now, editable=False)
+    fecha_creacion = models.DateField(default=datetime.date.today, editable=False)
+    hora_creacion = models.TimeField(default=datetime.datetime.now().time(), editable=False)
     presupuesto = models.DecimalField(max_digits=10, decimal_places=2, null=False, blank=False)
     observacion = models.CharField(max_length=100, null=True, blank=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)  # Actualiza aquí
@@ -192,7 +237,37 @@ class Jornada(models.Model):
     ('AMARRE_GUIAS', 'Amarre de guías'),
     ('LIMPIEZA_MALEZA', 'Limpieza de maleza'),
     ('RIEGO', 'Riego'),
-]
+    ('PREPARACION_SUELO', 'Preparación del suelo'),
+    ('PLANTACION', 'Plantación de cultivos'),
+    ('ABONADO', 'Abonado'),
+    ('LABRANZA', 'Labranza'),
+    ('CONTROL_PLAGAS', 'Control manual de plagas'),
+    ('DESINFECCION_SUELOS', 'Desinfección de suelos'),
+    ('MONITOREO_CULTIVOS', 'Monitoreo de cultivos'),
+    ('INSTALACION_RIEGO', 'Instalación de sistemas de riego'),
+    ('RECOLECCION_RESIDUOS', 'Recolección de residuos'),
+    ('INSTALACION_TUTORES', 'Instalación de tutores'),
+    ('PODA_FORMACION', 'Poda de formación'),
+    ('PODA_MANTENIMIENTO', 'Poda de mantenimiento'),
+    ('ENTRESACADO_FRUTOS', 'Entresacado de frutos'),
+    ('REPARACION_CERCAS', 'Reparación de cercas'),
+    ('INSTALACION_RED_PROTECCION', 'Instalación de redes de protección'),
+    ('MANEJO_POST_COSECHA', 'Manejo post-cosecha'),
+    ('CLASIFICACION_UVAS', 'Clasificación de uvas'),
+    ('TRANSPORTE_CARGA', 'Transporte de carga'),
+    ('MANTENIMIENTO_MAQUINARIA', 'Mantenimiento de maquinaria'),
+    ('REPLANTE_PLANTAS', 'Replante de plantas'),
+    ('ACARREO_INSUMOS', 'Acarreo de insumos'),
+    ('MANTENIMIENTO_RIEGO', 'Mantenimiento de sistemas de riego'),
+    ('CONTROL_EROSION', 'Control de erosión'),
+    ('CUBIERTA_ORGANICA', 'Colocación de cubierta orgánica'),
+    ('APLICACION_BIOESTIMULANTES', 'Aplicación de bioestimulantes'),
+    ('FERTIRRIGACION', 'Fertirrigación'),
+    ('INSTALACION_SOMBREADO', 'Instalación de sistemas de sombreado'),
+    ('DESINFECCION_HERRAMIENTAS', 'Desinfección de herramientas'),
+    ('CAPACITACION_PERSONAL', 'Capacitación del personal'),
+    ]
+
     fecha_creacion = models.DateField(default=datetime.date.today, editable=False)
     hora_creacion = models.TimeField(default=datetime.datetime.now().time(), editable=False)
     asignado = models.ForeignKey(Trabajador, on_delete=models.CASCADE, max_length=50, null=True)

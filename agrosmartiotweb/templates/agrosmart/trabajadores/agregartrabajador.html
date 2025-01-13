@@ -7,23 +7,29 @@
 <br>
 <br>
 <script>
-    // Función para mostrar u ocultar el campo de fecha_termino_contrato
-    $(document).ready(function() {
-        $('#trabajador-form select[name="tipo_contraro"]').on('change', function() {
+  $(document).ready(function() {
+      var form = $('#trabajador-form');
+  
+      // Al cambiar el tipo de contrato
+      form.find('select[name="tipo_contraro"]').on('change', function() {
           var selectedValue = $(this).val();
+          var fechaTerminoContratoField = form.find('input[name="fecha_termino_contrato"]');
+          var fechaTerminoContratoLabel = form.find('label[for="id_fecha_termino_contrato"]');
+  
           if (selectedValue === 'Plazo fijo') {
-            $('#trabajador-form input[name="fecha_termino_contrato"]').show();
-            $('#trabajador-form label[for="id_fecha_termino_contrato"]').show();
+              fechaTerminoContratoField.show().prop('required', true);
+              fechaTerminoContratoLabel.show();
           } else {
-            $('#trabajador-form input[name="fecha_termino_contrato"]').hide();
-            $('#trabajador-form label[for="id_fecha_termino_contrato"]').hide();
+              fechaTerminoContratoField.hide().val('').prop('required', false);
+              fechaTerminoContratoLabel.hide();
           }
-        });
       });
-      
-      
-</script>
-
+  
+      // Inicializar comportamiento basado en valor actual
+      form.find('select[name="tipo_contraro"]').trigger('change');
+  });
+  </script>
+  
 
 
 

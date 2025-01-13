@@ -1,0 +1,38 @@
+{% extends 'agrosmart/base.html' %}
+
+{% block contenido %}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Informes por Sensor</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        /* Hacer que los gráficos sean responsivos */
+        .chart-container {
+            width: 100%;
+            max-width: 1000px; /* Limitar el ancho máximo del gráfico */
+            margin: 0 auto;  /* Centrar el gráfico en la pantalla */
+            height: 500px;  /* Ajustar la altura del gráfico */
+        }
+
+        /* Asegurarse de que el gráfico no se deforme en pantallas pequeñas */
+        @media (max-width: 768px) {
+            .chart-container {
+                height: 400px;  /* Reducir la altura en dispositivos más pequeños */
+            }
+        }
+    </style>
+</head>
+<body>
+    <h3>Informes por Sensor</h3>
+
+    {% for chart in charts %}
+        <div class="chart-container">
+            {{ chart|safe }}
+        </div>
+    {% endfor %}
+</body>
+</html>
+{% endblock %}
