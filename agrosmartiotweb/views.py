@@ -1598,8 +1598,8 @@ def cuadernodecampo(request):
     for proceso in procesos:
         eventos.append({
             'title': f"Tarea: {proceso.trabajo} ",
-            'start': proceso.fecha.isoformat(),
-            'end': proceso.fecha.isoformat(),
+            'start': proceso.fecha_compra.isoformat(),
+            'end': proceso.fecha_compra.isoformat(),
             
             'trabajador': proceso.asignado.nombre,
         })
