@@ -1,104 +1,112 @@
-
-{% extends 'agrosmart/base.html' %}
-
-{% block contenido %}
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Humedad del Suelo</title>
-    <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            background-color: #f4f4f4;
-        }
-        .container {
-            margin-top: 50px;
-            max-width: 800px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-        .section {
-            margin-bottom: 20px;
-            padding: 20px;
-            background-color: #fff;
-            border-radius: 10px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        }
-        .section h3 {
-            margin-bottom: 20px;
-            font-size: 28px;
-            color: #333;
-        }
-        .data {
-            display: flex;
-            justify-content: space-around;
-            flex-wrap: wrap;
-            font-size: 24px;
-            font-weight: bold;
-        }
-        .data div {
-            margin: 10px;
-            padding: 20px;
-            background-color: #fff;
-            border-radius: 10px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            flex: 1 1 45%;
-        }
-        .timestamp {
-            margin-top: 20px;
-            font-size: 18px;
-            color: #555;
-        }
-        .map-link a {
-            text-decoration: none;
-            color: #007BFF;
-        }
-        .map-link a:hover {
-            text-decoration: underline;
-        }
-        @media (max-width: 300px) {
-            .data div {
-                flex: 1 1 100%;
-            }
-        }
-        #map {
-            height: 500px;
-            width: 100%;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h3>Datos Sensor Suelo  </h3>
-        {% if sensor_data %}
-            {% for sensor in sensor_data %}
-                <div class="section">
-                    <h3>Sensor ID {{ sensor.sensor_id }}</h3>
-                    <h4>Nombre del Sensor: {{ sensor.sensor_name }}</h4>
-                    <div class="data">
-                        <div>
-                            <strong>Humedad Suelo:</strong> <span>{{ sensor.latest_data.humiditysoil }}%</span><br>
-                            <strong>Temperatura Suelo:</strong> <span>{{ sensor.latest_data.temperature }}°C</span><br>
-                            <strong>Últimos Datos:</strong> <span>{{ sensor.latest_data.timestamp }}</span><br><br>
-
+{% extends 'agrosmart/base.html' %}  
+{% block contenido %}  
+<!DOCTYPE html>  
+<html>  
+<head>  
+    <title>Humedad del Suelo</title>  
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>  
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>  
+    <style>  
+        body {  
+            font-family: Arial, sans-serif;  
+            text-align: center;  
+            background-color: #f4f4f4;  
+            margin: 0;  
+            padding: 0;  
+        }  
+        .container {  
+            margin-top: 20px;  
+            max-width: 1200px;  
+            margin-left: auto;  
+            margin-right: auto;  
+            padding: 0 15px;  
+        }  
+        .section-container {  
+            display: flex;  
+            flex-wrap: wrap;  
+            justify-content: space-between;  
+            gap: 20px;  
+        }  
+        .section {  
+            flex: 1 1 calc(50% - 20px);  
+            margin-bottom: 20px;  
+            padding: 10px;  
+            background-color: #fff;  
+            border-radius: 8px;  
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);  
+        }  
+        .section h3 {  
+            margin-bottom: 10px;  
+            font-size: 22px;  
+            color: #333;  
+        }  
+        .section h4 {  
+            margin-bottom: 10px;  
+            font-size: 16px;  
+            color: #555;  
+        }  
+        .data {  
+            font-size: 16px;  
+            font-weight: normal;  
+            text-align: left;  
+        }  
+        .data div {  
+            margin: 5px;  
+            padding: 10px;  
+            background-color: #fff;  
+            border-radius: 8px;  
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);  
+        }  
+        .timestamp {  
+            margin-top: 15px;  
+            font-size: 14px;  
+            color: #555;  
+        }  
+        @media (max-width: 600px) {  
+            .section {  
+                flex: 1 1 100%;  
+            }  
+            canvas {  
+                height: 300px !important;  
+            }  
+        }  
+        #map {  
+            height: 400px;  
+            width: 100%;  
+        }  
+        canvas {  
+            width: 100% !important;  
+            height: 300px;  
+        }  
+    </style>  
+</head>  
+<body>  
+    <div class="container">  
+        <h3>Datos Sensor Suelo</h3>  
+        <div class="section-container">  
+            {% if sensor_data %}  
+                {% for sensor in sensor_data %}  
+                    <div class="section">  
+                        <h3>Sensor ID {{ sensor.sensor_id }}</h3>  
+                        <h4>Nombre del Sensor: {{ sensor.sensor_name }}</h4>  
+                        <div class="data">  
+                            <div>  
+                                <strong>Humedad Suelo:</strong> <span>{{ sensor.latest_data.humiditysoil }}%</span><br>  
+                                <strong>Temperatura Suelo:</strong> <span>{{ sensor.latest_data.temperature }}°C</span><br>  
+                                <strong>Datos:</strong> <span>{{ sensor.latest_data.timestamp }}</span><br><br>  
+                               
+                            </div>  
                             
-                        </div>
-                    </div>
-                </div>
-                <p>Debug - Humedad: {{ sensor.latest_data.humiditysoil }}, Temperatura: {{ sensor.latest_data.temperature }}</p>
-
-                <canvas id="chart-{{ sensor.sensor_id }}" width="100" height="80"></canvas>
-            {% endfor %}
-        {% else %}
-            <p>No hay datos disponibles.</p>
-        {% endif %}
-       
-
-    </div>
-    
+                        </div>  
+                        <canvas id="chart-{{ sensor.sensor_id }}"></canvas>  
+                    </div>  
+                    
+                {% endfor %}  
+            {% else %}  
+                <p>No hay datos disponibles.</p>  
+            {% endif %}  
+        </div>  
+    </div>  
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             {% for sensor in sensor_data %}
@@ -107,16 +115,30 @@
                 const chart{{ sensor.sensor_id }} = new Chart(ctx{{ sensor.sensor_id }}, {
                     type: 'bar',
                     data: {
-                        labels: ['Humedad Suelo', 'Temperatura Suelo'],
-                        datasets: [{
-                            label: 'Valores en Tiempo Real',
-                            data: [Number({{ sensor.latest_data.humiditysoil }}), Number({{ sensor.latest_data.temperature }})],
-                            backgroundColor: ['#4CAF50', '#FF5722'],
-                            borderColor: ['#388E3C', '#E64A19'],
-                            borderWidth: 1
-                        }]
+                        labels: ['Datos'],
+                        datasets: [
+                            {
+                                label: 'Humedad Suelo',
+                                data: [Number({{ sensor.latest_data.humiditysoil }})],
+                                backgroundColor: ['#4CAF50'],
+                                borderColor: ['#388E3C'],
+                                borderWidth: 1
+                            },
+                            {
+                                label: 'Temperatura Suelo',
+                                data: [Number({{ sensor.latest_data.temperature }})],
+                                backgroundColor: ['#FF5722'],
+                                borderColor: ['#E64A19'],
+                                borderWidth: 1
+                            }
+                        ]
                     },
                     options: {
+                        responsive: true,
+                        interaction: {
+                            mode: 'index',
+                            intersect: false
+                        },
                         scales: {
                             y: {
                                 beginAtZero: true,
@@ -129,7 +151,24 @@
                         plugins: {
                             legend: {
                                 display: true,
-                                position: 'top'
+                                position: 'top',
+                                onClick: (e, legendItem, legend) => {
+                                    // Obtiene el índice del dataset que se hizo clic
+                                    const index = legendItem.datasetIndex;
+                                    const chart = legend.chart;
+                                    // Alterna la visibilidad del dataset
+                                    const meta = chart.getDatasetMeta(index);
+                                    meta.hidden = meta.hidden === null ? !chart.data.datasets[index].hidden : null;
+                                    chart.update();
+                                }
+                            },
+                            tooltip: {
+                                enabled: true,
+                                callbacks: {
+                                    label: function (context) {
+                                        return `${context.dataset.label}: ${context.raw}`;
+                                    }
+                                }
                             }
                         }
                     }
@@ -138,6 +177,6 @@
         });
     </script>
     
-</body>
-</html>
+</body>  
+</html>  
 {% endblock %}
