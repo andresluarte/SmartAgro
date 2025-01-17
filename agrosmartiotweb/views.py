@@ -985,8 +985,12 @@ def lista_empresas(request):
 
 #DATOS DE SENSOR 
 
+from datetime import datetime, timedelta
 from .models import TemperatureHumidityLocation
-from .models import HumidityTemperaturaSoil,SensorAire,SensorSuelo
+from .models import HumidityTemperaturaSoil, SensorAire, SensorSuelo
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+
 @csrf_exempt
 def receive_data(request):
     if request.method == 'POST':
@@ -1009,8 +1013,21 @@ def receive_data(request):
         fecha_registro = request.POST.get('fecha_registro')
 
         # Verificar que los datos obligatorios estén presentes
-        if not all([temperature, humidity, latitude, longitude,fecha_registro]):
+        if not all([temperature, humidity, latitude, longitude, fecha_registro]):
             return JsonResponse({'status': 'error', 'message': 'Datos incompletos'}, status=400)
+
+        # Convertir `fecha_registro` a un objeto datetime
+        try:
+            fecha_registro_dt = datetime.strptime(fecha_registro, '%Y-%m-%d %H:%M:%S')
+        except ValueError:
+            return JsonResponse({'status': 'error', 'message': 'Formato de fecha inválido. Use YYYY-MM-DD HH:MM:SS'}, status=400)
+
+        # Obtener la hora actual
+        ahora = datetime.now()
+
+        # Verificar que `fecha_registro` no sea más de 5 minutos en el futuro
+        if fecha_registro_dt > ahora + timedelta(minutes=5):
+            return JsonResponse({'status': 'error', 'message': 'Fecha de registro inválida, no puede ser más de 5 minutos en el futuro'}, status=400)
 
         # Crear una nueva entrada de datos asociada al sensor
         TemperatureHumidityLocation.objects.create(
@@ -1177,6 +1194,7 @@ def combined_data_view_soil(request):
             sensor_data.append({
                 'sensor_id': sensor.id,
                 'latest_data': latest_data,
+                'sensor_name':sensor.name,
 
             })
         else:
