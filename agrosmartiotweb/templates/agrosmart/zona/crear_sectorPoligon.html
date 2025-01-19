@@ -62,25 +62,23 @@
     let allPolygons = []; // Arreglo para almacenar todos los polígonos existentes
     
     function initMap() {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                function(position) {
-                    const userLocation = {
-                        lat: position.coords.latitude,
-                        lng: position.coords.longitude,
-                    };
-                    initializeMap(userLocation, 16);
-                },
-                function() {
-                    const defaultLocation = { lat: -33.4489, lng: -70.6693 }; // Santiago, Chile
-                    initializeMap(defaultLocation, 10);
-                }
-            );
-        } else {
-            const defaultLocation = { lat: -33.4489, lng: -70.6693 }; // Santiago, Chile
-            initializeMap(defaultLocation, 10);
-        }
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            function(position) {
+                const userLocation = {
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude,
+                };
+                initializeMap(userLocation, 16);
+            },
+            function() {
+                alert("No se pudo obtener tu ubicación. Por favor, habilita la geolocalización.");
+            }
+        );
+    } else {
+        alert("Tu navegador no soporta geolocalización. Por favor, habilítala para continuar.");
     }
+}
     
     function initializeMap(centerLocation, zoomLevel) {
         map = new google.maps.Map(document.getElementById("map"), {
@@ -181,7 +179,7 @@
 </script>
 
 <script
-  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDT0QJ4JVXUrTA8mRZN_YXjy2CZDsa_vmw&callback=initMap&libraries=drawing"
+  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBh_1Lg0WxMjjXni4A6XQmsixeZ2gMG2mc&callback=initMap&libraries=drawing"
   async
   defer
 ></script>
