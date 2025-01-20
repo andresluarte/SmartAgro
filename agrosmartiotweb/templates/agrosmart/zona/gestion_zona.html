@@ -69,11 +69,11 @@
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-      <h3> Visualización de Zonas </h3>
+      <h3> Visualización de Sectores </h3>
 
 
       <head>
-        <title>Gestión de Zonas</title>
+        <title>Gestión de Sectores</title>
         <div class="btn-group justify-content-end">
           <button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
             Opciones
@@ -183,6 +183,7 @@
             map = new google.maps.Map(document.getElementById("map"), {
               center: { lat: -34.397, lng: 150.644 },
               zoom: 8,
+              mapTypeId: google.maps.MapTypeId.SATELLITE, 
             });
 
             // InfoWindow para mostrar el nombre del polígono

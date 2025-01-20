@@ -1559,6 +1559,7 @@ def gestion_finanzas(request):
         ).values('trabajo__trabajo').annotate(
             total_gasto=Sum('gasto_total')
         )
+        
 
     return render(request, 'agrosmart/finanzas/gestion_finanzas.html', {
         'finanzas': finanzas,
