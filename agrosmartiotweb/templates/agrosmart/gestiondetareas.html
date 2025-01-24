@@ -4,6 +4,9 @@
 {% load static %}
 {% load agrosmartiotweb %}
 {% block js %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+
 <script>
   function eliminarProceso(id) {
     Swal.fire({
@@ -34,6 +37,29 @@
   }
 
 </script>
+<style>
+  /* Reducir botones en dispositivos pequeños */
+@media (max-width: 768px) {
+    .action-buttons .btn {
+        padding: 8px; /* Reducir relleno */
+        font-size: 0.9em; /* Reducir tamaño de fuente */
+    }
+
+    .action-buttons .btn .btn-text {
+        display: none; /* Ocultar texto en pantallas pequeñas */
+    }
+
+    .action-buttons .btn i {
+        font-size: 1.2em; /* Aumentar tamaño del ícono */
+    }
+
+    .action-buttons a {
+        display: inline-block;
+        margin: 5px; /* Separación entre íconos */
+    }
+}
+
+</style>
 <script>
   function limpiarFiltrosYRecargar() {
     // Obtener el formulario
@@ -65,12 +91,40 @@
 
 
 <!-- Incluir los estilos de Bootstrap -->
+<style>
+  @media (max-width: 768px) {
+    .table-responsive thead {
+        display: none; /* Ocultar los encabezados de la tabla */
+    }
 
+    .table-responsive tbody tr {
+        display: block;
+        margin-bottom: 15px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 10px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
 
+    .table-responsive tbody td {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+    }
 
+    .table-responsive tbody td:before {
+        content: attr(data-label); /* Mostrar el encabezado como etiqueta */
+        font-weight: bold;
+        color: #555;
+        margin-right: 10px;
+        text-transform: uppercase;
+        font-size: 0.8em;
+    }
+}
+
+</style>
 <div class="tareas">
-  <br>
-  <br>
+
   <div class="card">
     <div class="card-body">
       <h3> Insumos y Maquinaria </h3>
@@ -170,23 +224,34 @@
           <tbody>
             {% for p in proceso_page_obj %}
             <tr>
-                <td>{{ p.trabajo }}</td>
-                <td>{{ p.fecha_compra }}</td>
+              <td data-label="Insumo/Maquinaria">
+                <i class="fas fa-tools" style="color: #007BFF; margin-right: 5px;"></i>
+                <strong style="color: #007BFF;">{{ p.trabajo }}</strong>
+            </td>
+            <td data-label="Fecha Compra">{{ p.fecha_compra }}</td>
               
-                <td>{{ p.estado }}</td>
-                <td>{{ p.asignado }}</td>
-                <td>${{ p.presupuesto|floatformat:"-2" }}</td>
-                <td>{{ p.observacion }}</td>
+                <td data-label="Estado">{{ p.estado }}</td>
+                <td data-label="Asignado">
+                  <i class="fas fa-user-check" style="color: #28a745; margin-right: 5px;"></i>
+                  <strong style="color: #28a745;">{{ p.asignado }}</strong>
+              </td>
+                <td data-label="Presupuesto">${{ p.presupuesto|floatformat:"-2" }}</td>
+                <td data-label="Observación">{{ p.observacion }}</td>
                 {% if request.user.user_type == 'superuser' or request.user.user_type == 'admin' or request.user.user_type == 'colaborador' %}
                     
-                    <td>{{ p.created_by }}</td>
+                <td data-label="Creado Por">{{ p.created_by }}</td>
                 {% endif %}
-                <td>
-                    <a href="{% url 'modificartarea' p.id %}" class="btn btn-warning">Modificar</a>
-                    <br>
-                    <br>
-                    <a href="#" onclick="eliminarProceso({{ p.id }})" class="btn btn-danger">Eliminar</a>
+                <td class="action-buttons">
+                  <a href="{% url 'modificartarea' p.id %}" class="btn btn-warning" title="Modificar">
+                      <i class="fas fa-edit"></i> 
+                  </a>
+            
+                  <br>
+                  <a href="#" onclick="eliminarProceso({{ p.id }})" class="btn btn-danger" title="Eliminar">
+                      <i class="fas fa-trash"></i> 
+                  </a>
                 </td>
+              
 
             </tr>
             {% endfor %}

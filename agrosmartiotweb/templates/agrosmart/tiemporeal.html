@@ -24,14 +24,17 @@
 
         .sensor-container {
             display: grid;
-            grid-template-columns: repeat(2, 1fr); /* Dos columnas */
+            grid-template-columns: repeat(2, 1fr); /* Dos columnas por defecto */
             gap: 20px; /* Espacio entre los sensores */
             margin-top: 30px;
+            justify-content: center; /* Centra horizontalmente en caso de que haya espacio */
+            align-items: center; /* Centra verticalmente los elementos */
         }
 
         @media (max-width: 768px) {
             .sensor-container {
                 grid-template-columns: 1fr; /* Una columna en pantallas pequeñas */
+                justify-content: center; /* Centrado horizontal en pantallas pequeñas */
             }
         }
 
