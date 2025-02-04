@@ -380,9 +380,13 @@ class SectorForm(forms.ModelForm):
 
     class Meta:
         model = Sector
-        fields = ['nombre', 'coordenadas']
+        fields = ['nombre', 'coordenadas','descripcion','superficie','tipo_uso','estado']
         widgets = {
-            'coordenadas': forms.HiddenInput(),  # Ocultamos este campo, se llenará desde JavaScript
+            'coordenadas': forms.HiddenInput(),  # Campo oculto
+            'superficie': forms.NumberInput(attrs={
+                'placeholder': 'Superficie en hectáreas',
+                'step': '0.01',  # Permitir decimales
+            }),
         }
 
 class SectorPoligonForm(forms.ModelForm):
@@ -423,7 +427,7 @@ class LoteForm(forms.ModelForm):
 class SectorModificarForm(forms.ModelForm):
     class Meta:
         model = Sector
-        fields = ['nombre', 'coordenadas']
+        fields = ['nombre', 'coordenadas','descripcion','superficie','tipo_uso','estado']
 
 class HuertoModificarForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):

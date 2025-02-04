@@ -18,6 +18,21 @@ def validate_rut(value):
 
 class Sector(models.Model):
     nombre = models.CharField(max_length=50)
+    descripcion = models.TextField(blank=True, null=True)  # Campo opcional
+    superficie = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)  # Opcional
+    TIPO_USO_CHOICES = [
+        ('cultivo', 'Cultivo'),
+        ('pastoreo', 'Pastoreo'),
+        ('reserva', 'Reserva'),
+        ('infraestructura', 'Infraestructura'),
+        ('otro', 'Otro'),
+    ]
+    tipo_uso = models.CharField(max_length=20, choices=TIPO_USO_CHOICES)  # Obligatorio
+    ESTADO_CHOICES = [
+        ('activo', 'Activo'),
+        ('inactivo', 'Inactivo'),
+    ]
+    estado = models.CharField(max_length=30, choices=ESTADO_CHOICES)  # Obligatorio
     coordenadas = models.TextField()
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='sector_creado', on_delete=models.CASCADE)
