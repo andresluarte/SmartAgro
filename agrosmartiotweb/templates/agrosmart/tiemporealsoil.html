@@ -82,7 +82,57 @@
 </head>  
 <body>  
     <div class="container">  
-        <h3>Datos Sensor Suelo</h3>  
+        <h3>Datos Sensor Suelo</h3>
+        <script>
+            const socket = new WebSocket('ws://' + window.location.host + '/ws/sensores/');
+        
+            socket.onopen = function(e) {
+                console.log("WebSocket conectado");
+                socket.send(JSON.stringify({
+                    'message': 'Hola servidor WebSocket desde SmartAgro'
+                }));
+            };
+        
+            socket.onmessage = function(e) {
+                const data = JSON.parse(e.data);
+                console.log("Datos recibidos:", data);  // Verifica que los datos estén llegando correctamente
+            
+                if (data && charts[data.sensor_id]) {
+                    const chart = charts[data.sensor_id];
+            
+                    // Verifica que los datos de humedad y temperatura sean numéricos
+                    console.log(`Actualizando gráfico para sensor ${data.sensor_id}:`);
+                    console.log(`Humedad: ${data.humiditysoil}, Temperatura: ${data.temperature}`);
+            
+                    // Si los datos son correctos, actualiza el gráfico
+                    chart.data.datasets[0].data = [data.humiditysoil];  // Humedad
+                    chart.data.datasets[1].data = [data.temperature];   // Temperatura
+            
+                    // Actualiza los valores en el DOM
+                    const sectionElement = document.querySelector(`#chart-${data.sensor_id}`).closest('.section');
+                    const humedadSpan = sectionElement.querySelector('span:nth-child(2)');
+                    const temperaturaSpan = sectionElement.querySelector('span:nth-child(4)');
+                    
+                    if (humedadSpan) humedadSpan.innerText = `${data.humiditysoil}%`;
+                    if (temperaturaSpan) temperaturaSpan.innerText = `${data.temperature}°C`;
+            
+                    // Vuelve a renderizar el gráfico con los nuevos datos
+                    console.log("Actualizando gráfico: ", chart);
+                    chart.update();
+                }
+            };
+            
+            
+        
+            socket.onclose = function(e) {
+                console.log("WebSocket desconectado");
+            };
+        
+            socket.onerror = function(error) {
+                console.error("WebSocket error:", error);
+            };
+        </script>
+          
         <div class="section-container">  
             {% if sensor_data %}  
                 {% for sensor in sensor_data %}  
@@ -109,10 +159,12 @@
     </div>  
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            const charts = {};  // Objeto para almacenar los gráficos
+        
             {% for sensor in sensor_data %}
-                // Configuración del gráfico para cada sensor
+                console.log("Creando gráfico para el sensor ID {{ sensor.sensor_id }}");  // Agregar este log
                 const ctx{{ sensor.sensor_id }} = document.getElementById('chart-{{ sensor.sensor_id }}').getContext('2d');
-                const chart{{ sensor.sensor_id }} = new Chart(ctx{{ sensor.sensor_id }}, {
+                charts[{{ sensor.sensor_id }}] = new Chart(ctx{{ sensor.sensor_id }}, {
                     type: 'bar',
                     data: {
                         labels: ['Datos'],
@@ -152,15 +204,6 @@
                             legend: {
                                 display: true,
                                 position: 'top',
-                                onClick: (e, legendItem, legend) => {
-                                    // Obtiene el índice del dataset que se hizo clic
-                                    const index = legendItem.datasetIndex;
-                                    const chart = legend.chart;
-                                    // Alterna la visibilidad del dataset
-                                    const meta = chart.getDatasetMeta(index);
-                                    meta.hidden = meta.hidden === null ? !chart.data.datasets[index].hidden : null;
-                                    chart.update();
-                                }
                             },
                             tooltip: {
                                 enabled: true,
@@ -175,6 +218,7 @@
                 });
             {% endfor %}
         });
+        
     </script>
     
 </body>  

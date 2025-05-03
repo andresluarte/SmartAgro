@@ -1045,7 +1045,8 @@ def receive_data(request):
 
     
 #DATOS SENSOR SUELO
-
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 @csrf_exempt
 
 def receive_data_soil(request):
@@ -1077,6 +1078,24 @@ def receive_data_soil(request):
             temperature=temperature,
             sensor=sensor,
             fecha_registro=fecha_registro  # Asociar los datos al sensor encontrado por la API Key
+        )
+          # Preparar los datos para enviarlos al WebSocket
+        data = {
+            'sensor_id': sensor.id,
+            'sensor_name': sensor.name,  # Si tienes el nombre del sensor en el modelo
+            'humiditysoil': humiditysoil,
+            'temperature': temperature,
+            'timestamp': fecha_registro  # Aquí asumes que la fecha está en formato adecuado
+        }
+
+        # Enviar los datos por WebSocket al grupo de sensores
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            "sensores",  # El grupo de WebSocket
+            {
+                "type": "send_sensor_data",
+                "data": data
+            }
         )
 
         return JsonResponse({'status': 'success', 'message': 'Datos de humedad del suelo recibidos correctamente'})

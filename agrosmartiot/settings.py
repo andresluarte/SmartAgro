@@ -24,6 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-i+h^ifkudr)+q*__he#@n=#=q*rk17-b!3^ns4vmt+5og7sqz1'
+SECURE_SSL_REDIRECT = False
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -46,10 +47,11 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'agrosmartiotweb', 'agrosmartiot',
-    'django.contrib.humanize', 'crispy_forms', "django_filters", "rest_framework", "import_export", "mptt"
+    'django.contrib.humanize', 'crispy_forms', "django_filters", "rest_framework", "import_export", "mptt","channels",
 ]
 
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
+ASGI_APPLICATION = 'agrosmartiot.asgi.application'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
