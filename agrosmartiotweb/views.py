@@ -1087,16 +1087,18 @@ def receive_data_soil(request):
             'temperature': temperature,
             'timestamp': fecha_registro  # Aquí asumes que la fecha está en formato adecuado
         }
-
-        # Enviar los datos por WebSocket al grupo de sensores
         channel_layer = get_channel_layer()
-        async_to_sync(channel_layer.group_send)(
-            "sensores",  # El grupo de WebSocket
-            {
-                "type": "send_sensor_data",
-                "data": data
-            }
-        )
+        # Enviar los datos por WebSocket al grupo de sensores
+        if channel_layer is not None:
+            async_to_sync(channel_layer.group_send)(
+                "sensores",
+                {
+                    "type": "send_sensor_data",
+                    "data": data
+                }
+            )
+        else:
+            print("Error: channel_layer es None — revisa la configuración de CHANNEL_LAYERS")
 
         return JsonResponse({'status': 'success', 'message': 'Datos de humedad del suelo recibidos correctamente'})
 
