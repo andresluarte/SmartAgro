@@ -1026,8 +1026,7 @@ def receive_data(request):
         ahora = datetime.now()
 
         # Verificar que `fecha_registro` no sea más de 5 minutos en el futuro
-        if fecha_registro_dt > ahora + timedelta(minutes=5):
-            return JsonResponse({'status': 'error', 'message': 'Fecha de registro inválida, no puede ser más de 5 minutos en el futuro'}, status=400)
+        
 
         # Crear una nueva entrada de datos asociada al sensor
         TemperatureHumidityLocation.objects.create(
