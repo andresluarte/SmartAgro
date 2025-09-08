@@ -3,9 +3,10 @@
 {% block contenido %}
 {% load static %}
 {% load agrosmartiotweb %}
-{% block js %}
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+{% load humanize %}
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
   function eliminarProceso(id) {
@@ -17,17 +18,7 @@
       "cancelButtonText": "No, Cancelar",
       "confirmButtonText": "Si, Eliminar",
       "reverseButtons": true,
-      "confirmButtonColor": "dc3545",
-
-
-
-
-
-
-
-
-
-
+      confirmButtonColor: "#dc3545",
     })
       .then(function (result) {
         if (result.isConfirmed) {
@@ -35,255 +26,451 @@
         }
       })
   }
-
 </script>
+
 <style>
-  /* Reducir botones en dispositivos pequeños */
-@media (max-width: 768px) {
-    .action-buttons .btn {
-        padding: 8px; /* Reducir relleno */
-        font-size: 0.9em; /* Reducir tamaño de fuente */
-    }
-
-    .action-buttons .btn .btn-text {
-        display: none; /* Ocultar texto en pantallas pequeñas */
-    }
-
-    .action-buttons .btn i {
-        font-size: 1.2em; /* Aumentar tamaño del ícono */
-    }
-
-    .action-buttons a {
-        display: inline-block;
-        margin: 5px; /* Separación entre íconos */
-    }
-}
-
-</style>
-<script>
-  function limpiarFiltrosYRecargar() {
-    // Obtener el formulario
-    const form = document.getElementById('searchForm');
-
-    // Restablecer los valores de todos los campos del formulario a sus valores predeterminados
-    form.reset();
-
-    // Recargar la página sin aplicar ningún tipo de filtro
-    window.location.href = "{% url 'gestiondetareas' %}";
+  /* Contenedor principal flex, responsive */
+  .container-cosechas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    background-color: #f0f4f8;
+    border-radius: 12px;
+    padding: 2rem;
+    justify-content: space-between;
   }
-</script>
 
-    {% if messages %}
-        {% for m in messages %}
-        <script>
-            Swal.fire({
-                title: "Excelente",
-                text: "{{ m }}",  <!-- El mensaje de éxito -->
-                icon: "success"
-            });
-        </script>
-        {% endfor %}
-    {% endif %}
+  /* Tarjeta de tabla y gráfico */
+  .card-table,
+  .card-chart {
+    flex: 1 1 400px;
+    min-width: 300px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
 
+  /* Tabla scrollable */
+  .table-responsive {
+    overflow-x: auto;
+  }
 
-{% endblock js %}
-{% load humanize %}
+  /* Mejoras visuales tabla */
+  .table thead {
+    background-color: #36A2EB;
+    color: #fff;
+  }
 
+  .table tbody tr:hover {
+    background-color: rgba(54, 162, 235, 0.1);
+  }
 
-<!-- Incluir los estilos de Bootstrap -->
-<style>
+  /* Responsive para tablet y móvil */
+  @media (max-width: 992px) {
+    .container-cosechas {
+      flex-direction: column;
+      padding: 1rem;
+    }
+
+    .card-table,
+    .card-chart {
+      min-width: 0;
+      width: 100%;
+      margin-bottom: 1.5rem;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .container-cosechas {
+      padding: 0.5rem;
+      gap: 1rem;
+    }
+
+    .card-table,
+    .card-chart {
+      padding: 0.5rem;
+      border-radius: 8px;
+    }
+
+    .table thead {
+      font-size: 0.95em;
+    }
+
+    .table td,
+    .table th {
+      font-size: 0.92em;
+      padding: 0.5em;
+    }
+
+    .btn {
+      font-size: 0.95em;
+      padding: 0.4em 0.8em;
+    }
+  }
+
+  /* CORRECCIÓN: Ajustes para móvil sin eliminar headers */
   @media (max-width: 768px) {
-    .table-responsive thead {
-        display: none; /* Ocultar los encabezados de la tabla */
+    /* Eliminar el padding superior del contenedor en móvil */
+    .container.py- {
+      padding-top: -10 !important;
+      margin-top: 0;
     }
 
-    .table-responsive tbody tr {
-        display: block;
-        margin-bottom: 15px;
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        padding: 10px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    /* Ajustar el espaciado del contenedor principal */
+    .container {
+      padding-left: 10px;
+      padding-right: 10px;
+    
+
+    /* Hacer la tabla scrollable horizontalmente en lugar de convertir a bloques */
+    .table-responsive {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
     }
 
-    .table-responsive tbody td {
-        display: flex;
-        justify-content: space-between;
-        padding: 8px 0;
+    .table {
+      min-width: 800px; /* Asegurar ancho mínimo para scroll horizontal */
+      font-size: 0.85em;
     }
 
-    .table-responsive tbody td:before {
-        content: attr(data-label); /* Mostrar el encabezado como etiqueta */
-        font-weight: bold;
-        color: #555;
-        margin-right: 10px;
-        text-transform: uppercase;
-        font-size: 0.8em;
+    .table th,
+    .table td {
+      padding: 0.4rem;
+      font-size: 0.8em;
+      white-space: nowrap;
     }
-}
 
+    /* Mantener los headers visibles */
+    .table thead th {
+      position: sticky;
+      top: 0;
+      background-color: #36A2EB !important;
+      color: #fff !important;
+      z-index: 10;
+    }
+
+    /* Ajustar botones en móvil */
+    .btn-sm {
+      font-size: 0.75em;
+      padding: 0.25rem 0.5rem;
+    }
+
+    .d-flex.gap-2 {
+      gap: 0.25rem !important;
+    }
+
+    /* Ajustar el dropdown en móvil */
+    .btn-group .btn {
+      font-size: 0.9em;
+      padding: 0.5rem 0.75rem;
+    }
+  }
+
+  /* Ajustes específicos para pantallas muy pequeñas */
+  @media (max-width: 480px) {
+    .container {
+      padding-left: 5px;
+      padding-right: 5px;
+    }
+
+    .d-flex.justify-content-between.align-items-center {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 1rem;
+    }
+
+    .btn-group {
+      width: 100%;
+    }
+
+    .btn-group .btn {
+      width: 100%;
+    }
+
+    /* Hacer los badges más pequeños */
+    .badge {
+      font-size: 0.7em;
+      padding: 0.25em 0.5em;
+    }
+  }
+
+  .fullscreen {
+    min-height: 100dvh;
+    /* ocupa el alto visible real en móviles */
+  }
 </style>
-<div class="tareas">
 
-  <div class="card">
-    <div class="card-body">
-      <h3> Insumos y Maquinaria </h3>
-      <hr>
-      <td>
-        <div class="btn-group justify-content-end">
-          <button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-            Opciones
-          </button>
-          <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+<div class="container py-4" style="background-color: #f1f8f0; border-radius: 12px; padding: 2rem; padding-top: 0%;">
 
-            <a class="dropdown-item"href="{% url 'agregartarea' %}" >Agregar Insumo/Maquinaria</a>
-            {% if request.user.user_type == 'superuser' or request.user.user_type == 'admin' or request.user.user_type == 'colaborador' %}
-                <a class="dropdown-item" href="{% url 'gestiondetrabajadores' %}">Trabajadores</a>
-            {% endif %}
+  <!-- Título y encabezado -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="fw-bold text-primary">
+      ⚙️ Insumos y Maquinaria
+    </h3>
+    <div class="btn-group">
+      <button type="button" class="btn btn-success dropdown-toggle shadow-sm" data-bs-toggle="dropdown">
+        Opciones
+      </button>
+      <div class="dropdown-menu">
+        <a class="dropdown-item" href="{% url 'agregartarea' %}">
+          <i class="fas fa-plus-circle text-success me-2"></i> Agregar Insumo/Maquinaria
+        </a>
+        {% if request.user.user_type == 'superuser' or request.user.user_type == 'admin' or request.user.user_type == 'colaborador' %}
+        <a class="dropdown-item" href="{% url 'gestiondetrabajadores' %}">
+          <i class="fas fa-users text-info me-2"></i> Trabajadores
+        </a>
+        {% endif %}
+        <a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#searchModal">
+          <i class="fas fa-filter text-warning me-2"></i> Filtrar
+        </a>
+        <a class="dropdown-item" href="{% url 'exportar_a_excel_proceso' %}?{{ request.GET.urlencode }}">
+          <i class="fas fa-file-excel text-success me-2"></i> Exportar a Excel
+        </a>
+        <a class="dropdown-item" href="{% url 'gestiondetareas' %}">
+          <i class="fas fa-eraser text-danger me-2"></i> Limpiar Filtro
+        </a>
+      </div>
+    </div>
+  </div>
 
-        
-            <a type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#searchModal" href="#">FILTRAR</a>
-            <a class="dropdown-item" href="{% url 'exportar_a_excel_proceso' %}?{{ request.GET.urlencode }}">Exportar a
-              Excel</a>
-            <a class="dropdown-item" href="{% url 'gestiondetareas' %}">Limpiar Filtro</a>
-            </ul>
+  <!-- Modal de Filtros -->
+  <div class="modal fade" id="searchModal" tabindex="-1" aria-labelledby="searchModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content shadow-lg rounded-3">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title" id="searchModalLabel"><i class="fas fa-filter me-2"></i> Filtrar Insumos</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <form method="get">
+          <div class="modal-body">
+            {{ filtered_proceso.form.as_p }}
           </div>
-
-
-          <br>
-          &nbsp;
-
-      
-          <div class="modal fade" id="searchModal" tabindex="-1" role="dialog" aria-labelledby="searchModalLabel"
-            aria-hidden="true">
-            <div class="modal-dialog" role="document">
-              <div class="modal-content">
-                <div class="modal-header">
-                  <h5 class="modal-title" id="searchModalLabel">Filtrar Insumos</h5>
-                  <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
-                  
-                    <span aria-hidden="true">&times;</span>
-                  </button>
-                  <form method="get">
-                    {{ filtered_proceso.form.as_p }}
-                    </div>
-                    <br>
-                    <div class="form-row">
-                      <div class="form-group col-md-6">
-                        <button type="submit" class="btn btn-success">Filtrar</button>
-                      </div>
-  
-  
-                    </div>
-                  </form>
-                </div>
-                
-                
-              </div>
-            </div>
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-success">
+              <i class="fas fa-search me-1"></i> Aplicar Filtro
+            </button>
           </div>
-     
-        <br>
-        &nbsp;
+        </form>
+      </div>
+    </div>
+  </div>
 
-
-
-      </td>
-      <div>
-
-      
-        <table class="table table-striped table-hover table-responsive" style="overflow-x: auto;">
-          <thead>
+  <!-- Tabla de Insumos -->
+  <div class="card shadow-sm border-0 rounded-4">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-striped table-hover align-middle">
+          <thead class="table-light text-center">
             <tr>
-              <th>Insumo/Maquinaria</th>
-              <th>FECHA</th>
-       
-            
-              
-              <th>ESTADO</th>
-              <th>ASIGNADO</th>
-
-
-              <th>PRESUPUESTO</th>
-              <th>OBSERVACIÓN</th>
-
-
-
-              
-             
-              {% if request.user.user_type == 'superuser' or request.user.user_type == 'admin' or request.user.user_type == 'colaborador' %}
-             
-              <th>CREADO POR</th>
+              <th class="text-start"><i class="fas fa-tools me-2"></i>Insumo/Maquinaria</th>
+              <th><i class="fas fa-calendar-alt me-2"></i>Fecha</th>
+              <th><i class="fas fa-tasks me-2"></i>Estado</th>
+              <th class="text-start"><i class="fas fa-user-check me-2"></i>Asignado</th>
+              <th class="text-end"><i class="fas fa-dollar-sign me-2"></i>Presupuesto</th>
+              <th class="text-end"><i class="fas fa-hashtag me-2"></i>Cantidad</th>
+              <th class="text-start"><i class="fas fa-map-marker-alt me-2"></i>Ubicación</th>
+              <th class="text-start"><i class="fas fa-truck me-2"></i>Proveedor</th>
+              <th class="text-start"><i class="fas fa-dollar-sign me-2"></i>Total</th>
+              <th class="text-start"><i class="fas fa-comment-dots me-2"></i>Observación</th>
+              {% if request.user.user_type in 'superuser admin colaborador' %}
+              <th class="text-start"><i class="fas fa-user-tie me-2"></i>Creado por</th>
               {% endif %}
-
-              <th>Opciones</th>
-
-
+              <th class="text-center"><i class="fas fa-cogs me-2"></i>Opciones</th>
             </tr>
           </thead>
           <tbody>
             {% for p in proceso_page_obj %}
             <tr>
-              <td data-label="Insumo/Maquinaria">
-                <i class="fas fa-tools" style="color: #007BFF; margin-right: 5px;"></i>
-                <strong style="color: #007BFF;">{{ p.trabajo }}</strong>
-            </td>
-            <td data-label="Fecha Compra">{{ p.fecha_compra }}</td>
-              
-                <td data-label="Estado">{{ p.estado }}</td>
-                <td data-label="Asignado">
-                  <i class="fas fa-user-check" style="color: #28a745; margin-right: 5px;"></i>
-                  <strong style="color: #28a745;">{{ p.asignado }}</strong>
+              <td class="text-start" data-label="Insumo/Maquinaria"><strong class="text-primary">{{ p.trabajo|default_if_none:"-" }}</strong></td>
+              <td data-label="Fecha">{{ p.fecha_compra|date:"d/m/Y" }}</td>
+              <td class="text-center" data-label="Estado">
+                <span class="badge bg-info text-dark px-3 py-2">{{ p.estado|default_if_none:"-" }}</span>
               </td>
-                <td data-label="Presupuesto">${{ p.presupuesto|floatformat:"-2" }}</td>
-                <td data-label="Observación">{{ p.observacion }}</td>
-                {% if request.user.user_type == 'superuser' or request.user.user_type == 'admin' or request.user.user_type == 'colaborador' %}
-                    
-                <td data-label="Creado Por">{{ p.created_by }}</td>
-                {% endif %}
-                <td class="action-buttons">
-                  <a href="{% url 'modificartarea' p.id %}" class="btn btn-warning" title="Modificar">
-                      <i class="fas fa-edit"></i> 
+              <td class="text-start" data-label="Asignado">{{ p.asignado|default_if_none:"-" }}</td>
+              <td class="text-end" data-label="Presupuesto">${{ p.presupuesto|floatformat:"2" }}</td>
+              <td class="text-end" data-label="Cantidad">{{ p.cantidad|default_if_none:"-" }}</td>
+              <td class="text-start" data-label="Ubicación">{{ p.ubicacion|default_if_none:"-" }}</td>
+              <td class="text-start" data-label="Proveedor">{{ p.proveedor|default_if_none:"-" }}</td>
+              <td class="text-start" data-label="Total">${{ p.total|default_if_none:"-" }}</td>
+              <td class="text-start" data-label="Observación">{{ p.observacion|default_if_none:"-" }}</td>
+              {% if request.user.user_type in 'superuser admin colaborador' %}
+              <td class="text-start" data-label="Creado por">{{ p.created_by }}</td>
+              {% endif %}
+              <td class="text-center" data-label="Opciones">
+                <div class="d-flex justify-content-center gap-2">
+                  <!-- Botón Modificar -->
+                  <a href="{% url 'modificartarea' p.id %}" class="btn btn-warning btn-sm d-flex align-items-center"
+                    title="Modificar">
+                    <i class="fas fa-edit me-1"></i> <span class="d-none d-md-inline">Modificar</span>
                   </a>
-            
-                  <br>
-                  <a href="#" onclick="eliminarProceso({{ p.id }})" class="btn btn-danger" title="Eliminar">
-                      <i class="fas fa-trash"></i> 
-                  </a>
-                </td>
-              
 
+                  <!-- Botón Eliminar -->
+                  <a href="#" onclick="eliminarProceso({{ p.id }})"
+                    class="btn btn-danger btn-sm d-flex align-items-center" title="Eliminar">
+                    <i class="fas fa-trash me-1"></i> <span class="d-none d-md-inline">Eliminar</span>
+                  </a>
+                </div>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="12" class="text-center py-4">
+                <i class="fas fa-exclamation-circle text-muted me-2"></i>
+                No se encontraron registros.
+              </td>
             </tr>
             {% endfor %}
-        </tbody>
+          </tbody>
         </table>
       </div>
     </div>
   </div>
-  <br>
 
-  <div class="d-flex justify-content-center" class="pagination ">
-    <span class="step-links">
-      {% if proceso_page_obj.has_previous %}
-      <a href="{% my_url 1 'page' request.GET.urlencode %}">&laquo; Primera Página</a>
-      <a href="{% my_url proceso_page_obj.previous_page_number 'page' request.GET.urlencode %}">Anterior</a>
-      {% endif %}
-
-      <span class="current">
-        Página {{ proceso_page_obj.number }} de {{ proceso_page_obj.paginator.num_pages }}.
-      </span>
-
-      {% if proceso_page_obj.has_next %}
-      <a href="{% my_url proceso_page_obj.next_page_number 'page' request.GET.urlencode %}">Siguiente</a>
-      <a href="{% my_url proceso_page_obj.paginator.num_pages 'page' request.GET.urlencode %}">Última Página
-      </a>
-      {% endif %}
-    </span>
+  <!-- Gráfico de Presupuesto Total -->
+  <div class="card shadow-sm border-0 rounded-4 mt-4 p-3">
+    <h5 class="fw-bold text-primary mb-3"><i class="fas fa-chart-line me-2"></i> Presupuesto Total vs Total Real</h5>
+    <div style="width: 100%; overflow-x: auto;">
+      <canvas id="presupuestoChart"></canvas>
+    </div>
   </div>
 
+  <!-- Gráfico de Cantidad de Trabajos -->
+  <div class="card shadow-sm border-0 rounded-4 mt-4 p-3">
+    <h5 class="fw-bold text-primary mb-3"><i class="fas fa-chart-bar me-2"></i> Cantidad de Trabajos por Tipo</h5>
+    <div style="width: 100%; overflow-x: auto;">
+      <canvas id="trabajoChart"></canvas>
+    </div>
+  </div>
 
+  <!-- Paginación -->
+  <div class="d-flex justify-content-center mt-4">
+    <nav>
+      <ul class="pagination pagination-rounded">
+        {% if proceso_page_obj.has_previous %}
+        <li class="page-item">
+          <a class="page-link" href="{% my_url 1 'page' request.GET.urlencode %}">&laquo; Primera</a>
+        </li>
+        <li class="page-item">
+          <a class="page-link"
+            href="{% my_url proceso_page_obj.previous_page_number 'page' request.GET.urlencode %}">Anterior</a>
+        </li>
+        {% endif %}
 
+        <li class="page-item disabled">
+          <span class="page-link">
+            Página {{ proceso_page_obj.number }} de {{ proceso_page_obj.paginator.num_pages }}
+          </span>
+        </li>
 
+        {% if proceso_page_obj.has_next %}
+        <li class="page-item">
+          <a class="page-link"
+            href="{% my_url proceso_page_obj.next_page_number 'page' request.GET.urlencode %}">Siguiente</a>
+        </li>
+        <li class="page-item">
+          <a class="page-link"
+            href="{% my_url proceso_page_obj.paginator.num_pages 'page' request.GET.urlencode %}">Última &raquo;</a>
+        </li>
+        {% endif %}
+      </ul>
+    </nav>
+  </div>
 
 </div>
+
+<script>
+  // ==============================
+  // Presupuesto Total (ya lo tienes)
+  // ==============================
+  let totalPresupuesto = 0;
+  let totalReal = 0;
+
+    {% for p in proceso_page_obj %}
+      totalPresupuesto += {{ p.presupuesto|default:0 }};
+      totalReal += {{ p.total|default:0 }};
+    {% endfor %}
+
+  const ctx = document.getElementById('presupuestoChart').getContext('2d');
+  const presupuestoChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Presupuesto vs Total Real'],
+      datasets: [
+        {
+          label: 'Presupuesto Total ($)',
+          data: [totalPresupuesto],
+          backgroundColor: 'rgba(54, 162, 235, 0.6)',
+          borderColor: 'rgba(54, 162, 235, 1)',
+          borderWidth: 1
+        },
+        {
+          label: 'Total Real ($)',
+          data: [totalReal],
+          backgroundColor: 'rgba(75, 192, 192, 0.6)',
+          borderColor: 'rgba(75, 192, 192, 1)',
+          borderWidth: 1
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: true } },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: { callback: value => '$' + value.toLocaleString() }
+        }
+      }
+    }
+  });
+
+  // ==============================
+  // Cantidad de Trabajos
+  // ==============================
+  // Generamos un array con todos los trabajos desde Django
+  const trabajosList = [
+    {% for p in proceso_page_obj %}
+  "{{ p.trabajo|escapejs }}",
+    {% endfor %}
+  ];
+
+  // Contabilizamos ocurrencias en JS
+  const trabajos = {};
+  trabajosList.forEach(t => {
+    trabajos[t] = (trabajos[t] || 0) + 1;
+  });
+
+  const trabajoLabels = Object.keys(trabajos);
+  const trabajoCounts = Object.values(trabajos);
+
+  const ctx2 = document.getElementById('trabajoChart').getContext('2d');
+  const trabajoChart = new Chart(ctx2, {
+    type: 'bar',
+    data: {
+      labels: trabajoLabels,
+      datasets: [{
+        label: 'Cantidad',
+        data: trabajoCounts,
+        backgroundColor: 'rgba(255, 159, 64, 0.6)',
+        borderColor: 'rgba(255, 159, 64, 1)',
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: { stepSize: 1 }
+        }
+      }
+    }
+  });
+</script>
+
 {% endblock %}

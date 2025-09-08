@@ -8,7 +8,7 @@ urlpatterns = [
     
 
 
-    
+    path("mi-perfil/", views.mi_perfil, name="mi_perfil"),
     path('gestiondetareas/', views.ProcesoList, name = "gestiondetareas"),
     path('api/', views.ProcesoListAPIView.as_view(),),
     path('exportar_proceso/', views.ExportToExcelViewProceso.as_view(), name='exportar_a_excel_proceso'),
@@ -34,8 +34,8 @@ urlpatterns = [
     #zona especifica
     path('gestion_zona/', views.gestion_zona, name = "gestion_zona"),
     path('agregarsector/', views.agregar_sector, name = "agregarsector"),
-    path('agregar_huerto/<int:sector_id>/', views.agregar_huerto, name='agregar_huerto'),
-    path('agregar_huerto_ss/', views.agregar_huerto_sin_sector, name='agregar_huerto_ss'),
+
+    path('agregar_huerto_ss/', views.agregar_huerto_poligono, name='agregar_huerto_ss'),
     path('agregar_lote_sh/', views.agregar_lote_sin_huerto, name='agregar_lote_sh'),
     path('agregar_lote/', views.agregar_lote, name='agregar_lote'),
     path('modificarsector/<id>', views.modificarsector, name = "modificarsector"),
@@ -44,6 +44,7 @@ urlpatterns = [
     #eliminar huerto
     path('eliminarhuerto/<int:id>/', views.eliminarhuerto, name = "eliminarhuerto"),
     path('modificarlote/<id>', views.modificarlote, name = "modificarlote"),
+
 
       
 

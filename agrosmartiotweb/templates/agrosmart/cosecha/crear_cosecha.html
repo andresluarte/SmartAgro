@@ -1,11 +1,12 @@
 {% extends 'agrosmart/base.html' %}
 {% block contenido %}
+{% load crispy_forms_tags %}
 
 <div class="container mt-5">
     <h3>Crear Nueva Cosecha</h3>
     <form method="POST">
       {% csrf_token %}
-      {{ form.as_p }}
+      {{form | crispy}}
       <button type="submit" class="btn btn-primary">Guardar Cosecha</button>
     </form>
     <a href="{% url 'cosechas_list' %}" class="btn btn-secondary mt-3">Volver a la lista</a>

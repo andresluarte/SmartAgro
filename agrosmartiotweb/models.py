@@ -42,6 +42,11 @@ class Sector(models.Model):
         return self.nombre
     
   # If using PostgreSQL
+from django.db import models
+from django.conf import settings
+
+
+
 
 class SectorPoligon(models.Model):
     nombre = models.CharField(max_length=100)
@@ -55,11 +60,11 @@ class SectorPoligon(models.Model):
 
 
 
-    
 
 class Huerto(MPTTModel):
     nombre = models.CharField(max_length=50)
     sector = models.ForeignKey(Sector, on_delete=models.CASCADE)
+    coordenadas = models.TextField(null=True, blank=True)
     parent = TreeForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='lotes')
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)  # Actualiza aquí
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='huerto_creado', on_delete=models.CASCADE)
@@ -67,6 +72,16 @@ class Huerto(MPTTModel):
     class MPTTMeta:
         order_insertion_by = ['nombre']
 
+    def __str__(self):
+        return self.nombre
+
+class HuertoPoligon(models.Model):
+    nombre = models.CharField(max_length=100)
+    coordenadas = models.TextField()
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)  # Relación con el usuario  # Almacenaremos las coordenadas como un JSON (array de objetos LatLng)  # For Django 3.1+, JSONField is available by default
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, related_name='HuertoPoligon_creado', on_delete=models.CASCADE
+    )
     def __str__(self):
         return self.nombre
 
@@ -122,10 +137,27 @@ class Trabajador(models.Model):
     class Meta:
         ordering = ['-fecha_ingreso']
 
-from django.db import models
-from django.conf import settings
+class Empresario(models.Model):
+    nombre = models.CharField(max_length=255)  # Nombre del empresario
+    razon_social = models.CharField(max_length=255, null=True, blank=True)  # Nombre legal de la empresa
+    rut = models.CharField(max_length=20, unique=True)  # RUT o identificación tributaria
+    giro = models.CharField(max_length=255, null=True, blank=True)  # Giro de la empresa
+    correo = models.EmailField(max_length=255, null=True, blank=True)  # Correo de contacto
+    telefono = models.CharField(max_length=20, null=True, blank=True)  # Teléfono de contacto
+    direccion = models.CharField(max_length=255, null=True, blank=True)
 
-from django.db import models
+
+    # Relación con usuarios
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)  # Actualiza aquí
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='empresario_creado', on_delete=models.CASCADE)
+
+    # Auditoría
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    fecha_actualizacion = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.nombre} - {self.rut}"
+
 
 class InsumoOpciones(models.Model):
     OPCIONES_TRABAJO = [
@@ -211,10 +243,21 @@ class Procesos(models.Model):
     )
     estado = models.CharField(max_length=15, choices=ESTADO_CHOICES, default='Por Realizar', editable=True)
     asignado = models.ForeignKey(Trabajador, on_delete=models.CASCADE, max_length=50, null=True)
+
+    cantidad = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    ubicacion = models.ForeignKey(Sector, on_delete=models.CASCADE, max_length=50, null=True, blank=True)
+    proveedor = models.ForeignKey(
+        Empresario,
+        on_delete=models.SET_NULL,  # Si eliminas el proveedor, no borra el proceso
+        null=True,
+        blank=True,
+        related_name='provedores_procesos'  # Nombre para la relación inversa
+    )
     fecha_creacion = models.DateField(default=datetime.date.today, editable=False)
     hora_creacion = models.TimeField(default=datetime.datetime.now().time(), editable=False)
     presupuesto = models.DecimalField(max_digits=10, decimal_places=2, null=False, blank=False)
     observacion = models.CharField(max_length=100, null=True, blank=True)
+    total = models.DecimalField(max_digits=12, decimal_places=2, editable=True, null=True, blank=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)  # Actualiza aquí
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='procesos_creados', on_delete=models.CASCADE)
     def __str__(self):
@@ -295,7 +338,7 @@ class Jornada(models.Model):
         ('En Proceso', 'En Proceso'),
         ('Terminado', 'Terminado'),
     )
-    estado = models.CharField(max_length=15, choices=ESTADO_CHOICES, default='Por Realizar', editable=True)
+    estado = models.CharField(max_length=15, choices=ESTADO_CHOICES, default='En Proceso', editable=True)
     es_jornada_por_trato = models.BooleanField(default=False) 
 
     nombre_tarea_1 = models.CharField(max_length=100,choices=MANODEOBRACHOICES)
@@ -715,3 +758,5 @@ class FinanzasPorMes(models.Model):
         finanzas.total_gasto_final = (total_jornadas or 0) + (total_jornadas_por_trato or 0)
 
         finanzas.save()
+
+

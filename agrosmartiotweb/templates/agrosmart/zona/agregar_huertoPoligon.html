@@ -1,0 +1,369 @@
+{% extends 'agrosmart/base.html' %}
+
+{% block contenido %}
+{% load static %}
+{% load crispy_forms_tags %}
+<br>
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Crear Huerto</title>
+    <style>
+        #map {
+            height: 400px;
+            width: 100%;
+        }
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 1px solid transparent;
+            border-radius: 4px;
+        }
+        .alert-success {
+            color: #3c763d;
+            background-color: #dff0d8;
+            border-color: #d6e9c6;
+        }
+        .alert-danger {
+            color: #a94442;
+            background-color: #f2dede;
+            border-color: #ebccd1;
+        }
+        .form-control {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+
+<body>
+  <h3>Crear Huertos</h3>
+
+  <!-- Mostrar mensajes -->
+  {% if mensaje %}
+    <div class="alert alert-success">
+        {{ mensaje }}
+    </div>
+  {% endif %}
+
+  <form action="" autocomplete="off" class="formularioproceso" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    
+    <br>
+    {{ form.as_p }}
+    <p><strong>Instrucciones:</strong> Selecciona un sector para navegar automáticamente en el mapa, luego dibuja el polígono del huerto. Las coordenadas se guardarán automáticamente.</p>
+    <div id="map"></div>
+    
+    <br>
+    <br>
+
+    <div>
+      <input type="reset" value="Cancelar" class="btn btn-danger" onclick="resetForm()">
+      &nbsp;
+      <button type="submit" name="action" value="" class="btn btn-secondary">Agregar Huerto</button>
+    </div>
+  </form>
+
+  <br>
+  <a href="{% url 'gestion_zona' %}">
+    <button class="btn btn-success">Volver Atrás</button>
+  </a>
+
+  <script>
+    let map;
+    let drawingManager;
+    let selectedShape;
+    let allPolygons = [];
+    let sectores = [];
+    
+    function initMap() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    const userLocation = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude,
+                    };
+                    initializeMap(userLocation, 16);
+                },
+                function() {
+                    const defaultLocation = { lat: -33.4489, lng: -70.6693 };
+                    initializeMap(defaultLocation, 10);
+                    console.log("No se pudo obtener la ubicación. Usando ubicación por defecto.");
+                }
+            );
+        } else {
+            const defaultLocation = { lat: -33.4489, lng: -70.6693 };
+            initializeMap(defaultLocation, 10);
+            console.log("Navegador no soporta geolocalización. Usando ubicación por defecto.");
+        }
+    }
+    
+    function initializeMap(centerLocation, zoomLevel) {
+        map = new google.maps.Map(document.getElementById("map"), {
+            center: centerLocation,
+            zoom: zoomLevel,
+            mapTypeId: google.maps.MapTypeId.SATELLITE,
+        });
+
+        drawingManager = new google.maps.drawing.DrawingManager({
+            drawingMode: google.maps.drawing.OverlayType.POLYGON,
+            drawingControl: true,
+            drawingControlOptions: {
+                position: google.maps.ControlPosition.TOP_CENTER,
+                drawingModes: ['polygon'],
+            },
+            polygonOptions: {
+                editable: true,
+                draggable: true,
+                strokeColor: '#0066CC',
+                strokeOpacity: 0.8,
+                strokeWeight: 3,
+                fillColor: '#0066CC',
+                fillOpacity: 0.35,
+            },
+        });
+
+        drawingManager.setMap(map);
+
+        // Cargar sectores y huertos existentes
+        try {
+            sectores = {{ sectores_json|safe }};
+            const huertos = {{ huertos_json|safe }};
+            loadExistingHuertos(huertos);
+            loadExistingSectores(sectores);
+            setupSectorNavigation();
+        } catch (e) {
+            console.error("Error cargando datos existentes:", e);
+        }
+
+        // Evento para capturar el polígono dibujado
+        google.maps.event.addListener(drawingManager, 'overlaycomplete', function(event) {
+            if (event.type === 'polygon') {
+                if (selectedShape) {
+                    selectedShape.setMap(null);
+                }
+                
+                selectedShape = event.overlay;
+
+                const path = selectedShape.getPath();
+                const bounds = new google.maps.LatLngBounds();
+                path.forEach(coord => {
+                    bounds.extend(coord);
+                });
+                map.fitBounds(bounds);
+
+                updateCoordinatesField();
+
+                google.maps.event.addListener(selectedShape.getPath(), 'set_at', updateCoordinatesField);
+                google.maps.event.addListener(selectedShape.getPath(), 'insert_at', updateCoordinatesField);
+                google.maps.event.addListener(selectedShape.getPath(), 'remove_at', updateCoordinatesField);
+
+                console.log("Polígono creado y coordenadas guardadas");
+            }
+        });
+    }
+
+    function loadExistingSectores(sectores) {
+        if (!sectores || sectores.length === 0) {
+            console.log("No hay sectores existentes para cargar");
+            return;
+        }
+
+        sectores.forEach(sector => {
+            try {
+                let coordinates;
+                if (typeof sector.fields.coordenadas === 'string') {
+                    coordinates = JSON.parse(sector.fields.coordenadas);
+                } else {
+                    coordinates = sector.fields.coordenadas;
+                }
+
+                const polygon = new google.maps.Polygon({
+                    paths: coordinates,
+                    editable: false,
+                    draggable: false,
+                    strokeColor: '#FFD700', // Color dorado para sectores
+                    strokeOpacity: 0.8,
+                    strokeWeight: 2,
+                    fillColor: '#FFD700',
+                    fillOpacity: 0.2,
+                    map: map,
+                });
+
+                allPolygons.push(polygon);
+
+                const infoWindow = new google.maps.InfoWindow({
+                    content: `<strong>Sector: ${sector.fields.nombre}</strong>`,
+                });
+
+                google.maps.event.addListener(polygon, 'click', function(event) {
+                    infoWindow.setPosition(event.latLng);
+                    infoWindow.open(map);
+                });
+
+            } catch (error) {
+                console.error("Error cargando sector:", sector.fields.nombre, error);
+            }
+        });
+    }
+
+    function loadExistingHuertos(huertos) {
+        if (!huertos || huertos.length === 0) {
+            console.log("No hay huertos existentes para cargar");
+            return;
+        }
+
+        huertos.forEach(huerto => {
+            try {
+                let coordinates;
+                if (typeof huerto.fields.coordenadas === 'string') {
+                    coordinates = JSON.parse(huerto.fields.coordenadas);
+                } else {
+                    coordinates = huerto.fields.coordenadas;
+                }
+
+                const polygon = new google.maps.Polygon({
+                    paths: coordinates,
+                    editable: false,
+                    draggable: false,
+                    strokeColor: '#FF0000',
+                    strokeOpacity: 0.8,
+                    strokeWeight: 2,
+                    fillColor: '#FF0000',
+                    fillOpacity: 0.35,
+                    map: map,
+                });
+
+                allPolygons.push(polygon);
+
+                const infoWindow = new google.maps.InfoWindow({
+                    content: `<strong>Huerto: ${huerto.fields.nombre}</strong>`,
+                });
+
+                google.maps.event.addListener(polygon, 'click', function(event) {
+                    infoWindow.setPosition(event.latLng);
+                    infoWindow.open(map);
+                });
+
+            } catch (error) {
+                console.error("Error cargando huerto:", huerto.fields.nombre, error);
+            }
+        });
+    }
+
+    function setupSectorNavigation() {
+        const sectorSelect = document.getElementById('id_sector');
+        if (sectorSelect) {
+            sectorSelect.addEventListener('change', function() {
+                const selectedSectorId = this.value;
+                if (selectedSectorId && sectores.length > 0) {
+                    navigateToSector(selectedSectorId);
+                }
+            });
+        }
+    }
+
+    function navigateToSector(sectorId) {
+        const sector = sectores.find(s => s.pk == sectorId);
+        if (sector) {
+            try {
+                let coordinates;
+                if (typeof sector.fields.coordenadas === 'string') {
+                    coordinates = JSON.parse(sector.fields.coordenadas);
+                } else {
+                    coordinates = sector.fields.coordenadas;
+                }
+
+                if (coordinates && coordinates.length > 0) {
+                    // Crear bounds del sector para centrar el mapa
+                    const bounds = new google.maps.LatLngBounds();
+                    coordinates.forEach(coord => {
+                        bounds.extend(new google.maps.LatLng(coord.lat, coord.lng));
+                    });
+                    
+                    map.fitBounds(bounds);
+                    
+                    // Agregar un poco más de zoom
+                    setTimeout(() => {
+                        const currentZoom = map.getZoom();
+                        map.setZoom(Math.min(currentZoom + 1, 18));
+                    }, 500);
+
+                    console.log(`Navegando al sector: ${sector.fields.nombre}`);
+                }
+            } catch (error) {
+                console.error("Error navegando al sector:", error);
+            }
+        }
+    }
+
+    function updateCoordinatesField() {
+        if (selectedShape && selectedShape.getPath) {
+            const coordinates = selectedShape.getPath().getArray().map(coord => ({
+                lat: coord.lat(),
+                lng: coord.lng(),
+            }));
+            
+            const coordenadsInput = document.getElementById('id_coordenadas');
+            if (coordenadsInput) {
+                coordenadsInput.value = JSON.stringify(coordinates);
+                console.log("Coordenadas actualizadas:", coordinates);
+            } else {
+                console.error("Campo de coordenadas no encontrado");
+            }
+        }
+    }
+
+    function resetForm() {
+        if (selectedShape) {
+            selectedShape.setMap(null);
+            selectedShape = null;
+        }
+        
+        const coordenadsInput = document.getElementById('id_coordenadas');
+        if (coordenadsInput) {
+            coordenadsInput.value = '';
+        }
+        
+        console.log("Formulario reiniciado");
+    }
+
+    // Validación antes del envío
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.querySelector('.formularioproceso');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                const coordenadsInput = document.getElementById('id_coordenadas');
+                if (!coordenadsInput || !coordenadsInput.value.trim()) {
+                    e.preventDefault();
+                    alert('Por favor, dibuja un polígono en el mapa antes de enviar el formulario.');
+                    return false;
+                }
+                
+                try {
+                    const coords = JSON.parse(coordenadsInput.value);
+                    if (!coords || coords.length < 3) {
+                        e.preventDefault();
+                        alert('El polígono debe tener al menos 3 puntos.');
+                        return false;
+                    }
+                } catch (error) {
+                    e.preventDefault();
+                    alert('Error en las coordenadas del polígono. Por favor, dibújalo nuevamente.');
+                    return false;
+                }
+            });
+        }
+    });
+  </script>
+
+  <script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCjbW87C925l3sO_RbuMiUevmeypwkgak0&callback=initMap&libraries=drawing">
+  </script>
+
+</body>
+</html>
+
+{% endblock %}

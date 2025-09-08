@@ -41,6 +41,11 @@
         .bx-controls {
             display: none; /* Oculta los controles si no los necesitas */
         }
+        .logo-real img {
+        height: 90px;     /* alto fijo */
+        width: auto;      /* mantiene proporción */
+        }
+
 
         
     </style>
@@ -60,108 +65,108 @@
 
     <header id="header">
         <div class="logo-real">
-            <img src="{% static 'app/img/logosmartagro2.jpg' %}" alt="img" class="logo-img">
+            <img src="{% static 'app/img/logosmartagro2.jpg' %}" >
 
         </div>
+        
+
 
         
-        <div id="menuButton" class="container-fluid" onclick="toggleNav()">
+        <!-- Botón hamburguesa -->
+        <div id="menuButton" class="menu-button" onclick="openNav()">
             <div class="bar1"></div>
             <div class="bar2"></div>
             <div class="bar3"></div>
         </div>
-        
+
+
+       
+
+
+        <!-- Carga de FontAwesome -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
         <div id="mySidenav" class="sidenav" style="width: 0;">
-            <a href="javascript:void(0)" class="closebtn" onclick="toggleNav()">&times;</a> 
-            {% if user.is_authenticated %}
-            <a class="bold-link">Usuario: {{ user.username }}</a> 
+            <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
             
-            {% if empresa %}
-                <div class="empresa-info">
-                    {% if empresa.logo %}
-                        <img src="{{ empresa.logo.url }}" alt="Logo Empresa" class="logo-small">
-                    {% else %}
-                        
-                    {% endif %}
-                    <span class="empresa-nombre">Fundo: {{ empresa.nombre }}</span>
-                </div>
-            {% endif %}
-           
-            <a href="{% url 'home' %}">Inicio</a>
-     
+            {% if user.is_authenticated %}
+            <!-- Usuario -->
+            
+            <a href="{% url 'mi_perfil' %}" class="bold-link">
+                <i class="fa-solid fa-user"></i> {{ user.username }}
+            </a>
+
+            <!-- Inicio -->
+            <a href="{% url 'home' %}"><i class="fa-solid fa-house"></i></a>
+
+            <!-- Sensores -->
             <span onclick="toggleSubMenu('sensoresSubMenu')">
-                <a href="#" style=font-weight:aria-label class="bold-link ">Sensores</a>
+                <a href="#"><i class="fa-solid fa-microchip"></i></a>
             </span>
             <div id="sensoresSubMenu" class="submenu" style="display: none;">
-                <a href="{% url 'tiemporeal' %}">Datos Aire</a>
-                <a href="{% url 'tiemporealsoil' %}">Datos Suelo</a>
-                <a href="{% url 'informes' %}">Informes</a>
-                <a href="{% url 'informesporsensor' %}">Informes por sensor</a>
+                <a href="{% url 'tiemporeal' %}"><i class="fa-solid fa-temperature-half"></i> Aire</a>
+                <a href="{% url 'tiemporealsoil' %}"><i class="fa-solid fa-seedling"></i> Suelo</a>
+                <a href="{% url 'informes' %}"><i class="fa-solid fa-chart-line"></i> Informes</a>
+                <a href="{% url 'informesporsensor' %}"><i class="fa-solid fa-filter"></i> Por Sensor</a>
             </div>
 
+            <!-- Gestión -->
             <span onclick="toggleSubMenu('gestionSubMenu')">
-                <a href="#" class="bold-link">Gestión</a>
+                <a href="#"><i class="fa-solid fa-briefcase"></i></a>
             </span>
             <div id="gestionSubMenu" class="submenu" style="display: none;">
-                <a href="{% url 'gestiondetareas' %}">Insumos y Maquinaria</a>
-                <a href="{% url 'gestion_jornadas' %}">Jornadas</a>
-                <a href="{% url 'gestion_finanzas' %}">Finanzas</a>
-                <a href="{% url 'gestion_zona' %}">Sectores</a>
-                <a href="{% url 'cuadernodecampo' %}">Cuaderno de Campo</a>
-                <a href="{% url 'cosechas_list' %}">Cosechas</a>
-            
-                {% if request.user.is_authenticated %}
-                    {% if request.user.user_type == 'superuser' %}
-                        <a href="{% url 'register' %}">Registrar Usuario</a>
-                        <a href="{% url 'list_all_users' %}">Usuarios</a>
-                    {% elif request.user.user_type == 'admin' or request.user.user_type == 'colaborador' %}
-                        <a href="{% url 'gestiondetrabajadores' %}">Trabajadores</a>
-                    {% endif %}
-                    
-                    {% if request.user.user_type == 'admin' %}
-                        <a href="{% url 'register_colaborador' %}">Registrar Colaborador</a>
-                        <a href="{% url 'list_colaboradores' %}">Mis Colaboradores</a>
-                    {% endif %}
+                <a href="{% url 'gestiondetareas' %}"><i class="fa-solid fa-tractor"></i> Insumos</a>
+                <a href="{% url 'gestion_jornadas' %}"><i class="fa-solid fa-calendar-check"></i> Jornadas</a>
+                <a href="{% url 'gestion_finanzas' %}"><i class="fa-solid fa-dollar-sign"></i> Finanzas</a>
+                <a href="{% url 'gestion_zona' %}"><i class="fa-solid fa-map"></i> Sectores</a>
+                <a href="{% url 'cuadernodecampo' %}"><i class="fa-solid fa-book"></i> Campo</a>
+                <a href="{% url 'cosechas_list' %}"><i class="fa-solid fa-apple-whole"></i> Cosechas</a>
+
+                {% if request.user.user_type == 'superuser' %}
+                    <a href="{% url 'register' %}"><i class="fa-solid fa-user-plus"></i> Registrar</a>
+                    <a href="{% url 'list_all_users' %}"><i class="fa-solid fa-users"></i> Usuarios</a>
+                {% elif request.user.user_type == 'admin' or request.user.user_type == 'colaborador' %}
+                    <a href="{% url 'gestiondetrabajadores' %}"><i class="fa-solid fa-people-group"></i> Trabajadores</a>
+                {% endif %}
+
+                {% if request.user.user_type == 'admin' %}
+                    <a href="{% url 'register_colaborador' %}"><i class="fa-solid fa-user-pen"></i> Colaborador</a>
+                    <a href="{% url 'list_colaboradores' %}"><i class="fa-solid fa-user-friends"></i> Mis Colaboradores</a>
                 {% endif %}
             </div>
-            
 
-            <span class="bold-link" onclick="toggleSubMenu('EmpresaSubMenu')">
-                <a href="#" class="bold-link">Empresa</a>
+            <!-- Empresa -->
+            <span onclick="toggleSubMenu('EmpresaSubMenu')">
+                <a href="#"><i class="fa-solid fa-building"></i></a>
             </span>
             <div id="EmpresaSubMenu" class="submenu" style="display: none;">
                 {% if request.user.user_type == 'admin' %}
-                <a href="{% url 'agregar_empresa' %}">Registrar Empresa o Fundo</a>
-                <a href="{% url 'lista_empresas' %}">Empresa/Fundo</a>
+                <a href="{% url 'agregar_empresa' %}"><i class="fa-solid fa-circle-plus"></i> Registrar Empresa</a>
+                <a href="{% url 'lista_empresas' %}"><i class="fa-solid fa-list"></i> Empresas</a>
                 {% elif request.user.user_type == 'colaborador' %}
-                <a href="{% url 'lista_empresas' %}">Empresas</a>
+                <a href="{% url 'lista_empresas' %}"><i class="fa-solid fa-list"></i> Empresas</a>
                 {% endif %}
             </div>
 
-            <a href="{% url 'user_logout' %}">Cerrar Sesión</a>
-            <br>
-            <br>
-            <br>
-            <br>
-            <br>
-            <br>
-            <br>
-            <br>
-            <br><br>
-            <br>
-            <br>
-            <br>
+            <!-- Cerrar Sesión -->
+            <a href="{% url 'user_logout' %}"><i class="fa-solid fa-right-from-bracket"></i></a>
 
+            <!-- Logo de Empresa -->
+            {% if empresa %}
+                {% if empresa.logo %}
+                    <div class="logo-small" style="background-image: url('{{ empresa.logo.url }}');"></div>
+                {% endif %}
+                <a class="bold-link">{{ empresa.nombre }}</a>
+            {% endif %}
 
-            
             {{user.user_type}}
             
             {% else %}
-            <a href="{% url 'login' %}">Iniciar Sesión</a>
-            <a href="{% url 'ayuda' %}">Contacto</a>
+            <a href="{% url 'login' %}"><i class="fa-solid fa-user-lock"></i></a>
+            <a href="{% url 'ayuda' %}"><i class="fa-solid fa-circle-info"></i></a>
             {% endif %}
         </div>
+
     </header>
 
 
@@ -180,31 +185,44 @@
     <br>
 
     <footer id="footer">
-        <div class="container">
-            
-            <div class="footer-icons">
-                <a href="https://www.linkedin.com" style="margin: 0 10px;">
-                    <img class="img" src="{% static 'app/img/icono-linkedin.png' %}" alt="LinkedIn" style="width: 40px; height: 40px;">
-                </a>
-                <a href="https://mail.google.com" style="margin: 0 10px;">
-                    <img class="img" src="{% static 'app/img/icono-gmail.png' %}" alt="Gmail" style="width: 40px; height: 40px;">
-                </a>
-                <a href="https://mail.google.com" style="margin: 0 10px;">
-                    <img class="img" src="{% static 'app/img/icon-whatsapp.png' %}" alt="Whatsapp" style="width: 40px; height: 40px;">
-                </a>
-                <a href="https://mail.google.com" style="margin: 0 10px;">
-                    <img class="img" src="{% static 'app/img/icon-instragram.png' %}" alt="Instagram" style="width: 40px; height: 40px;">
-                </a>
-                {% if user.is_authenticated %}
-                <a href="{% url 'user_logout' %}" style="margin: 0 10px;">
-                    <img class="img" src="{% static 'app/img/logout.png' %}" alt="Instagram" style="width: 40px; height: 40px;">
-                </a>
-                {% else %}
-                {% endif %}
-                
-            </div>
+    <div class="container">
+        <div class="footer-icons" style="text-align: center; margin-bottom: 20px;">
+            <a href="https://www.linkedin.com" style="margin: 0 10px;">
+                <img class="img" src="{% static 'app/img/icono-linkedin.png' %}" alt="LinkedIn" style="width: 40px; height: 40px;">
+            </a>
+            <a href="https://mail.google.com" style="margin: 0 10px;">
+                <img class="img" src="{% static 'app/img/icono-gmail.png' %}" alt="Gmail" style="width: 40px; height: 40px;">
+            </a>
+            <a href="https://mail.google.com" style="margin: 0 10px;">
+                <img class="img" src="{% static 'app/img/icon-whatsapp.png' %}" alt="Whatsapp" style="width: 40px; height: 40px;">
+            </a>
+            <a href="https://mail.google.com" style="margin: 0 10px;">
+                <img class="img" src="{% static 'app/img/icon-instragram.png' %}" alt="Instagram" style="width: 40px; height: 40px;">
+            </a>
+            {% if user.is_authenticated %}
+            <a href="{% url 'user_logout' %}" style="margin: 0 10px;">
+                <img class="img" src="{% static 'app/img/logout.png' %}" alt="Logout" style="width: 40px; height: 40px;">
+            </a>
+            {% endif %}
         </div>
-    </footer>
+
+        <!-- Sección de "Desarrollado por" con mejor estilo -->
+        <div class="footer-developed" style="text-align: center; margin-top: 20px;">
+            <span style="font-weight: bold; font-size: 16px; color: #333;">Desarrollado por</span>
+            <br>
+            <img src="{% static 'app/img/logo1.png' %}" alt="Logo" style="
+                height: 90px;
+                margin-top: 10px;
+                display: inline-block;
+                transition: transform 0.3s, box-shadow 0.3s;
+                border-radius: 8px;
+            " 
+            onmouseover="this.style.transform='scale(1.1)'; this.style.boxShadow='0 4px 15px rgba(0,0,0,0.3)';" 
+            onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none';">
+        </div>
+    </div>
+</footer>
+
 
 
 
@@ -214,6 +232,9 @@
 
 
     <script>
+      
+
+
         function toggleSubMenu(subMenuId) {
             var subMenu = document.getElementById(subMenuId);
             if (subMenu.style.display === "block") {
@@ -223,13 +244,29 @@
             }
         }
 
-        function closeNav() {
-            document.getElementById("mySidenav").style.width = "0";
-        }
+        const sidenav = document.getElementById("mySidenav");
+        const menuBtn = document.getElementById("menuButton");
 
         function openNav() {
-            document.getElementById("mySidenav").style.width = "200px";
+            sidenav.style.width = "250px";
+            if (menuBtn) menuBtn.style.display = "none"; // ocultar botón hamburguesa
         }
+
+        function closeNav() {
+            sidenav.style.width = "0";
+            if (menuBtn) menuBtn.style.display = "block"; // volver a mostrar botón
+        }
+
+        // (Opcional) Toggle robusto por si lo necesitas en otros sitios:
+        function toggleNav() {
+            const w = window.getComputedStyle(sidenav).width;
+            if (w !== "0px") {
+                closeNav();
+            } else {
+                openNav();
+            }
+        }
+
     </script>
 
     <script>

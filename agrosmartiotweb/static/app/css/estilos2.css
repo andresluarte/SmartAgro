@@ -1,41 +1,4 @@
-/* Estilos para el menú lateral */
-.sidenav {
-    height: 100%;
-    width: 0;
-    position: fixed;
-    top: 0;
-    left: 0; /* Cambiamos "left" por "right" para posicionarlo a la derecha */
-    background-color: #caffca;
-    overflow-x: hidden;
-    transition: 0.3s;
-    z-index: 9999; /* Asegúrate de que esté al frente de todos los demás elementos */
-}
 
-.sidenav p {
-    padding: 30px 25px;
-    text-decoration: none;
-    font-size: 15px;
-    color: #000000;
-    display: block;
-    transition: 0.3s;
-}
-.sidenav a {
-    padding: 10px 25px;
-    text-decoration: none;
-    font-size: 18px;
-    color: #818181;
-    display: block;
-    transition: 0.3s;
-}
-
-
-.sidenav a:hover {
-    color: #76d6ff;
-}
-.sidebar-nav {
-    width: 0; /* change this value to set the width of the sidebar when it's hidden */
-}   
-/* Estilos para el botón de hamburguesa */
 .container-fluid {
     cursor: pointer;
     position: fixed;
@@ -45,7 +8,7 @@
 .bar1, .bar2, .bar3 {
     width: 35px;
     height: 5px;
-    background-color: #333;
+    background-color: #0026ff;
     margin: 6px 0;
     transition: 0.4s;
 }
@@ -66,11 +29,12 @@
 .logo-real {
 	display:contents;
 	align-items: center;
+    height: 90px;
  }
  
  /* Otras propiedades de estilo para el logo */
 .logo-img {
-	height: 100px;
+	height: 50;
 	
     
 
@@ -87,6 +51,10 @@
 }
 
 .menu-button {
+    position: fixed;   /* siempre visible */
+    top: 20px;         /* distancia desde arriba */
+    right: 20px;       /* lo lleva a la derecha */
+    z-index: 1001;     /* encima del menú */
     cursor: pointer;
 }
 
@@ -97,6 +65,7 @@
     margin: 6px 0;
     transition: 0.4s;
 }
+
 
 
 .logo12 {

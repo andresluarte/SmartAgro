@@ -36,7 +36,10 @@ def home(request):
     # Renderizar el template con la empresa en el contexto
     return render(request, 'agrosmart/home.html', {'empresa': empresa})
 
-
+@login_required(login_url="my_login")  # asegúrate de tener un login configurado
+def mi_perfil(request):
+    user = request.user
+    return render(request, "agrosmart/usuarios/miperfil.html", {"user": user})
 
 
 
@@ -166,16 +169,17 @@ class ExportToExcelViewTrabajador(View):
     def get(self, request):
         queryset = self.get_queryset(request)
         dataset = TrabajadorResource().export(queryset=queryset)
-        response = HttpResponse(dataset.xls, content_type='application/vnd.ms-excel')
+        response = HttpResponse(dataset.export('xls'), content_type='application/vnd.ms-excel')
         response['Content-Disposition'] = 'attachment; filename="trabajadores.xls"'
         return response
 
     def post(self, request):
         queryset = self.get_queryset(request)
         dataset = TrabajadorResource().export(queryset=queryset)
-        response = HttpResponse(dataset.xls, content_type='application/vnd.ms-excel')
+        response = HttpResponse(dataset.export('xls'), content_type='application/vnd.ms-excel')
         response['Content-Disposition'] = 'attachment; filename="trabajadores.xls"'
         return response
+
 
 class ProcesoListAPIView(ListAPIView):
     queryset = Procesos.objects.all()
@@ -206,7 +210,7 @@ def agregartarea(request):
             data = {'form': formulario}
     else:
         data = {'form': ProcesoForm(user=request.user)}
-     
+   
     return render(request, 'agrosmart/agregartarea.html', data)
 
 #Modificar Tarea (proceso)
@@ -448,6 +452,9 @@ def jornada_por_trato_list(request):
 
 from django.http import HttpResponseForbidden
 
+from django.contrib.auth import get_user_model
+User = get_user_model()
+
 @login_required(login_url="my_login")
 def TrabajadorList(request):
     # Limitar acceso solo a superuser, admin y colaborador
@@ -456,10 +463,15 @@ def TrabajadorList(request):
     
     if request.user.is_superuser:
         queryset = Trabajador.objects.all()
+
     elif request.user.user_type == 'admin':
-        queryset = Trabajador.objects.filter(created_by=request.user)
+        # Obtener los colaboradores creados por este admin
+        colaboradores = User.objects.filter(created_by=request.user, user_type='colaborador')
+        # Filtrar trabajadores creados por el admin o sus colaboradores
+        queryset = Trabajador.objects.filter(created_by__in=list(colaboradores) + [request.user])
+
     elif request.user.user_type == 'colaborador':
-        # Colaborador puede ver sus propios trabajadores y los de su admin
+        # Colaborador puede ver sus propios trabajadores y los creados por su admin
         admin_user = request.user.created_by
         queryset = Trabajador.objects.filter(created_by__in=[request.user, admin_user])
     else:
@@ -467,17 +479,48 @@ def TrabajadorList(request):
 
     filtered_trabajador = TrabajadorFilter(request.GET, queryset=queryset)
 
-    context = {
-        'filtered_trabajador': filtered_trabajador,
-    }
-
     paginated_filtered_trabajador = Paginator(filtered_trabajador.qs, 8)
     page_number = request.GET.get('page')
     trabajador_page_obj = paginated_filtered_trabajador.get_page(page_number)
 
-    context['trabajador_page_obj'] = trabajador_page_obj
+    context = {
+        'filtered_trabajador': filtered_trabajador,
+        'trabajador_page_obj': trabajador_page_obj
+    }
 
-    return render(request, 'agrosmart/trabajadores/gestiondetrabajadores.html', context=context)
+    return render(request, 'agrosmart/trabajadores/gestiondetrabajadores.html', context)
+
+
+from django.db.models import Count
+from django.db.models.functions import TruncMonth
+from django.utils.timezone import localtime
+from .models import Trabajador
+
+def dashboard_trabajadores(request):
+    # Agrupar por mes de ingreso
+    ingresos = (
+        Trabajador.objects
+        .annotate(mes=TruncMonth('fecha_ingreso'))
+        .values('mes')
+        .annotate(total=Count('id'))
+        .order_by('mes')
+    )
+
+    # Transformar datos para el gráfico
+    labels = []
+    data = []
+
+    for item in ingresos:
+        mes_formateado = localtime(item['mes']).strftime("%b %Y")  # Ej: "Ene 2025"
+        labels.append(mes_formateado)
+        data.append(item['total'])
+
+    context = {
+        'labels': labels,
+        'data': data,
+    }
+    return render(request, 'tu_template.html', context)
+
 
 from django.core.paginator import Paginator
 from .models import Procesos
@@ -514,7 +557,7 @@ def ProcesoList(request):
 
     # Paginación
     context = {'filtered_proceso': filtered_proceso}
-    paginated_filtered_proceso = Paginator(queryset, 4)  # Número de elementos por página
+    paginated_filtered_proceso = Paginator(queryset, 8)  # Número de elementos por página
     page_number = request.GET.get('page')
     proceso_page_obj = paginated_filtered_proceso.get_page(page_number)
     context['proceso_page_obj'] = proceso_page_obj
@@ -523,43 +566,66 @@ def ProcesoList(request):
 
 
 
+import json
+from decimal import Decimal
+from django.shortcuts import render
+class DecimalEncoder(json.JSONEncoder):
+    """Encoder personalizado para manejar objetos Decimal"""
+    def default(self, obj):
+        if isinstance(obj, Decimal):
+            return float(obj)
+        return super(DecimalEncoder, self).default(obj)
 
-
-from django.core.serializers import serialize
-@login_required(login_url="my_login")
 def gestion_zona(request):
-    if request.user.is_superuser:
-        sectores = Sector.objects.all()
-    elif request.user.user_type == 'admin':
-        sectores = Sector.objects.filter(user=request.user)
-    elif request.user.user_type == 'colaborador':
-        # Colaborador puede ver sus propias zonas y las del admin que lo creó
-        admin_user = request.user.created_by
-        sectores = Sector.objects.filter(user__in=[request.user, admin_user])
-    elif request.user.user_type == 'agricultor':
-        # Agricultor puede ver sus propias zonas y las del colaborador y admin que lo creó
-        colaborador_user = request.user.created_by
-        admin_user = colaborador_user.created_by if colaborador_user else None
-        sectores = Sector.objects.filter(user__in=[request.user, colaborador_user, admin_user])
-    else:
-        sectores = Sector.objects.none()
-
-    # Serializa los sectores a JSON para usarlos en el frontend
-    sectores_json = serialize('json', sectores)
-
-    # Asegúrate de pasar tanto 'sectores_json' como 'sectores' al contexto
+    # Obtener sectores del usuario
+    sectores = Sector.objects.filter(user=request.user)
+    
+    # Serializar sectores para JavaScript
+    sectores_data = []
+    for sector in sectores:
+        sectores_data.append({
+            'pk': sector.pk,
+            'fields': {
+                'nombre': sector.nombre,
+                'coordenadas': sector.coordenadas,
+                'descripcion': sector.descripcion if hasattr(sector, 'descripcion') else '',
+                'superficie': float(sector.superficie) if sector.superficie else None,
+                'tipo_uso': sector.tipo_uso if hasattr(sector, 'tipo_uso') else '',
+                'estado': sector.estado if hasattr(sector, 'estado') else '',
+            }
+        })
+    
+    # Obtener huertos del usuario
+    huertos = Huerto.objects.filter(user=request.user).select_related('sector')
+    
+    # Serializar huertos para JavaScript
+    huertos_data = []
+    for huerto in huertos:
+        huertos_data.append({
+            'pk': huerto.pk,
+            'fields': {
+                'nombre': huerto.nombre,
+                'coordenadas': huerto.coordenadas,
+                'sector_nombre': huerto.sector.nombre if huerto.sector else None,
+                'sector_id': huerto.sector.id if huerto.sector else None,
+            }
+        })
+    
+    # Convertir a JSON para el template usando el encoder personalizado
+    sectores_json = json.dumps(sectores_data, cls=DecimalEncoder)
+    huertos_json = json.dumps(huertos_data, cls=DecimalEncoder)
+    
     context = {
-        'sectores_json': sectores_json,  # Envía el JSON serializado a la plantilla
-        'sectores': sectores              # Envía la queryset de sectores a la plantilla
+        'sectores': sectores,
+        'sectores_json': sectores_json,
+        'huertos_json': huertos_json,
     }
-
-    return render(request, "agrosmart/zona/gestion_zona.html", context)
-
-
+    
+    return render(request, 'agrosmart/zona/gestion_zona.html', context)
 
 
 from django.shortcuts import render, redirect
-from .forms import SectorForm, HuertoForm, LoteForm
+from .forms import SectorForm, HuertoForm, LoteForm,HuertoPoligonForm
 @login_required(login_url="my_login")
 def agregar_sector(request):
     sectores_json = []  # Inicializa la lista de sectores
@@ -599,12 +665,61 @@ def agregar_sector(request):
         'coordenadas': coordenadas,  # Pasa coordenadas para centrar
     })
 
+def agregar_huerto_poligono(request):
+    if request.method == "POST":
+        form = HuertoPoligonForm(request.POST, user=request.user)
+        if form.is_valid():
+            huerto = form.save(commit=False)
+            huerto.user = request.user
+            huerto.created_by = request.user
+            huerto.save()
+            
+            mensaje = 'Huerto agregado exitosamente.'
+            form = HuertoPoligonForm(user=request.user)
+        else:
+            mensaje = 'Error al agregar el huerto. Verifique los datos.'
+    else:
+        form = HuertoPoligonForm(user=request.user)
+        mensaje = ''
 
-
-
-
-
-
+    # Obtener todos los huertos existentes del usuario
+    huertos = Huerto.objects.filter(user=request.user)
+    
+    # Serializar los huertos para JavaScript
+    huertos_data = []
+    for huerto in huertos:
+        huertos_data.append({
+            'pk': huerto.pk,
+            'fields': {
+                'nombre': huerto.nombre,
+                'coordenadas': huerto.coordenadas
+            }
+        })
+    
+    # Obtener todos los sectores del usuario con sus coordenadas
+    sectores = Sector.objects.filter(user=request.user)
+    sectores_data = []
+    for sector in sectores:
+        sectores_data.append({
+            'pk': sector.pk,
+            'fields': {
+                'nombre': sector.nombre,
+                'coordenadas': sector.coordenadas  # Asumiendo que el modelo Sector tiene coordenadas
+            }
+        })
+    
+    # Convertir a JSON para el template
+    huertos_json = json.dumps(huertos_data)
+    sectores_json = json.dumps(sectores_data)
+    
+    context = {
+        'form': form,
+        'mensaje': mensaje,
+        'huertos_json': huertos_json,
+        'sectores_json': sectores_json,
+    }
+    
+    return render(request, 'agrosmart/zona/agregar_huertoPoligon.html', context)
 
 
 
@@ -994,50 +1109,56 @@ from django.views.decorators.csrf import csrf_exempt
 @csrf_exempt
 def receive_data(request):
     if request.method == 'POST':
-        # Obtener la API Key desde la cabecera 'Authorization'
         api_key = request.headers.get('Authorization')
-        
         if not api_key:
             return JsonResponse({'status': 'error', 'message': 'API Key no proporcionada'}, status=400)
 
-        # Verificar que la API Key sea válida
         sensor = SensorAire.objects.filter(api_key=api_key).first()
         if not sensor:
             return JsonResponse({'status': 'error', 'message': 'API Key inválida'}, status=403)
 
-        # Obtener los datos enviados en la solicitud
         temperature = request.POST.get('temperature')
         humidity = request.POST.get('humidity')
         latitude = request.POST.get('latitude')
         longitude = request.POST.get('longitude')
         fecha_registro = request.POST.get('fecha_registro')
 
-        # Verificar que los datos obligatorios estén presentes
         if not all([temperature, humidity, latitude, longitude, fecha_registro]):
             return JsonResponse({'status': 'error', 'message': 'Datos incompletos'}, status=400)
 
-        # Convertir `fecha_registro` a un objeto datetime
-        try:
-            fecha_registro_dt = datetime.strptime(fecha_registro, '%Y-%m-%d %H:%M:%S')
-        except ValueError:
-            return JsonResponse({'status': 'error', 'message': 'Formato de fecha inválido. Use YYYY-MM-DD HH:MM:SS'}, status=400)
-
-        # Obtener la hora actual
-        ahora = datetime.now()
-
-        # Verificar que `fecha_registro` no sea más de 5 minutos en el futuro
-        
-
-        # Crear una nueva entrada de datos asociada al sensor
         TemperatureHumidityLocation.objects.create(
             temperature=temperature,
             humidity=humidity,
             latitude=latitude,
             longitude=longitude,
             sensor=sensor,
-            fecha_registro=fecha_registro  # Asociar los datos al sensor encontrado por la API Key
+            fecha_registro=fecha_registro
         )
 
+        # Enviar datos por WebSocket
+        data = {
+            'sensor_id': sensor.id,
+            'sensor_name': sensor.name,
+            'temperature': temperature,
+            'humidity': humidity,
+            'latitude': latitude,
+            'longitude': longitude,
+            'timestamp': fecha_registro
+        }
+        channel_layer = get_channel_layer()
+        # Enviar los datos por WebSocket al grupo de sensores
+        if channel_layer is not None:
+            async_to_sync(channel_layer.group_send)(
+                "sensoresaire",
+                {
+                    "type": "sensor_update",
+                    "data": data,
+                }
+            )
+        else:
+            print("Error: channel_layer es None — revisa la configuración de CHANNEL_LAYERS")
+
+        
         return JsonResponse({'status': 'success', 'message': 'Datos recibidos correctamente'})
 
     return JsonResponse({'status': 'error', 'message': 'Método no permitido'}, status=405)
@@ -1092,8 +1213,8 @@ def receive_data_soil(request):
             async_to_sync(channel_layer.group_send)(
                 "sensores",
                 {
-                    "type": "send_sensor_data",
-                    "data": data
+                    "type": "sensor_update",
+                    "data": data,
                 }
             )
         else:
@@ -1136,7 +1257,7 @@ def combined_data_view(request):
     sensor_data = []
     for sensor in sensors:
         # Obtener el dato más reciente basado en fecha_registro
-        latest_data = TemperatureHumidityLocation.objects.filter(sensor=sensor).order_by('-fecha_registro').first()
+        latest_data = TemperatureHumidityLocation.objects.filter(sensor=sensor).order_by('-timestamp').first()
         if latest_data:
             temperature = float(latest_data.temperature)
             humidity = float(latest_data.humidity)

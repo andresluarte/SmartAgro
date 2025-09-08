@@ -2,37 +2,52 @@
 
 {% block contenido %}
 
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Informes por Sensor</title>
-    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-    <style>
-        /* Hacer que los gráficos sean responsivos */
-        .chart-container {
-            width: 100%;
-            max-width: 1000px; /* Limitar el ancho máximo del gráfico */
-            margin: 0 auto;  /* Centrar el gráfico en la pantalla */
-            height: 500px;  /* Ajustar la altura del gráfico */
-        }
+<div class="container py-5">
+    <h3 class="text-center fw-bold mb-5" style="color:#2c3e50;">
+        📊 Informes por Sensor
+    </h3>
 
-        /* Asegurarse de que el gráfico no se deforme en pantallas pequeñas */
-        @media (max-width: 768px) {
-            .chart-container {
-                height: 400px;  /* Reducir la altura en dispositivos más pequeños */
-            }
-        }
-    </style>
-</head>
-<body>
-    <h3>Informes por Sensor</h3>
-
-    {% for chart in charts %}
-        <div class="chart-container">
-            {{ chart|safe }}
+    <div class="row g-4">
+        {% for chart in charts %}
+        <div class="col-lg-6 col-md-12">
+            <div class="card shadow-lg border-0 rounded-4 h-100">
+                <div class="card-header text-white fw-bold"
+                     style="background: linear-gradient(135deg,#34495e,#2c3e50);">
+                    Gráfico {{ forloop.counter }}
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        {{ chart|safe }}
+                    </div>
+                </div>
+            </div>
         </div>
-    {% endfor %}
-</body>
-</html>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Estilos personalizados -->
+<style>
+    .chart-container {
+        width: 100%;
+        max-width: 1000px;
+        margin: 0 auto;
+        height: 450px;
+    }
+
+    @media (max-width: 768px) {
+        .chart-container {
+            height: 350px;
+        }
+    }
+
+    .card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+    }
+</style>
+
 {% endblock %}

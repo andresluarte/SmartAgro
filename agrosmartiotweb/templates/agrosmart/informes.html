@@ -1,138 +1,164 @@
 {% extends 'agrosmart/base.html' %}
 
 {% block contenido %}
+{% load static %}
 
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Informes</title>
-    <style>
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-        }
-        th {
-            background-color: #f4f4f4;
-        }
-    </style>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-</head>
-<body>
-    <br>
-    <h3>Informes de Datos</h3>
-    <br>
-    <br>
-    <h3>Resumen Temperatura y Humedad Aire</h3>
-    <canvas id="tempHumidityChart"></canvas>
-    
-    <h3>Temperatura y Humedad Aire Última Hora</h3>
-    <canvas id="lastHourTempHumidityChart"></canvas>
-<br>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
 
-    <h3>Resumen Temperatura y Humedad del Suelo</h3>
-    <canvas id="soilHumidityChart"></canvas>
-    
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const tempHumidityData = JSON.parse('{{ temp_humidity_data|escapejs }}');
-            const soilData = JSON.parse('{{ soil_data|escapejs }}');
-            const lastHourDataAir = JSON.parse('{{ last_hour_data_air|escapejs }}');
-    
-            // Datos para gráficos de Promedio por Hora de Aire
-            const tempHumidityLabels = tempHumidityData.map(entry => entry.hour);
-            const tempHumidityTemp = tempHumidityData.map(entry => entry.avg_temp);
-            const tempHumidityHum = tempHumidityData.map(entry => entry.avg_humidity);
-    
-            // Datos para gráficos de Promedio por Hora de Suelo
-            const soilLabels = soilData.map(entry => entry.hour);
-            const soilHumidity = soilData.map(entry => entry.avg_humidity_soil);
-            const soilTemperature = soilData.map(entry => entry.avg_temp);
-    
-            // Datos para el gráfico de la última hora
-            const lastHourLabels = lastHourDataAir.map(entry => entry.minute);
-            const lastHourTemp = lastHourDataAir.map(entry => entry.avg_temp_hour);
-            const lastHourHumidity = lastHourDataAir.map(entry => entry.avg_humidity_hour);
-    
-            // Gráfico de Temperatura y Humedad Promedio por Hora (Aire)
-            const tempHumidityChart = new Chart(document.getElementById('tempHumidityChart'), {
-                type: 'line',
-                data: {
-                    labels: tempHumidityLabels,
-                    datasets: [
-                        {
-                            label: 'Temperatura Promedio',
-                            data: tempHumidityTemp,
-                            borderColor: 'rgba(255, 99, 132, 1)',
-                            backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                            fill: true
-                        },
-                        {
-                            label: 'Humedad Promedio',
-                            data: tempHumidityHum,
-                            borderColor: 'rgba(54, 162, 235, 1)',
-                            backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                            fill: true
-                        }
-                    ]
-                }
-            });
-    
-            // Gráfico de Humedad y Temperatura del Suelo
-            const soilHumidityChart = new Chart(document.getElementById('soilHumidityChart'), {
-                type: 'line',
-                data: {
-                    labels: soilLabels,
-                    datasets: [
-                        {
-                            label: 'Humedad del Suelo Promedio',
-                            data: soilHumidity,
-                            borderColor: 'rgba(75, 192, 192, 1)',
-                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                            fill: true
-                        },
-                        {
-                            label: 'Temperatura Promedio',
-                            data: soilTemperature,
-                            borderColor: 'rgba(54, 162, 235, 1)',
-                            backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                            fill: true
-                        }
-                    ]
-                }
-            });
-    
-            // Gráfico de Temperatura y Humedad del Aire de la Última Hora
-            const lastHourTempHumidityChart = new Chart(document.getElementById('lastHourTempHumidityChart'), {
-                type: 'line',
-                data: {
-                    labels: lastHourLabels,
-                    datasets: [
-                        {
-                            label: 'Temperatura Última Hora',
-                            data: lastHourTemp,
-                            borderColor: 'rgba(255, 206, 86, 1)',
-                            backgroundColor: 'rgba(255, 206, 86, 0.2)',
-                            fill: true
-                        },
-                        {
-                            label: 'Humedad Última Hora',
-                            data: lastHourHumidity,
-                            borderColor: 'rgba(153, 102, 255, 1)',
-                            backgroundColor: 'rgba(153, 102, 255, 0.2)',
-                            fill: true
-                        }
-                    ]
-                }
-            });
-        });
-    </script>
-</body>
-</html>
+<style>
+    body {
+        background-color: #f7f8fa;
+    }
+    .card {
+        border-radius: 15px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .card-header {
+        font-weight: bold;
+        font-size: 1.1rem;
+    }
+    .chart-container {
+        position: relative;
+        width: 100%;
+        height: 300px;
+    }
+    @media (min-width: 992px) {
+        .chart-container { height: 350px; }
+    }
+</style>
+
+<div class="container my-5">
+    <h3 class="text-center mb-4">📊 Dashboard de Sensores</h3>
+
+    <!-- Filtro de rango de fechas -->
+    <div class="row justify-content-center mb-4 g-2">
+        <div class="col-md-5 col-sm-12 text-center">
+            <input type="date" id="startDate" class="form-control" value="{{ today_date }}">
+        </div>
+        <div class="col-md-5 col-sm-12 text-center">
+            <input type="date" id="endDate" class="form-control" value="{{ today_date }}">
+        </div>
+    </div>
+
+    <!-- Gráficos -->
+    <div class="row g-4">
+        <div class="col-lg-6 col-md-12">
+            <div class="card">
+                <div class="card-header bg-gradient-primary text-dark text-center">
+                    Temperatura y Humedad Aire
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="tempHumidityChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 col-md-12">
+            <div class="card">
+                <div class="card-header bg-gradient-success text-dark text-center">
+                    Humedad y Temperatura del Suelo
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="soilHumidityChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-gradient-warning text-dark text-center">
+                    Temperatura y Humedad Aire Última Hora
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="lastHourTempHumidityChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const rawTempHumidityData = JSON.parse('{{ temp_humidity_data|escapejs }}');
+    const rawSoilData = JSON.parse('{{ soil_data|escapejs }}');
+    const rawLastHourData = JSON.parse('{{ last_hour_data_air|escapejs }}');
+
+    const tempHumidityCtx = document.getElementById('tempHumidityChart').getContext('2d');
+    const soilHumidityCtx = document.getElementById('soilHumidityChart').getContext('2d');
+    const lastHourCtx = document.getElementById('lastHourTempHumidityChart').getContext('2d');
+
+    let tempHumidityChart, soilHumidityChart, lastHourChart;
+
+    function createCharts() {
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+
+        // Filtrar datos por rango de fechas
+        const filterByRange = (data) => data.filter(d => (!startDate || d.date >= startDate) && (!endDate || d.date <= endDate));
+
+        const tempHumidityData = filterByRange(rawTempHumidityData);
+        const soilData = filterByRange(rawSoilData);
+        const lastHourData = filterByRange(rawLastHourData);
+
+        const tempLabels = tempHumidityData.map(e => e.hour);
+        const tempValues = tempHumidityData.map(e => e.avg_temp);
+        const humValues = tempHumidityData.map(e => e.avg_humidity);
+
+        const soilLabels = soilData.map(e => e.hour);
+        const soilHumValues = soilData.map(e => e.avg_humidity_soil);
+        const soilTempValues = soilData.map(e => e.avg_temp);
+
+        const lastHourLabels = lastHourData.map(e => e.minute);
+        const lastHourTempValues = lastHourData.map(e => e.avg_temp_hour);
+        const lastHourHumValues = lastHourData.map(e => e.avg_humidity_hour);
+
+        const options = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'top', labels: { boxWidth: 20, padding: 10 } },
+                tooltip: { mode: 'index', intersect: false }
+            },
+            interaction: { mode: 'index', intersect: false },
+            scales: {
+                x: { grid: { color: '#eee' } },
+                y: { beginAtZero: true, grid: { color: '#eee' } }
+            }
+        };
+
+        const createLineChart = (ctx, labels, datasets) => {
+            return new Chart(ctx, { type: 'line', data: { labels: labels, datasets: datasets }, options: options });
+        };
+
+        if(tempHumidityChart) tempHumidityChart.destroy();
+        tempHumidityChart = createLineChart(tempHumidityCtx, tempLabels, [
+            { label: 'Temperatura (°C)', data: tempValues, borderColor: '#FF6384', backgroundColor: 'rgba(255,99,132,0.2)', tension: 0.4, fill: true },
+            { label: 'Humedad (%)', data: humValues, borderColor: '#36A2EB', backgroundColor: 'rgba(54,162,235,0.2)', tension: 0.4, fill: true }
+        ]);
+
+        if(soilHumidityChart) soilHumidityChart.destroy();
+        soilHumidityChart = createLineChart(soilHumidityCtx, soilLabels, [
+            { label: 'Humedad Suelo (%)', data: soilHumValues, borderColor: '#4BC0C0', backgroundColor: 'rgba(75,192,192,0.2)', tension: 0.4, fill: true },
+            { label: 'Temperatura (°C)', data: soilTempValues, borderColor: '#9966FF', backgroundColor: 'rgba(153,102,255,0.2)', tension: 0.4, fill: true }
+        ]);
+
+        if(lastHourChart) lastHourChart.destroy();
+        lastHourChart = createLineChart(lastHourCtx, lastHourLabels, [
+            { label: 'Temperatura Última Hora (°C)', data: lastHourTempValues, borderColor: '#FFCE56', backgroundColor: 'rgba(255,206,86,0.2)', tension: 0.4, fill: true },
+            { label: 'Humedad Última Hora (%)', data: lastHourHumValues, borderColor: '#9966FF', backgroundColor: 'rgba(153,102,255,0.2)', tension: 0.4, fill: true }
+        ]);
+    }
+
+    createCharts();
+    document.getElementById('startDate').addEventListener('change', createCharts);
+    document.getElementById('endDate').addEventListener('change', createCharts);
+});
+</script>
 {% endblock %}

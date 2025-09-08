@@ -8,6 +8,25 @@
 <br>
 <br>
 <br>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const estadoField = document.getElementById("id_estado");  // Django genera id_estado
+    const totalField = document.getElementById("id_total");
+
+    function toggleTotal() {
+        if (estadoField.value === "Terminado") {
+            totalField.removeAttribute("readonly");  // habilita el campo
+        } else {
+            totalField.setAttribute("readonly", "readonly");  // deshabilita el campo
+            totalField.value = "";  // opcional: limpia valor
+        }
+    }
+
+    // Llamar al cargar la página y al cambiar el estado
+    toggleTotal();
+    estadoField.addEventListener("change", toggleTotal);
+});
+</script>
 
 
 

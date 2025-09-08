@@ -12,8 +12,8 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 
 import os
 from pathlib import Path
-import django_heroku
-import pytz
+#import django_heroku
+#import pytz
 from django.contrib.messages import constants as message_constants
 AUTH_USER_MODEL = 'agrosmartiotweb.CustomUser'
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -47,8 +47,11 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'agrosmartiotweb', 'agrosmartiot',
-    'django.contrib.humanize', 'crispy_forms', "django_filters", "rest_framework", "import_export", "mptt","channels",
+    'django.contrib.humanize', 'crispy_forms', "django_filters", "rest_framework", "import_export", "mptt","channels","bootstrap4",
+    'crispy_bootstrap4', 
 ]
+
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap4"
 
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
 ASGI_APPLICATION = 'agrosmartiot.asgi.application'
@@ -91,8 +94,8 @@ WSGI_APPLICATION = 'agrosmartiot.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
-import dj_database_url
-import os
+#import dj_database_url
+#import os
 
 # DATABASES = {
 #     'default': {
@@ -100,14 +103,22 @@ import os
 #         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),  # Ubicación del archivo de la base de datos
 #     }
 # }
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer",  # local
+        # Para Redis:
+        # "BACKEND": "channels_redis.core.RedisChannelLayer",
+        # "CONFIG": {"hosts": [("127.0.0.1", 6379)]},
+    },
+}
 
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'de2racke075i6q',
-        'USER': 'udhkbqf94vj8sj',
-        'PASSWORD': 'pffb7a290903a2f5066a12b53f03ac65a9fac2699696d580b93290a3734d68bf0',  # Reemplaza 'tu_contraseña' con la contraseña de tu usuario PostgreSQL
-        'HOST': 'cd5gks8n4kb20g.cluster-czrs8kj4isg7.us-east-1.rds.amazonaws.com',
+        'NAME': 'smartagroiot',
+        'USER': 'postgres',
+        'PASSWORD': 'postgres',
+        'HOST': 'localhost',
         'PORT': '5432',
     }
 }
@@ -163,5 +174,5 @@ CSRF_COOKIE_SECURE = False     # Asegúrate de que sea False en desarrollo
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 
 ALLOWED_HOSTS = []
-django_heroku.settings(locals())
+#django_heroku.settings(locals())
 CSRF_TRUSTED_ORIGINS = ['https://web-production-3711.up.railway.app']

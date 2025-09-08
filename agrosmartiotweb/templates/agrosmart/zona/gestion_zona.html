@@ -3,10 +3,125 @@
 {% block contenido %}
 {% load static %}
 {% load agrosmartiotweb %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 
 <!DOCTYPE html>
 <html lang="es">
-<script>
+<head>
+  <meta charset="UTF-8">
+  <title>Gestión de Sectores</title>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+
+    h3 {
+      font-weight: 600;
+      color: #2d3436;
+      margin-bottom: 20px;
+    }
+
+    .card {
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    }
+
+    #map {
+      height: 500px;
+      width: 100%;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+
+    .table-container {
+      overflow-x: auto;
+      margin: 15px 0;
+    }
+
+    .responsive-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .responsive-table th {
+      background: #f8f9fa;
+      font-weight: 600;
+      text-align: left;
+      padding: 12px;
+    }
+
+    .responsive-table td {
+      padding: 12px;
+      border-top: 1px solid #eee;
+    }
+
+    .badge {
+      border-radius: 12px;
+      padding: 5px 12px;
+      font-size: 0.85rem;
+    }
+
+    .badge-sector {
+      background: #ff6b6b;
+      color: white;
+    }
+    .badge-huerto {
+      background: #339af0;
+      color: white;
+    }
+    .badge-lote {
+      background: #51cf66;
+      color: white;
+    }
+
+    .action-btn {
+      border-radius: 50%;
+      padding: 8px 10px;
+      margin-left: 6px;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+      transition: 0.2s;
+    }
+
+    .action-btn:hover {
+      transform: scale(1.1);
+    }
+
+    .map-legend {
+      background: white;
+      padding: 12px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      margin-bottom: 15px;
+      display: inline-block;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      margin: 5px 0;
+    }
+
+    .legend-color {
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+      margin-right: 10px;
+      border: 2px solid #333;
+    }
+
+    .legend-sector {
+      background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1);
+    }
+
+    .legend-huerto {
+      background: #1e90ff;
+    }
+
+  </style>
+  <script>
   function eliminarSector(id) {
     Swal.fire({
       "title": "¿Estas Seguro?",
@@ -16,17 +131,7 @@
       "cancelButtonText": "No, Cancelar",
       "confirmButtonText": "Si, Eliminar",
       "reverseButtons": true,
-      "confirmButtonColor": "dc3545",
-
-
-
-
-
-
-
-
-
-
+      "confirmButtonColor": "#FF0000",
     })
       .then(function (result) {
         if (result.isConfirmed) {
@@ -43,17 +148,7 @@
       "cancelButtonText": "No, Cancelar",
       "confirmButtonText": "Si, Eliminar",
       "reverseButtons": true,
-      "confirmButtonColor": "dc3545",
-
-
-
-
-
-
-
-
-
-
+      "confirmButtonColor": "#FF0000",
     })
       .then(function (result) {
         if (result.isConfirmed) {
@@ -63,346 +158,243 @@
   }
 
 </script>
-<div class="zonas">
-  <div class="card">
-    <div class="card-body">
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-      <h3> Visualización de Sectores </h3>
-
-
-      <head>
-        <title>Gestión de Sectores</title>
-        <div class="btn-group justify-content-end">
-          <button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+</head>
+<body>
+  <br>
+  <div class="contenido">
+    <div class="card p-4">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3><i class="bi bi-geo-alt-fill me-2 text-danger"></i> Visualización de Sectores y Huertos</h3>
+        <div class="btn-group">
+          <button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown">
             Opciones
           </button>
-
-          <br>
-
-          <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
-
-            <a href="{% url 'agregarsector' %}" class="btn btn-secondary">Agregar Sector</a>
-
-            <a href="{% url 'agregar_huerto_ss' %}" class="btn btn-secondary">Agregar Huerto</a>
-
-            <a href="{% url 'agregar_lote' %}" class="btn btn-secondary">&nbsp;&nbsp;&nbsp;Agregar Lote</a>
-
-
-
-
-
-
-
+          <div class="dropdown-menu dropdown-menu-end">
+            <a href="{% url 'agregarsector' %}" class="dropdown-item">➕ Agregar Sector</a>
+            <a href="{% url 'agregar_huerto_ss' %}" class="dropdown-item">🌱 Agregar Huerto</a>
+            <a href="{% url 'agregar_lote' %}" class="dropdown-item">🌾 Agregar Lote</a>
           </div>
-
-
         </div>
+      </div>
 
+      <!-- Leyenda del mapa -->
+      <div class="map-legend">
+        <h6><i class="bi bi-info-circle me-2"></i>Leyenda</h6>
+        <div class="legend-item">
+          <div class="legend-color legend-sector"></div>
+          <span>Sectores (colores variados)</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color legend-huerto"></div>
+          <span>Huertos (azul)</span>
+        </div>
+      </div>
 
-      </head>
-      <style>
-        body {
-          font-family: Arial, sans-serif;
-        }
+      <!-- Mapa -->
+      <div id="map"></div>
 
-        h1 {
-          color: #333;
-        }
+      <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCjbW87C925l3sO_RbuMiUevmeypwkgak0&callback=initMap&libraries=drawing" async defer></script>
+      <script>
+        const sectores = {{ sectores_json|safe }};
+        const huertos = {{ huertos_json|safe }};
+        let map;
+        let infoWindow;
 
-        .recuadro {
-          border: 1px solid #ccc;
-          padding: 10px;
-          margin: 10px;
-        }
+        function initMap() {
+          map = new google.maps.Map(document.getElementById("map"), {
+            center: { lat: -34.397, lng: 150.644 },
+            zoom: 8,
+            mapTypeId: google.maps.MapTypeId.HYBRID, 
+            tilt: 45,
+          });
 
-        ul {
-          list-style: none;
-          margin: 0;
-          padding: 0;
-        }
+          infoWindow = new google.maps.InfoWindow();
+          const bounds = new google.maps.LatLngBounds();
 
-        ul ul {
-          margin-left: 20px;
-          padding-left: 10px;
-          border-left: 1px solid #ccc;
-        }
+          // Cargar sectores con colores aleatorios
+          sectores.forEach((sector) => {
+            const path = JSON.parse(sector.fields.coordenadas);
+            const color = getRandomColor();
 
-        li {
-          margin-bottom: 5px;
-        }
-
-        .nivel {
-          font-weight: bold;
-          margin-bottom: 10px;
-        }
-
-        .sector {
-          color: #FF5733;
-        }
-
-        .huerto {
-          color: #33A0FF;
-        }
-
-        .lote {
-          color: #33FF63;
-        }
-      </style>
-      <style>
-        #map {
-          height: 500px;
-          width: 100%;
-        }
-      </style>
-
-      <body>
-        <br>
-        <br>
-
-
-
-        <!-- Mapa -->
-        <div id="map"></div>
-
-        <br>
-        <script
-          src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBh_1Lg0WxMjjXni4A6XQmsixeZ2gMG2mc&callback=initMap&libraries=drawing"
-          async defer>
-          </script>
-        <script>
-          // Obtener los sectores pasados desde la vista
-          const sectores = {{ sectores_json| safe }};
-
-          let map;
-          let infoWindow;
-
-          function initMap() {
-            // Inicializamos el mapa y centramos temporalmente en una latitud y longitud inicial
-            map = new google.maps.Map(document.getElementById("map"), {
-              center: { lat: -34.397, lng: 150.644 },
-              zoom: 8,
-              mapTypeId: google.maps.MapTypeId.SATELLITE, 
+            const sectorPolygon = new google.maps.Polygon({
+              paths: path,
+              strokeColor: color,
+              strokeOpacity: 0.9,
+              strokeWeight: 3,
+              fillColor: color,
+              fillOpacity: 0.25,
+              map: map,
+              zIndex: 1 // Sectores en el fondo
             });
 
-            // InfoWindow para mostrar el nombre del polígono
-            infoWindow = new google.maps.InfoWindow();
+            // Agregar coordenadas al bounds
+            path.forEach(coord => {
+              bounds.extend(new google.maps.LatLng(coord.lat, coord.lng));
+            });
 
-            // Objeto para ajustar los límites del mapa y mostrar todos los polígonos
-            const bounds = new google.maps.LatLngBounds();
+            // Event listener para sectores
+            google.maps.event.addListener(sectorPolygon, 'click', function (event) {
+              const content = `
+                <div style="max-width: 200px;">
+                  <h6 style="color: #ff6b6b; margin-bottom: 8px;">
+                    <i class="bi bi-geo-alt-fill"></i> SECTOR
+                  </h6>
+                  <strong>${sector.fields.nombre}</strong>
+                  ${sector.fields.descripcion ? '<br><small>' + sector.fields.descripcion + '</small>' : ''}
+                  ${sector.fields.superficie ? '<br><small>Superficie: ' + sector.fields.superficie + ' ha</small>' : ''}
+                </div>
+              `;
+              infoWindow.setContent(content);
+              infoWindow.setPosition(event.latLng);
+              infoWindow.open(map);
+            });
+          });
 
-            // Itera sobre los sectores y dibuja los polígonos en el mapa
-            sectores.forEach((sector, index) => {
-              const path = JSON.parse(sector.fields.coordenadas); // Asegúrate de que "coordenadas" sea el campo correcto
-
-              // Generar un color aleatorio o definir colores preestablecidos
-              const color = getRandomColor();
-
-              // Crear el polígono
-              const poligono = new google.maps.Polygon({
+          // Cargar huertos con color azul específico
+          huertos.forEach((huerto) => {
+            try {
+              const path = JSON.parse(huerto.fields.coordenadas);
+              
+              const huertoPolygon = new google.maps.Polygon({
                 paths: path,
-                strokeColor: color,
-                strokeOpacity: 0.8,
+                strokeColor: '#1e90ff', // Azul más intenso para el borde
+                strokeOpacity: 1.0,
                 strokeWeight: 2,
-                fillColor: color,
-                fillOpacity: 0.35,
+                fillColor: '#1e90ff', // Azul para el relleno
+                fillOpacity: 0.4,
                 map: map,
+                zIndex: 2 // Huertos encima de sectores
               });
 
-              // Expandir los límites del mapa para incluir cada vértice del polígono
+              // Agregar coordenadas al bounds
               path.forEach(coord => {
                 bounds.extend(new google.maps.LatLng(coord.lat, coord.lng));
               });
 
-              // Agregar un evento click para mostrar el nombre del sector
-              google.maps.event.addListener(poligono, 'click', function () {
-                infoWindow.setContent(sector.fields.nombre); // Asegúrate de que "nombre" sea el campo correcto
-                infoWindow.setPosition(path[0]); // Usa la primera coordenada como posición para el infoWindow
+              // Event listener para huertos
+              google.maps.event.addListener(huertoPolygon, 'click', function (event) {
+                const content = `
+                  <div style="max-width: 200px;">
+                    <h6 style="color: #1e90ff; margin-bottom: 8px;">
+                      <i class="bi bi-flower1"></i> HUERTO
+                    </h6>
+                    <strong>${huerto.fields.nombre}</strong>
+                    <br><small>Sector: ${huerto.fields.sector_nombre || 'No especificado'}</small>
+                  </div>
+                `;
+                infoWindow.setContent(content);
+                infoWindow.setPosition(event.latLng);
                 infoWindow.open(map);
               });
-            });
 
-            // Ajusta el mapa para mostrar todos los sectores
-            map.fitBounds(bounds);
-          }
-
-          // Función para generar colores aleatorios en formato hexadecimal
-          function getRandomColor() {
-            const letters = '0123456789ABCDEF';
-            let color = '#';
-            for (let i = 0; i < 6; i++) {
-              color += letters[Math.floor(Math.random() * 16)];
+            } catch (error) {
+              console.error('Error cargando huerto:', huerto.fields.nombre, error);
             }
-            return color;
+          });
+
+          // Ajustar el mapa para mostrar todos los elementos
+          if (!bounds.isEmpty()) {
+            map.fitBounds(bounds);
+            
+            // Asegurar un zoom mínimo
+            google.maps.event.addListenerOnce(map, 'bounds_changed', function() {
+              if (map.getZoom() > 18) {
+                map.setZoom(18);
+              }
+            });
           }
+        }
 
-          // Cargar el script de Google Maps
-        </script>
+        function getRandomColor() {
+          // Paleta de colores más atractiva para sectores
+          const colors = [
+            '#ff6b6b', // Rojo coral
+            '#4ecdc4', // Turquesa
+            '#45b7d1', // Azul cielo
+            '#f9ca24', // Amarillo dorado
+            '#f0932b', // Naranja
+            '#eb4d4b', // Rojo
+            '#6c5ce7', // Púrpura
+            '#a29bfe', // Lavanda
+            '#fd79a8', // Rosa
+            '#00b894', // Verde menta
+            '#00cec9', // Cian
+            '#e17055'  // Terracota
+          ];
+          return colors[Math.floor(Math.random() * colors.length)];
+        }
+      </script>
 
+      <br>
+      <!-- Listado -->
+      {% for sector in sectores %}
+      <div class="card my-3 p-3">
+        <span class="badge badge-sector">SECTOR</span>
+        <h5 class="mt-2">{{ sector.nombre }}</h5>
 
+        <div class="table-container">
+          <table class="responsive-table">
+            <thead>
+              <tr>
+                <th>Descripción</th>
+                <th>Superficie (ha)</th>
+                <th>Tipo de Uso</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>{{ sector.descripcion|default_if_none:"Sin descripción" }}</td>
+                <td>{{ sector.superficie|default_if_none:"Sin superficie" }}</td>
+                <td>{{ sector.tipo_uso }}</td>
+                <td>{{ sector.estado }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
+        <!-- Botones -->
+        <div class="d-flex align-items-center">
+          <!-- Botón Editar -->
+          <a href="{% url 'modificarsector' sector.id %}" 
+            class="btn btn-warning btn-sm d-inline-flex align-items-center justify-content-center me-1" 
+            style="width:36px; height:36px; border-radius:8px;" title="Editar">
+            <i class="bi bi-pencil"></i>
+          </a>
 
-        <ul>
-          <li class="nivel sector">SECTOR:</li>
-          {% for sector in sectores %}
-          <div class="recuadro">
-            <li class="sector">
-              <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-arrow-down-right" viewBox="0 0 16 16">
-                <path fill-rule="evenodd" d="M14 13.5a.5.5 0 0 1-.5.5h-6a.5.5 0 0 1 0-1h4.793L2.146 2.854a.5.5 0 1 1 .708-.708L13 12.293V7.5a.5.5 0 0 1 1 0v6z" />
-              </svg>
-            
-              <div class="table-container">
-                <table class="responsive-table">
-                  <thead>
-                    <tr>
-                      <th>Nombre</th>
-                      <th>Descripción</th>
-                      <th>Superficie (ha)</th>
-                      <th>Tipo de Uso</th>
-                      <th>Estado</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>{{ sector.nombre }}</td>
-                      <td>{{ sector.descripcion|default_if_none:"Sin descripción" }}</td>
-                      <td>{{ sector.superficie|default_if_none:"Sin superficie" }}</td>
+          <!-- Botón Eliminar -->
+          <a href="#" 
+            onclick="eliminarSector({{ sector.id }})" 
+            class="btn btn-danger btn-sm d-inline-flex align-items-center justify-content-center" 
+            style="width:36px; height:36px; border-radius:8px;" title="Eliminar">
+            <i class="bi bi-trash"></i>
+          </a>
+        </div>
 
-                      <td>{{ sector.tipo_uso }}</td>
-                      <td>{{ sector.estado }}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            
-              <a href="{% url 'modificarsector' sector.id %}" class="btn btn-warning action-btn">
-                <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-pencil" viewBox="0 0 16 16">
-                  <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z" />
-                </svg>
-              </a>
-            
-              <a href="#" onclick="eliminarSector({{ sector.id }})" class="btn btn-danger action-btn">
-                <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-trash3" viewBox="0 0 16 16">
-                  <path d="M6.5 1h3a.5.5 0 0 1 .5.5v1H6v-1a.5.5 0 0 1 .5-.5ZM11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3A1.5 1.5 0 0 0 5 1.5v1H2.506a.58.58 0 0 0-.01 0H1.5a.5.5 0 0 0 0 1h.538l.853 10.66A2 2 0 0 0 4.885 16h6.23a2 2 0 0 0 1.994-1.84l.853-10.66h.538a.5.5 0 0 0 0-1h-.995a.59.59 0 0 0-.01 0H11Zm1.958 1-.846 10.58a1 1 0 0 1-.997.92h-6.23a1 1 0 0 1-.997-.92L3.042 3.5h9.916Zm-7.487 1a.5.5 0 0 1 .528.47l.5 8.5a.5.5 0 0 1-.998.06L5 5.03a.5.5 0 0 1 .47-.53Zm5.058 0a.5.5 0 0 1 .47.53l-.5 8.5a.5.5 0 1 1-.998-.06l.5-8.5a.5.5 0 0 1 .528-.47ZM8 4.5a.5.5 0 0 1 .5.5v8.5a.5.5 0 0 1-1 0V5a.5.5 0 0 1 .5-.5Z" />
-                </svg>
-              </a>
-            </li>
-            
-            <style>
-              .table-container {
-                overflow-x: auto;
-                margin: 10px 0;
-              }
-            
-              .responsive-table {
-                width: 100%;
-                border: 1px solid #ddd;
-                border-radius: 8px;
-                text-align: left;
-                background-color: #f9f9f9;
-              }
-            
-              .responsive-table th,
-              .responsive-table td {
-                padding: 12px;
-              }
-            
-              .responsive-table th {
-                background-color: #f1f1f1;
-              }
-            
-              .action-btn {
-                display: inline-block;
-                text-align: center;
-                background-color: #e7e7e7;
-                color: #333;
-                border: none;
-                margin-top: 10px;
-                transition: background-color 0.2s;
-              }
-            
-              .btn-danger {
-                background-color: #ff6b6b;
-              }
-            
-              .btn-danger:hover {
-                background-color: #e63946;
-              }
-            
-              .btn-warning:hover {
-                background-color: #f2a623;
-              }
-            </style>
-            
+        <!-- Huertos -->
+        <ul class="mt-3">
+          {% for huerto in sector.huerto_set.all %}
+          <li>
+            <span class="badge badge-huerto">Huerto</span> {{ huerto.nombre }}
+            <a href="{% url 'modificarhuerto' huerto.id %}" class="btn btn-primary action-btn"><i class="bi bi-pencil"></i></a>
+            <a href="#" onclick="eliminarHuerto({{ huerto.id }})" class="btn btn-danger action-btn"><i class="bi bi-trash"></i></a>
 
-
-            <ul>
-              <li class="nivel huerto ">HUERTO:</li>
-              {% for huerto in sector.huerto_set.all %}
-              <li class="huerto">
-                {{ huerto.nombre }}
-
-
-
-
-
-                <a href="{% url 'modificarhuerto' huerto.id %}" class="btn btn-warning"
-                  style="background-color: #33A0FF; color: white; border-radius: 100%; padding: 10px;">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor"
-                    class="bi bi-pencil" viewBox="0 0 16 16">
-                    <path
-                      d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z" />
-                  </svg>
-                </a>
-                <a href="#" onclick="eliminarHuerto({{ huerto.id }})" class="btn btn-danger"
-                  style=" border-radius: 100%; padding: 10px;">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor"
-                    class="bi bi-trash3" viewBox="0 0 16 16">
-                    <path
-                      d="M6.5 1h3a.5.5 0 0 1 .5.5v1H6v-1a.5.5 0 0 1 .5-.5ZM11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3A1.5 1.5 0 0 0 5 1.5v1H2.506a.58.58 0 0 0-.01 0H1.5a.5.5 0 0 0 0 1h.538l.853 10.66A2 2 0 0 0 4.885 16h6.23a2 2 0 0 0 1.994-1.84l.853-10.66h.538a.5.5 0 0 0 0-1h-.995a.59.59 0 0 0-.01 0H11Zm1.958 1-.846 10.58a1 1 0 0 1-.997.92h-6.23a1 1 0 0 1-.997-.92L3.042 3.5h9.916Zm-7.487 1a.5.5 0 0 1 .528.47l.5 8.5a.5.5 0 0 1-.998.06L5 5.03a.5.5 0 0 1 .47-.53Zm5.058 0a.5.5 0 0 1 .47.53l-.5 8.5a.5.5 0 1 1-.998-.06l.5-8.5a.5.5 0 0 1 .528-.47ZM8 4.5a.5.5 0 0 1 .5.5v8.5a.5.5 0 0 1-1 0V5a.5.5 0 0 1 .5-.5Z" />
-                  </svg>
-
-                </a>
-
+            <!-- Lotes -->
+            <ul class="mt-2">
+              {% for lote in huerto.lote_set.all %}
+              <li>
+                <span class="badge badge-lote">Lote</span> {{ lote.nombre }}
+                <a href="{% url 'modificarlote' lote.id %}" class="btn btn-success action-btn"><i class="bi bi-pencil"></i></a>
               </li>
-              <ul>
-                <li class="nivel lote">LOTE:</li>
-                {% for lote in huerto.lote_set.all %}
-                <li class="lote">
-                  {{ lote.nombre }}
-                  <a href="{% url 'modificarlote' lote.id %}" class="btn btn-warning"
-                    style="background-color: #33FF63; color: white; border-radius: 100%; padding: 10px;">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor"
-                      class="bi bi-pencil" viewBox="0 0 16 16">
-                      <path
-                        d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z" />
-                    </svg>
-                  </a>
-
-
-                </li>
-                {% endfor %}
-              </ul>
               {% endfor %}
             </ul>
-          </div>
+          </li>
           {% endfor %}
         </ul>
-
-
-
-      </body>
-
-
-
-      <!-- Script de Google Maps API -->
-
+      </div>
+      {% endfor %}
     </div>
   </div>
-
-</div>
-
-
+</body>
 </html>
 {% endblock %}

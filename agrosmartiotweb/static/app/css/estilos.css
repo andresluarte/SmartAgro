@@ -40,7 +40,12 @@ label.error {
     justify-content: space-between;
     
     flex-wrap:wrap;
-}  
+}
+/* ...existing code... */
+#header {
+    position: relative;
+}
+/* ...existing code... */
 .bx-viewport.bx-viewport {
     min-height: 90px;
   }
@@ -93,7 +98,7 @@ img {
 /*CONTENIDO PRINCIPAL*/
 
 #contenido {
-    width: 80%;
+    width: 100%;
     margin: auto;
     max-width: 1280px;
     min-height: 100vh;
@@ -141,17 +146,10 @@ img {
     display: none;
 }
 
-.slider-original {
-    position: relative;
-    width: 512px;
-    height: 288px;
-    z-index: 1; /* Asegura que el slider tenga un z-index menor que el sidenav */
-}
+
 
 /* Si los botones del slider tienen un z-index más alto, baja su valor */
-.slider .button {
-    z-index: 0; /* Ajusta el z-index de los botones del slider si es necesario */
-}
+
 
 input[type=text],
 input[type=email],
@@ -281,18 +279,11 @@ textarea {
     margin-bottom: 5px; /* Espacio más reducido debajo del bloque */
 }
 
-.empresa-info {
-    display: flex;
-    align-items: center; /* Centra verticalmente */
-    justify-content: center; /* Centra horizontalmente */
-    margin-top: 0px; /* Espacio entre el nombre de usuario y la empresa */
-}
 
-.logo-small {
-    width: 50px; /* Ajusta el tamaño del logo pequeño */
-    height: auto;
-    margin-right: 20px; /* Espacio entre el logo y el nombre */
-}
+
+
+
+
 
 .empresa-nombre {
     font-size: 14px; /* Tamaño del texto del nombre de la empresa */
@@ -303,21 +294,29 @@ textarea {
 
 .slider-original {
     position: relative;
-    width: 100%;
+    width: 100%; /* Ocupa todo el ancho del contenedor padre */
+    max-width: 100%; /* Evita que se salga del contenedor */
+    height: 300px; /* Puedes ajustar según tu preferencia */
     overflow: hidden;
+    margin: 0 auto; /* Centra el slider si hay espacio */
+    border-radius: 8px; /* Opcional: bordes redondeados */
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* Opcional: sombra */
+    z-index: 1;
 }
-
 
 .slides {
     display: flex;
+    width: 100%;
+    height: 100%;
     transition: transform 0.5s ease;
 }
 
 .slide {
     min-width: 100%;
-    transition: opacity 0.5s ease;
+    height: 100%;
+    flex-shrink: 0;
+    position: relative;
 }
-
 .slide img {
     width: 100%;
     display: block;
@@ -343,4 +342,38 @@ textarea {
     animation: slide-animation 12s infinite 8s;
 }
 
+
+
+
+
+/* Menú lateral */
+.sidenav {
+    height: 100%;
+    width: 0;
+    position: fixed;
+    z-index: 999;
+    top: 0;
+    right: 0; /* lado derecho */
+    background-color: #a0cfa9a4;
+    overflow-x: hidden;
+    transition: 0.4s;
+    padding-top: 60px;
+    text-align: center;
+}
+.sidenav a {
+    display: block;
+    padding: 12px;
+    color: #1e331f;
+    font-size: 22px;
+    transition: 0.3s;
+}
+.sidenav a:hover {
+    color: #00d084;
+}
+.sidenav .closebtn {
+    position: absolute;
+    top: 20px;
+    right: 25px;
+    font-size: 36px;
+}
 

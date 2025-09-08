@@ -8,15 +8,16 @@ class TimePickerInput(forms.TimeInput):
     input_type = 'time'
 
 
-
+from django.contrib.auth import get_user_model
+User = get_user_model()
 from django import forms
-from .models import Procesos
+from .models import Procesos,Sector,Empresario
 from django.forms.widgets import DateInput
 
 class ProcesoForm(forms.ModelForm):
     class Meta:
         model = Procesos
-        fields = ["trabajo", "fecha_compra", "asignado", "presupuesto", "observacion"]
+        fields = ["trabajo", "fecha_compra",   "cantidad", "asignado","ubicacion","proveedor", "presupuesto", "observacion",]
         widgets = {
             "fecha_compra": forms.DateInput(attrs={
                 "type": "date"  # Asegura que el navegador use el selector de fecha
@@ -35,29 +36,36 @@ class ProcesoForm(forms.ModelForm):
 
 
     def __init__(self, *args, **kwargs):
-        user = kwargs.pop('user')  # Extrae el usuario de los kwargs
+        user = kwargs.pop('user', None)  # Usuario logueado
         super().__init__(*args, **kwargs)
 
-        # Filtrar los trabajadores asignados según el tipo de usuario
-        if user.user_type == 'superuser':
-            # Si el usuario es superusuario, puede ver todos los trabajadores
-            self.fields['asignado'].queryset = Trabajador.objects.all()
-        elif user.user_type == 'admin':
-    # Si el usuario es admin, puede ver los trabajadores que creó directamente
-            self.fields['asignado'].queryset = Trabajador.objects.filter(created_by=user)
+        if user:
+            if user.is_superuser:
+                # Superusuario ve todos los trabajadores
+                self.fields['asignado'].queryset = Trabajador.objects.all()
+                self.fields['sector'].queryset = Sector.objects.filter(user=user)
 
-        elif user.user_type == 'colaborador':
-            colaborador_user = user.created_by
-            admin_user = colaborador_user.created_by if colaborador_user else None
-            self.fields['asignado'].queryset = Trabajador.objects.filter(created_by__in=[colaborador_user])
-        elif user.user_type == 'agricultor' or user.user_type == 'ayudante':
-            # Si el usuario es agricultor o ayudante, puede ver los trabajadores creados por su colaborador y su admin
-            colaborador_user = user.created_by  # El colaborador es quien creó al agricultor/ayudante
-            admin_user = colaborador_user.created_by if colaborador_user else None  # El admin es quien creó al colaborador
-            self.fields['asignado'].queryset = Trabajador.objects.filter(created_by__in=[colaborador_user, admin_user])
-        else:
-            # Si el usuario no tiene un tipo definido, no podrá ver ningún trabajador
-            self.fields['asignado'].queryset = Trabajador.objects.none()
+            elif user.user_type == 'admin':
+                # Colaboradores creados por este admin
+                colaboradores = User.objects.filter(created_by=user, user_type='colaborador')
+                # IDs de colaboradores más el admin
+                ids_validos = list(colaboradores.values_list('id', flat=True)) + [user.id]
+                # Trabajadores creados por el admin o sus colaboradores
+                self.fields['asignado'].queryset = Trabajador.objects.filter(created_by__id__in=ids_validos)
+                # Sectores creados por el admin
+                self.fields['ubicacion'].queryset = Sector.objects.filter(user=user)
+                self.fields['proveedor'].queryset = Empresario.objects.filter(user=user)
+
+
+            elif user.user_type == 'colaborador':
+                # Colaborador ve sus trabajadores y los de su admin
+                admin_user = user.created_by
+                self.fields['asignado'].queryset = Trabajador.objects.filter(
+                    created_by__in=[user, admin_user]
+                )
+
+            else:
+                self.fields['asignado'].queryset = Trabajador.objects.none()
 
         
 
@@ -85,13 +93,12 @@ from .models import Procesos
 class ProcesoModificarForm(forms.ModelForm):
     class Meta:
         model = Procesos
-        fields = ["trabajo", "estado","fecha_compra", "asignado", "presupuesto", "observacion"]
+        fields = ["trabajo", "estado", "fecha_compra",   "cantidad", "asignado","ubicacion","proveedor", "presupuesto", "observacion","total"]
         widgets = {
-            "fecha_compra": forms.DateInput(attrs={
-                "type": "date"  # Asegura que el navegador use el selector de fecha
-            }),
-           
-            
+            "fecha_compra": forms.DateInput(
+                format='%Y-%m-%d',
+                attrs={"type": "date"}
+            ),
             "presupuesto": forms.NumberInput(attrs={
                 "placeholder": "Monto Asignado para Compra de Insumo/Maquinaria",
                 "min": "0",
@@ -100,11 +107,16 @@ class ProcesoModificarForm(forms.ModelForm):
             "observacion": forms.TextInput(attrs={
                 "placeholder": "Ej: Compra debe ser con factura"
             }),
-     
+            "total": forms.NumberInput(attrs={"readonly": "readonly"}),  # por defecto solo lectura
         }
         labels = {
             "trabajo": "Insumo/Maquinaria",
         }
+        # 👇 Agregas el formato de entrada
+        input_formats = {
+            "fecha_compra": ["%Y-%m-%d"],
+        }
+
 
     def __init__(self, *args, **kwargs):
         user = kwargs.pop('user')  # Extrae el usuario de los kwargs
@@ -125,6 +137,37 @@ class ProcesoModificarForm(forms.ModelForm):
             self.fields['asignado'].queryset = Trabajador.objects.filter(created_by__in=[colaborador_user, admin_user])
         else:
             self.fields['asignado'].queryset = Trabajador.objects.none()
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)  # Usuario logueado
+        super().__init__(*args, **kwargs)
+
+        if user:
+            if user.is_superuser:
+                # Superusuario ve todos los trabajadores
+                self.fields['asignado'].queryset = Trabajador.objects.all()
+                self.fields['sector'].queryset = Sector.objects.filter(user=user)
+
+            elif user.user_type == 'admin':
+                # Colaboradores creados por este admin
+                colaboradores = User.objects.filter(created_by=user, user_type='colaborador')
+                # IDs de colaboradores más el admin
+                ids_validos = list(colaboradores.values_list('id', flat=True)) + [user.id]
+                # Trabajadores creados por el admin o sus colaboradores
+                self.fields['asignado'].queryset = Trabajador.objects.filter(created_by__id__in=ids_validos)
+                # Sectores creados por el admin
+                self.fields['ubicacion'].queryset = Sector.objects.filter(user=user)
+                self.fields['proveedor'].queryset = Empresario.objects.filter(user=user)
+
+
+            elif user.user_type == 'colaborador':
+                # Colaborador ve sus trabajadores y los de su admin
+                admin_user = user.created_by
+                self.fields['asignado'].queryset = Trabajador.objects.filter(
+                    created_by__in=[user, admin_user]
+                )
+
+            else:
+                self.fields['asignado'].queryset = Trabajador.objects.none()
 
     def clean_presupuesto(self):
         presupuesto = self.cleaned_data.get("presupuesto")
@@ -157,6 +200,15 @@ class TrabajadorForm(forms.ModelForm):
         widgets = {
             "fecha_ingreso": DateInput(),
             "fecha_termino_contrato": DateInput(),
+        }
+    labels = {
+            "nombre": "Nombre Completo",
+            "rut": "RUT (sin puntos, con guion)",
+            "tipo_contraro": "Tipo de Contrato",
+            "fecha_ingreso": "Fecha de Ingreso",
+            "fecha_termino_contrato": "Fecha de Término de Contrato (si aplica)",
+            "cobro": "Cobro por Hora (en moneda local)",
+            "trabajo_a_realizar": "Trabajo a Realizar",
         }
     
     def clean(self):
@@ -191,6 +243,12 @@ from .models import Jornada
 #jornada
 
 
+from django import forms
+from .models import Jornada, Trabajador, Sector, Huerto, Lote
+
+class CustomTimePickerInput(forms.TimeInput):
+    input_type = 'time'
+
 HORAS_PERMITIDAS = [
     '06:00', '06:30', '07:00', '07:30', '08:00', '08:30', '09:00', '09:30', '10:00',
     '10:30', '11:00', '11:30', '12:00', '12:30', '13:00', '13:30', '14:00', '14:30',
@@ -198,34 +256,29 @@ HORAS_PERMITIDAS = [
     '19:30', '20:00', '20:30', '21:00', '21:30', '22:00', '22:30', '23:00',
 ]
 
-
-
-
-from django import forms
-from .models import Jornada, Trabajador, Sector, Huerto, Lote
-
 class JornadaForm(forms.ModelForm):
-    
     class Meta:
         model = Jornada
-        exclude = ['creador']
         fields = ['asignado',  'sector', 'huerto', 'lote', 'fecha', 'nombre_tarea_1', 
                   'hora_inicio_tarea_1', 'hora_fin_tarea_1', 'cobro_tarea_1', 'nombre_tarea_2', 'hora_inicio_tarea_2', 
                   'hora_fin_tarea_2', 'cobro_tarea_2', 'nombre_tarea_3', 'hora_inicio_tarea_3', 'hora_fin_tarea_3', 'cobro_tarea_3',
                   'nombre_extra_1', 'gasto_extra_1', 'nombre_extra_2', 'gasto_extra_2', 'nombre_extra_3', 'gasto_extra_3', 
                   'observacion']
         widgets = {
-            "fecha": forms.DateInput(attrs={'type': 'date'}),
-            "hora_inicio_tarea_1": CustomTimePickerInput(),
-            "hora_fin_tarea_1": CustomTimePickerInput(),
-            "hora_inicio_tarea_2": CustomTimePickerInput(),
-            "hora_fin_tarea_2": CustomTimePickerInput(),
-            "hora_inicio_tarea_3": CustomTimePickerInput(),
-            "hora_fin_tarea_3": CustomTimePickerInput(),
+            "fecha": forms.DateInput(attrs={'type': 'date','class':'form-control'}),
+            "hora_inicio_tarea_1": CustomTimePickerInput(attrs={'class':'form-control', 'list':'horas-permitidas'}),
+            "hora_fin_tarea_1": CustomTimePickerInput(attrs={'class':'form-control', 'list':'horas-permitidas'}),
+            "hora_inicio_tarea_2": CustomTimePickerInput(attrs={'class':'form-control', 'list':'horas-permitidas'}),
+            "hora_fin_tarea_2": CustomTimePickerInput(attrs={'class':'form-control', 'list':'horas-permitidas'}),
+            "hora_inicio_tarea_3": CustomTimePickerInput(attrs={'class':'form-control', 'list':'horas-permitidas'}),
+            "hora_fin_tarea_3": CustomTimePickerInput(attrs={'class':'form-control', 'list':'horas-permitidas'}),
+            "cobro_tarea_1": forms.NumberInput(attrs={'class':'form-control','readonly':False}),
+            "cobro_tarea_2": forms.NumberInput(attrs={'class':'form-control','readonly':False}),
+            "cobro_tarea_3": forms.NumberInput(attrs={'class':'form-control','readonly':False}),
         }
 
     def __init__(self, *args, **kwargs):
-        user = kwargs.pop('user', None)  # Extraer el usuario de kwargs, si está presente
+        user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
         
         if user:
@@ -233,11 +286,7 @@ class JornadaForm(forms.ModelForm):
             self.fields['sector'].queryset = Sector.objects.filter(user=user)
             self.fields['huerto'].queryset = Huerto.objects.filter(user=user)
             self.fields['lote'].queryset = Lote.objects.filter(user=user)
-
-        # Hacer que los campos de cobro no sean de solo lectura
-        for field_name in ['cobro_tarea_1', 'cobro_tarea_2', 'cobro_tarea_3']:
-            self.fields[field_name].widget.attrs['readonly'] = False
-
+            
     def save(self, commit=True):
         instance = super().save(commit=False)
         cobro_por_hora = instance.asignado.cobro if instance.asignado else None
@@ -250,25 +299,22 @@ class JornadaForm(forms.ModelForm):
                 return round(horas_trabajadas * cobro_por_hora, 2)
             return None
 
-        # Calcular los cobros de las tareas
         instance.cobro_tarea_1 = calcular_cobro_tarea(self.cleaned_data.get('hora_inicio_tarea_1'), self.cleaned_data.get('hora_fin_tarea_1'))
         instance.cobro_tarea_2 = calcular_cobro_tarea(self.cleaned_data.get('hora_inicio_tarea_2'), self.cleaned_data.get('hora_fin_tarea_2'))
         instance.cobro_tarea_3 = calcular_cobro_tarea(self.cleaned_data.get('hora_inicio_tarea_3'), self.cleaned_data.get('hora_fin_tarea_3'))
 
-        # Sumar los cobros de las tareas para calcular detalle_gasto_total_tareas
         cobros_tareas = [instance.cobro_tarea_1, instance.cobro_tarea_2, instance.cobro_tarea_3]
         instance.detalle_gasto_total_tareas = sum(filter(None, cobros_tareas))
 
-        # Calcular detalle_gastos_total_extras
         gastos_extras = [instance.gasto_extra_1, instance.gasto_extra_2, instance.gasto_extra_3]
         instance.detalle_gastos_total_extras = sum(filter(None, gastos_extras))
 
-        # Calcular total_gasto_jornada
         instance.total_gasto_jornada = instance.detalle_gasto_total_tareas + instance.detalle_gastos_total_extras
 
         if commit:
             instance.save()
         return instance
+
 
 from django import forms
 from .models import JornadaPorTrato
@@ -374,7 +420,7 @@ class JornadaModificarForm(forms.ModelForm):
         return instance
 
 from django import forms
-from .models import Sector, Huerto, Lote
+from .models import Sector, Huerto, Lote,HuertoPoligon
 
 class SectorForm(forms.ModelForm):
 
@@ -402,15 +448,31 @@ class SectorPoligonForm(forms.ModelForm):
 class HuertoForm(forms.ModelForm):
     class Meta:
         model = Huerto
-        fields = ['nombre', 'sector']  # Incluye el campo sector
-
+        fields = ['nombre', 'sector','coordenadas']
+        widgets = {
+            'coordenadas': forms.HiddenInput(),  # Ocultamos este campo, se llenará desde JavaScript
+        }
     def __init__(self, *args, **kwargs):
-        user = kwargs.pop('user', None)  # Recibir el usuario desde la vista
+        user = kwargs.pop('user', None)
         super(HuertoForm, self).__init__(*args, **kwargs)
-        # Filtrar los sectores para que solo aparezcan los del usuario logueado
-        if user is not None:
+        if user:
             self.fields['sector'].queryset = Sector.objects.filter(user=user)
+           
 
+  
+
+class HuertoPoligonForm(forms.ModelForm):
+    class Meta:
+        model = Huerto
+        fields = ['nombre','sector','coordenadas']
+        widgets = {
+            'coordenadas': forms.HiddenInput(),  # Ocultamos este campo, se llenará desde JavaScript
+        }
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        super(HuertoPoligonForm, self).__init__(*args, **kwargs)
+        if user:
+            self.fields['sector'].queryset = Sector.objects.filter(user=user)
 
 class LoteForm(forms.ModelForm):
     class Meta:
@@ -452,7 +514,7 @@ class LoteModificarForm(forms.ModelForm):
         fields = ['nombre', 'huerto']
 
 from django.contrib.auth.forms import UserCreationForm,AuthenticationForm
-from django.contrib.auth.models import User
+
 from .models import CustomUser
 from django import forms
 

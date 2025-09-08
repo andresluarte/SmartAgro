@@ -1,6 +1,6 @@
 from django.contrib import admin
 from import_export import resources
-from .models import Procesos,Contacto,Trabajador,Jornada,Sector,Huerto,Lote,CustomUser,SensorAire,TemperatureHumidityLocation,DecisionEfectuada,HumidityTemperaturaSoil,SensorSuelo,JornadaPorTrato
+from .models import Procesos,Contacto,Trabajador,Jornada,Sector,Huerto,Lote,CustomUser,SensorAire,TemperatureHumidityLocation,DecisionEfectuada,HumidityTemperaturaSoil,SensorSuelo,JornadaPorTrato,Empresario
 from import_export.fields import Field
 
 
@@ -10,7 +10,7 @@ admin.site.register(Contacto)
 admin.site.register(Trabajador)
 admin.site.register(Jornada)
 admin.site.register(CustomUser)
-
+admin.site.register(Empresario)
 admin.site.register(Sector)
 admin.site.register(Huerto)
 admin.site.register(Lote)

@@ -3,462 +3,1193 @@
 {% block contenido %}
 {% load static %}
 {% load agrosmartiotweb %}
+{% load humanize %}
+
 {% block js %}
 <style>
-  .tareas-extras {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
+:root {
+  --primary-color: #2563eb;
+  --primary-hover: #1d4ed8;
+  --secondary-color: #64748b;
+  --success-color: #059669;
+  --warning-color: #d97706;
+  --danger-color: #dc2626;
+  --info-color: #0891b2;
+  --light-bg: #f8fafc;
+  --white: #ffffff;
+  --gray-50: #f9fafb;
+  --gray-100: #f3f4f6;
+  --gray-200: #e5e7eb;
+  --gray-300: #d1d5db;
+  --gray-600: #4b5563;
+  --gray-700: #374151;
+  --gray-800: #1f2937;
+  --gray-900: #111827;
+  --border-radius: 12px;
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --transition: all 0.2s ease-in-out;
+}
+
+body {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: var(--gray-800);
+}
+
+.jornadas-container {
+  background: var(--white);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-lg);
+  margin: 2rem 0;
+  overflow: hidden;
+}
+
+.header-section {
+  background: linear-gradient(135deg, var(--primary-color) 0%, #3b82f6 100%);
+  color: var(--white);
+  padding: 2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.header-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="75" cy="75" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="50" cy="10" r="0.5" fill="rgba(255,255,255,0.05)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>') repeat;
+  opacity: 0.3;
+}
+
+.header-content {
+  position: relative;
+  z-index: 1;
+}
+
+.page-title {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.controls-section {
+  background: var(--gray-50);
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid var(--gray-200);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.btn-modern {
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: none;
+  cursor: pointer;
+  transition: var(--transition);
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.btn-primary {
+  background: var(--primary-color);
+  color: var(--white);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-primary:hover {
+  background: var(--primary-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+  color: var(--white);
+}
+
+.btn-warning {
+  background: var(--warning-color);
+  color: var(--white);
+}
+
+.btn-warning:hover {
+  background: #b45309;
+  transform: translateY(-1px);
+  color: var(--white);
+}
+
+.btn-success {
+  background: var(--success-color);
+  color: var(--white);
+}
+
+.btn-success:hover {
+  background: #047857;
+  transform: translateY(-1px);
+  color: var(--white);
+}
+
+.btn-info {
+  background: var(--info-color);
+  color: var(--white);
+}
+
+.btn-info:hover {
+  background: #0e7490;
+  transform: translateY(-1px);
+  color: var(--white);
+}
+
+.btn-danger {
+  background: var(--danger-color);
+  color: var(--white);
+}
+
+.btn-danger:hover {
+  background: #b91c1c;
+  transform: translateY(-1px);
+  color: var(--white);
+}
+
+.btn-outline {
+  background: transparent;
+  border: 2px solid var(--gray-300);
+  color: var(--gray-700);
+}
+
+.btn-outline:hover {
+  background: var(--gray-100);
+  border-color: var(--gray-400);
+}
+
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdown-menu {
+  background: var(--white);
+  border-radius: 8px;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--gray-200);
+  min-width: 200px;
+  padding: 0.5rem 0;
+}
+
+.dropdown-item {
+  padding: 0.75rem 1rem;
+  color: var(--gray-700);
+  text-decoration: none;
+  display: block;
+  transition: var(--transition);
+  font-weight: 500;
+}
+
+.dropdown-item:hover {
+  background: var(--gray-50);
+  color: var(--primary-color);
+}
+
+.table-container {
+  padding: 2rem;
+  overflow-x: auto;
+}
+
+.table-modern {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: var(--white);
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.table-modern thead {
+  background: linear-gradient(135deg, var(--gray-800) 0%, var(--gray-700) 100%);
+}
+
+.table-modern th {
+  padding: 1rem;
+  color: var(--white);
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border: none;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.table-modern tbody tr {
+  transition: var(--transition);
+  border-bottom: 1px solid var(--gray-100);
+}
+
+.table-modern tbody tr:hover {
+  background: var(--gray-50);
+  transform: scale(1.001);
+}
+
+.table-modern tbody tr:last-child {
+  border-bottom: none;
+}
+
+.table-modern td {
+  padding: 1.25rem 1rem;
+  vertical-align: top;
+  border: none;
+  font-size: 0.875rem;
+}
+
+.employee-name {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  text-transform: capitalize;
+}
+
+.info-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  background: var(--gray-100);
+  color: var(--gray-700);
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.info-badge.empty {
+  background: var(--gray-200);
+  color: var(--gray-500);
+}
+
+.task-container {
+  display: grid;
+  gap: 1rem;
+  max-width: 400px;
+}
+
+.task-card {
+  background: linear-gradient(135deg, var(--white) 0%, var(--gray-50) 100%);
+  border: 1px solid var(--gray-200);
+  border-radius: 8px;
+  padding: 1rem;
+  transition: var(--transition);
+}
+
+.task-card:hover {
+  border-color: var(--primary-color);
+  box-shadow: var(--shadow-sm);
+}
+
+.task-title {
+  font-weight: 700;
+  color: var(--primary-color);
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+}
+
+.task-details {
+  font-size: 0.875rem;
+  color: var(--gray-600);
+  line-height: 1.5;
+}
+
+.task-amount {
+  font-weight: 700;
+  color: var(--success-color);
+  font-size: 1rem;
+}
+
+.extra-container {
+  display: grid;
+  gap: 0.75rem;
+  max-width: 300px;
+}
+
+.extra-card {
+  background: linear-gradient(135deg, #fef3c7 0%, #fcd34d 100%);
+  border: 1px solid #f59e0b;
+  border-radius: 6px;
+  padding: 0.75rem;
+  font-size: 0.8125rem;
+}
+
+.extra-title {
+  font-weight: 700;
+  color: #92400e;
+  margin-bottom: 0.25rem;
+}
+
+.extra-amount {
+  font-weight: 700;
+  color: #b45309;
+}
+
+.total-card {
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+  border: 2px solid var(--success-color);
+  border-radius: 8px;
+  padding: 1rem;
+  max-width: 250px;
+}
+
+.total-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.total-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.875rem;
+}
+
+.total-label {
+  font-weight: 600;
+  color: var(--gray-700);
+}
+
+.total-amount {
+  font-weight: 700;
+  color: var(--success-color);
+  font-size: 1rem;
+}
+
+.status-badge {
+  padding: 0.375rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.status-active {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status-pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-completed {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.btn-sm {
+  padding: 0.5rem 1rem;
+  font-size: 0.75rem;
+  border-radius: 6px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.pagination-container {
+  padding: 2rem;
+  background: var(--gray-50);
+  border-top: 1px solid var(--gray-200);
+  display: flex;
+  justify-content: center;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--white);
+  padding: 1rem 1.5rem;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-sm);
+}
+
+.pagination a {
+  padding: 0.5rem 1rem;
+  color: var(--primary-color);
+  text-decoration: none;
+  border-radius: 6px;
+  font-weight: 600;
+  transition: var(--transition);
+}
+
+.pagination a:hover {
+  background: var(--primary-color);
+  color: var(--white);
+}
+
+.pagination .current {
+  padding: 0.5rem 1rem;
+  color: var(--gray-600);
+  font-weight: 600;
+}
+
+.modal-content {
+  border-radius: var(--border-radius);
+  border: none;
+  box-shadow: var(--shadow-lg);
+}
+
+.modal-header {
+  background: linear-gradient(135deg, var(--primary-color) 0%, #3b82f6 100%);
+  color: var(--white);
+  border-bottom: none;
+  border-radius: var(--border-radius) var(--border-radius) 0 0;
+}
+
+.modal-title {
+  font-weight: 700;
+  font-size: 1.25rem;
+}
+
+.modal-body {
+  padding: 2rem;
+}
+
+.modal-footer {
+  background: var(--gray-50);
+  border-top: 1px solid var(--gray-200);
+  border-radius: 0 0 var(--border-radius) var(--border-radius);
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-control {
+  border: 2px solid var(--gray-200);
+  border-radius: 8px;
+  padding: 0.75rem;
+  font-size: 0.875rem;
+  transition: var(--transition);
+}
+
+.form-control:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .controls-section {
+    flex-direction: column;
+    align-items: stretch;
   }
-
-  .tarea-extra-item {
-    flex: 1;
-    border: 1px solid #ccc;
-    padding: 10px;
-  }
-
-  .campo-total {
-    flex: 1;
-    border: 1px solid #e00000;
-    padding: 10px;
-  }
-  .resaltar-titulo {
-    font-size: 1.2em; /* Tamaño del título */
-    font-weight: bold; /* Texto en negrita */
-    color: #2a9d8f; /* Color distintivo para los títulos */
-    text-transform: uppercase; /* Convertir en mayúsculas */
-    margin-right: 5px; /* Espaciado entre título y datos */
-  }
-
-  .resaltar-dato {
-      font-size: 1.1em; /* Tamaño del dato */
-      font-weight: normal; /* Peso normal para diferenciar del título */
-      color: #264653; /* Color para los datos */
-  }
-
-</style>
-
-
-
-{% endblock js %}
-{% load humanize %}
-<!-- Bootstrap CSS -->
-
-
-
-<!-- Bootstrap JS -->
-
-
-
-
-<!-- Incluir los estilos de Bootstrap -->
-
-<!-- Bootstrap CSS -->
-
-
-<div class="jornadas">
-  <br>
-  <br>
   
-    <div class="d-flex flex-column flex-sm-row card-body ">
+  .controls-section > * {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 992px) {
+  .table-container {
+    padding: 1rem;
+  }
+  
+  .task-container,
+  .extra-container {
+    max-width: none;
+  }
+  
+  .page-title {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .header-section {
+    padding: 1.5rem;
+  }
+  
+  .controls-section {
+    padding: 1rem;
+  }
+  
+  .btn-modern {
+    padding: 0.625rem 1.25rem;
+    font-size: 0.8125rem;
+  }
+  
+  .table-modern th,
+  .table-modern td {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.8125rem;
+  }
+  
+  .employee-name {
+    font-size: 1rem;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+  }
+  
+  .btn-sm {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+@media (max-width: 576px) {
+  .jornadas-container {
+    margin: 1rem 0;
+    border-radius: 0;
+  }
+  
+  .header-section,
+  .table-container,
+  .pagination-container {
+    padding: 1rem;
+  }
+  
+  .page-title {
+    font-size: 1.25rem;
+  }
+  
+  .controls-section {
+    padding: 0.75rem;
+    gap: 0.5rem;
+  }
+  
+  .btn-modern {
+    padding: 0.5rem 1rem;
+    font-size: 0.75rem;
+  }
+  
+  .table-modern {
+    font-size: 0.75rem;
+  }
+  
+  .table-modern th,
+  .table-modern td {
+    padding: 0.5rem 0.25rem;
+  }
+  
+  .task-container,
+  .extra-container {
+    grid-template-columns: 1fr;
+  }
+  
+  .total-card {
+    max-width: none;
+  }
+}
+
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.9);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid var(--gray-200);
+  border-top: 4px solid var(--primary-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+</style>
+{% endblock js %}
+
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-spinner"></div>
+</div>
+
+<div class="jornadas-container">
+  <!-- Header Section -->
+  <div class="header-section">
+    <div class="header-content">
       {% if request.path == '/gestion_jornadas_por_trato/' %}
-      <h3> Gestión de Jornadas por Trato </h3>
-        {% else %}
-        <h3> Gestión de Jornadas por Horas</h3>
-        {% endif %}
-      
-      <hr>
-     
-      <td>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-        {% if request.path == '/gestion_jornadas_por_trato/' %}
-            <a href="{% url 'gestion_jornadas' %}" class="btn btn-info">Cargar Jornadas por horas</a>
-            
-        {% else %}
-            <a href="{% url 'gestion_jornadas_por_trato' %}" class="btn btn-warning">Cargar Jornadas por Trato</a>
-        {% endif %}
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <h3 class="page-title">Gestión de Jornadas por Trato</h3>
+      {% else %}
+        <h3 class="page-title">Gestión de Jornadas por Horas</h3>
+      {% endif %}
+    </div>
+  </div>
 
-          <button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-            Opciones
-          </button>
-          <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
-            
-            <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#modalJornada">Agregar Jornada</a>
+  <!-- Controls Section -->
+  <div class="controls-section">
+    <div class="d-flex flex-wrap gap-3 align-items-center">
+      {% if request.path == '/gestion_jornadas_por_trato/' %}
+        <a href="{% url 'gestion_jornadas' %}" class="btn-modern btn-info">
+          <i class="fas fa-clock"></i>
+          Cargar Jornadas por Horas
+        </a>
+      {% else %}
+        <a href="{% url 'gestion_jornadas_por_trato' %}" class="btn-modern btn-warning">
+          <i class="fas fa-handshake"></i>
+          Cargar Jornadas por Trato
+        </a>
+      {% endif %}
+    </div>
 
+    <div class="dropdown">
+      <button class="btn-modern btn-success dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+        <i class="fas fa-cog"></i>
+        Opciones
+      </button>
+      <ul class="dropdown-menu">
+        <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#modalJornada">
+          <i class="fas fa-plus me-2"></i>Agregar Jornada
+        </a></li>
+        <li><a class="dropdown-item" href="{% url 'gestiondetrabajadores' %}">
+          <i class="fas fa-users me-2"></i>Trabajadores
+        </a></li>
+        <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#searchModal">
+          <i class="fas fa-filter me-2"></i>Filtrar
+        </a></li>
+        <li><hr class="dropdown-divider"></li>
+        <li>
+          {% if request.path == '/gestion_jornadas_por_trato/' %}
+            <a class="dropdown-item" href="{% url 'exportar_a_excel_jornada_por_trato' %}?{{ request.GET.urlencode }}">
+              <i class="fas fa-file-excel me-2"></i>Exportar a Excel
+            </a>
+          {% else %}
+            <a class="dropdown-item" href="{% url 'exportar_a_excel_jornada' %}?{{ request.GET.urlencode }}">
+              <i class="fas fa-file-excel me-2"></i>Exportar a Excel
+            </a>
+          {% endif %}
+        </li>
+        <li><a class="dropdown-item" href="{% url 'gestion_jornadas' %}">
+          <i class="fas fa-eraser me-2"></i>Limpiar Filtro
+        </a></li>
+      </ul>
+    </div>
+  </div>
 
-            <a class="dropdown-item" href="{% url 'gestiondetrabajadores' %}">Trabajadores</a>
-            <a type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#searchModal" href="#">FILTRAR</a>
-            {% if request.path == '/gestion_jornadas_por_trato/' %}
-                <a class="dropdown-item" href="{% url 'exportar_a_excel_jornada_por_trato' %}?{{ request.GET.urlencode }}">Exportar a Excel</a>
-            {% else %}
-                <a class="dropdown-item" href="{% url 'exportar_a_excel_jornada' %}?{{ request.GET.urlencode }}">Exportar a Excel</a>
-            {% endif %}
-
-
-            <a class="dropdown-item" href="{% url 'gestion_jornadas' %}">Limpiar Filtro</a>
-
-            </ul>
-          </div>
-
-
-
-
-
-
-
-            <div class="modal fade" id="searchModal" tabindex="-1" role="dialog" aria-labelledby="searchModalLabel"
-                aria-hidden="true">
-              <div class="modal-dialog" role="document">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                          <h5 class="modal-title" id="searchModalLabel">Filtrar Jornadas</h5>
-    
-                          <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                          </button>
-                        </div>
-                        <div class="modal-body">
-                          <form method="get">
-                            {{filtered_jornadas.form.as_p}}
-                            </div>
-                            <br>
-                            <div class="form-row">
-                              <div class="form-group col-md-6">
-                                <button type="submit" class="btn btn-success">Filtrar</button>
-                              </div>
-
-
-                            </div>
-                          </form>
-                    </div>
-                  </div>
-              </div>
-            </div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        <br>
-        &nbsp;
-
-
-
-
-
-      </td>
-
-      <div>
-        <table class="table table-striped table-hover table-responsive" style="overflow-x: auto;">
-          <thead>
-            <tr>
-              <th>Asignado</th>
-              <th>Sector</th>
-              <th>Huerto</th>
-              <th>Lote</th>
-              <th>Fecha</th>
-              <th>Tareas</th>
-              <th>Extras</th>
-              <th>Observación</th>
-              <th>Estado</th>
-              <th>Total</th>
-              <th>OPCIONES</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for jornada in jornada_page_obj %} 
-            <tr>
-              <td><span style="font-size: 1.5em; font-weight: bold;">{{ jornada.asignado }}</span></td>
-
-
-
-              <td>
-                {% if jornada.sector %}
-                {{ jornada.sector}}
-                {% else %}
-                Sin Sector Asignado
-                {% endif %}
-              </td>
-              <td>
-                {% if jornada.huerto %}
-                {{ jornada.huerto}}
-                {% else %}
-                Sin Huerto Asignado
-                {% endif %}
-
-              </td>
-
-              <td>
-                {% if jornada.lote%}
-                {{ jornada.lote}}
-                {% else %}
-                Sin Lote Asignado
-                {% endif %}
-              </td>
-              <td>{{ jornada.fecha }}</td>
-
-
-              <td>
-                <div class="tareas-extras">
-                  <div class="tarea-extra-item">
-                    <strong class="resaltar-titulo">Tarea 1:</strong> <span class="resaltar-dato">{{ jornada.nombre_tarea_1 }}</span>
-                    {% if request.path == '/gestion_jornadas_por_trato/' %}
-                    {% else %}
-                    <strong class="resaltar-titulo">Horario:</strong>
+  <!-- Table Section -->
+  <div class="table-container">
+    <div class="table-responsive">
+      <table class="table-modern">
+        <thead>
+          <tr>
+            <th><i class="fas fa-user me-2"></i>Asignado</th>
+            <th><i class="fas fa-map-marked-alt me-2"></i>Sector</th>
+            <th><i class="fas fa-tree me-2"></i>Huerto</th>
+            <th><i class="fas fa-layer-group me-2"></i>Lote</th>
+            <th><i class="fas fa-calendar me-2"></i>Fecha</th>
+            <th><i class="fas fa-tasks me-2"></i>Tareas</th>
+            <th><i class="fas fa-plus-circle me-2"></i>Extras</th>
+            <th><i class="fas fa-comment me-2"></i>Observación</th>
+            <th><i class="fas fa-info-circle me-2"></i>Estado</th>
+            <th><i class="fas fa-calculator me-2"></i>Total</th>
+            <th><i class="fas fa-cogs me-2"></i>Opciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for jornada in jornada_page_obj %}
+          <tr>
+            <td>
+              <div class="employee-name">{{ jornada.asignado }}</div>
+            </td>
+            <td>
+              {% if jornada.sector %}
+                <span class="info-badge">{{ jornada.sector }}</span>
+              {% else %}
+                <span class="info-badge empty">Sin Sector</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if jornada.huerto %}
+                <span class="info-badge">{{ jornada.huerto }}</span>
+              {% else %}
+                <span class="info-badge empty">Sin Huerto</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if jornada.lote %}
+                <span class="info-badge">{{ jornada.lote }}</span>
+              {% else %}
+                <span class="info-badge empty">Sin Lote</span>
+              {% endif %}
+            </td>
+            <td>
+              <div class="text-nowrap">{{ jornada.fecha }}</div>
+            </td>
+            <td>
+              <div class="task-container">
+                <div class="task-card">
+                  <div class="task-title">Tarea 1: {{ jornada.nombre_tarea_1 }}</div>
+                  <div class="task-details">
+                    {% if request.path != '/gestion_jornadas_por_trato/' %}
+                      <strong>Horario:</strong> {{ jornada.hora_inicio_tarea_1 }} - {{ jornada.hora_fin_tarea_1 }}<br>
                     {% endif %}
-                    <span class="resaltar-dato">{{ jornada.hora_inicio_tarea_1 }} a {{ jornada.hora_fin_tarea_1 }}</span> 
-                    <br> 
-                    <strong class="resaltar-titulo">Cobro tarea 1: $</strong> 
-                    <span class="resaltar-dato">{{ jornada.cobro_tarea_1|intcomma }}</span>
+                    <span class="task-amount">Cobro: ${{ jornada.cobro_tarea_1|intcomma }}</span>
                   </div>
-                  {% if jornada.nombre_tarea_2 %}
-                  <div class="tarea-extra-item">
-                    <strong class="resaltar-titulo">Tarea 2:</strong> <span class="resaltar-dato">{{ jornada.nombre_tarea_2 }}</span>
-                    {% if request.path == '/gestion_jornadas_por_trato/' %}
-                    {% else %}
-                    <strong class="resaltar-titulo">Horario:</strong>
-                    {% endif %}
-                    <span class="resaltar-dato">{{ jornada.hora_inicio_tarea_2 }} a {{ jornada.hora_fin_tarea_2 }}</span> 
-                    <br> 
-                    <strong class="resaltar-titulo">Cobro tarea 2: $</strong> 
-                    <span class="resaltar-dato">{{ jornada.cobro_tarea_2|intcomma }}</span>
-                  </div>
-                  {% endif %}
-                  {% if jornada.nombre_tarea_3 %}
-                  <div class="tarea-extra-item">
-                    <strong class="resaltar-titulo">Tarea 3:</strong> <span class="resaltar-dato">{{ jornada.nombre_tarea_3 }}</span>
-                    {% if request.path == '/gestion_jornadas_por_trato/' %}
-                    {% else %}
-                    <strong class="resaltar-titulo">Horario:</strong>
-                    {% endif %}
-                    <span class="resaltar-dato">{{ jornada.hora_inicio_tarea_3 }} a {{ jornada.hora_fin_tarea_3 }}</span> 
-                    <br> 
-                    <strong class="resaltar-titulo">Cobro tarea 3: $</strong> 
-                    <span class="resaltar-dato">{{ jornada.cobro_tarea_3|intcomma }}</span>
-                  </div>
-                  {% endif %}
                 </div>
                 
-              </td>
-
-              <td>
-                <div class="tareas-extras">
-                  {% if jornada.nombre_extra_1 %}
-                  <div class="tarea-extra-item">
-                    <strong>Nombre Extra N° 1:</strong> {{ jornada.nombre_extra_1 }} <br>
-                    <strong>Gasto Extra 1: $</strong> <br> {{ jornada.gasto_extra_1|intcomma }}
+                {% if jornada.nombre_tarea_2 %}
+                <div class="task-card">
+                  <div class="task-title">Tarea 2: {{ jornada.nombre_tarea_2 }}</div>
+                  <div class="task-details">
+                    {% if request.path != '/gestion_jornadas_por_trato/' %}
+                      <strong>Horario:</strong> {{ jornada.hora_inicio_tarea_2 }} - {{ jornada.hora_fin_tarea_2 }}<br>
+                    {% endif %}
+                    <span class="task-amount">Cobro: ${{ jornada.cobro_tarea_2|intcomma }}</span>
                   </div>
-                  {% endif %}
-                  {% if jornada.nombre_extra_2 %}
-                  <div class="tarea-extra-item">
-                    <strong>Nombre Extra N° 2:</strong> {{ jornada.nombre_extra_2 }} <br>
-                    <strong>Gasto Extra 2: $</strong> <br> {{ jornada.gasto_extra_2|intcomma }}
-                  </div>
-                  {% endif %}
-                  {% if jornada.nombre_extra_3 %}
-                  <div class="tarea-extra-item">
-                    <strong>Nombre Extra N° 3:</strong> {{ jornada.nombre_extra_3 }} <br>
-                    <strong>Gasto Extra 3: $</strong> <br> {{ jornada.gasto_extra_3|intcomma }}
-                  </div>
-                  {% endif %}
-                  {% if not jornada.nombre_extra_1 and not jornada.nombre_extra_2 and not jornada.nombre_extra_3 %}
-                  <div class="tarea-extra-item">
-                    <strong>Sin extras</strong>
-                  </div>
-                  {% endif %}
                 </div>
-              </td>
-
-
-
-              <td>
-                {% if jornada.observacion %}
-                {{ jornada.observacion}}
-                {% else %}
-                Sin Observación
                 {% endif %}
-              </td>
-
-              <td>{{ jornada.estado }}</td>
-
-              <td>
-                <div class="campo-total">
-                  <ul>
-                    <li><strong>Gasto total Jornada</strong> ${{ jornada.total_gasto_jornada|intcomma }}</li>
-                    {% if jornada.total_gasto_jornada %}
-                    <li><strong>Detalle Gasto Tareas:</strong> ${{ jornada.detalle_gasto_total_tareas|intcomma }}</li>
+                
+                {% if jornada.nombre_tarea_3 %}
+                <div class="task-card">
+                  <div class="task-title">Tarea 3: {{ jornada.nombre_tarea_3 }}</div>
+                  <div class="task-details">
+                    {% if request.path != '/gestion_jornadas_por_trato/' %}
+                      <strong>Horario:</strong> {{ jornada.hora_inicio_tarea_3 }} - {{ jornada.hora_fin_tarea_3 }}<br>
                     {% endif %}
-                    {% if jornada.detalle_gasto_total_tareas %}
-                    <li><strong>Detalle Gasto Extras:</strong> ${{ jornada.detalle_gastos_total_extras|intcomma }}</li>
-                    {% endif %}
-                  </ul>
+                    <span class="task-amount">Cobro: ${{ jornada.cobro_tarea_3|intcomma }}</span>
+                  </div>
                 </div>
-              </td>
-
-
-              <td>
-                <a href="{% url 'modificarjornada' jornada.id %}" class="btn btn-warning">Modificar</a>
-              <td>
+                {% endif %}
+              </div>
+            </td>
+            <td>
+              <div class="extra-container">
+                {% if jornada.nombre_extra_1 %}
+                <div class="extra-card">
+                  <div class="extra-title">{{ jornada.nombre_extra_1 }}</div>
+                  <div class="extra-amount">${{ jornada.gasto_extra_1|intcomma }}</div>
+                </div>
+                {% endif %}
+                
+                {% if jornada.nombre_extra_2 %}
+                <div class="extra-card">
+                  <div class="extra-title">{{ jornada.nombre_extra_2 }}</div>
+                  <div class="extra-amount">${{ jornada.gasto_extra_2|intcomma }}</div>
+                </div>
+                {% endif %}
+                
+                {% if jornada.nombre_extra_3 %}
+                <div class="extra-card">
+                  <div class="extra-title">{{ jornada.nombre_extra_3 }}</div>
+                  <div class="extra-amount">${{ jornada.gasto_extra_3|intcomma }}</div>
+                </div>
+                {% endif %}
+                
+                {% if not jornada.nombre_extra_1 and not jornada.nombre_extra_2 and not jornada.nombre_extra_3 %}
+                <div class="info-badge empty">Sin extras</div>
+                {% endif %}
+              </div>
+            </td>
+            <td>
+              {% if jornada.observacion %}
+                <div class="text-wrap" style="max-width: 200px;">{{ jornada.observacion }}</div>
+              {% else %}
+                <span class="info-badge empty">Sin Observación</span>
+              {% endif %}
+            </td>
+            <td>
+              <span class="status-badge status-active">{{ jornada.estado }}</span>
+            </td>
+            <td>
+              <div class="total-card">
+                <ul class="total-list">
+                  <li class="total-item">
+                    <span class="total-label">Total Jornada:</span>
+                    <span class="total-amount">${{ jornada.total_gasto_jornada|intcomma }}</span>
+                  </li>
+                  {% if jornada.detalle_gasto_total_tareas %}
+                  <li class="total-item">
+                    <span class="total-label">Tareas:</span>
+                    <span class="total-amount">${{ jornada.detalle_gasto_total_tareas|intcomma }}</span>
+                  </li>
+                  {% endif %}
+                  {% if jornada.detalle_gastos_total_extras %}
+                  <li class="total-item">
+                    <span class="total-label">Extras:</span>
+                    <span class="total-amount">${{ jornada.detalle_gastos_total_extras|intcomma }}</span>
+                  </li>
+                  {% endif %}
+                </ul>
+              </div>
+            </td>
+            <td>
+              <div class="action-buttons">
+                <a href="{% url 'modificarjornada' jornada.id %}" class="btn-modern btn-warning btn-sm">
+                  <i class="fas fa-edit"></i>
+                  Modificar
+                </a>
                 {% if request.path == '/gestion_jornadas_por_trato/' %}
-              <a href="#" onclick="eliminarjornadaPorTrato({{ jornada.id }})" class="btn btn-danger">Eliminar </a>
-            
-            {% else %}
-            <a href="#" onclick="eliminarJornada({{ jornada.id }})" class="btn btn-danger">Eliminar </a>
-            {% endif %}
-              </td>
-              
-
-
-              </td>
-
-              {% endfor %}
-          </tbody>
-        </table>
-      </div>
-
-
-
-
-
-
+                  <button onclick="eliminarjornadaPorTrato({{ jornada.id }})" class="btn-modern btn-danger btn-sm">
+                    <i class="fas fa-trash"></i>
+                    Eliminar
+                  </button>
+                {% else %}
+                  <button onclick="eliminarJornada({{ jornada.id }})" class="btn-modern btn-danger btn-sm">
+                    <i class="fas fa-trash"></i>
+                    Eliminar
+                  </button>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
-    <br>
+  </div>
 
-
-
-    <div class="d-flex justify-content-center" class="pagination ">
-      <span class="step-links">
-        {% if jornada_page_obj.has_previous %}
-        <a href="{% my_url 1 'page' request.GET.urlencode %}">&laquo; Primera Página</a>
-        <a href="{% my_url jornada_page_obj.previous_page_number 'page' request.GET.urlencode %}">Anterior</a>
-        {% endif %}
-
-        <span class="current">
-          Página {{ jornada_page_obj.number }} de {{ jornada_page_obj.paginator.num_pages }}.
-        </span>
-
-        {% if jornada_page_obj.has_next %}
-        <a href="{% my_url jornada_page_obj.next_page_number 'page' request.GET.urlencode %}">Siguiente</a>
-        <a href="{% my_url jornada_page_obj.paginator.num_pages 'page' request.GET.urlencode %}">Última Página
+  <!-- Pagination Section -->
+  <div class="pagination-container">
+    <div class="pagination">
+      {% if jornada_page_obj.has_previous %}
+        <a href="{% my_url 1 'page' request.GET.urlencode %}">
+          <i class="fas fa-angle-double-left me-1"></i>Primera
         </a>
-        {% endif %}
+        <a href="{% my_url jornada_page_obj.previous_page_number 'page' request.GET.urlencode %}">
+          <i class="fas fa-angle-left me-1"></i>Anterior
+        </a>
+      {% endif %}
+
+      <span class="current">
+        Página {{ jornada_page_obj.number }} de {{ jornada_page_obj.paginator.num_pages }}
       </span>
+
+      {% if jornada_page_obj.has_next %}
+        <a href="{% my_url jornada_page_obj.next_page_number 'page' request.GET.urlencode %}">
+          Siguiente<i class="fas fa-angle-right ms-1"></i>
+        </a>
+        <a href="{% my_url jornada_page_obj.paginator.num_pages 'page' request.GET.urlencode %}">
+          Última<i class="fas fa-angle-double-right ms-1"></i>
+        </a>
+      {% endif %}
     </div>
-    <!-- Modal -->
+  </div>
+</div>
+
+<!-- Modal Agregar Jornada -->
 <div class="modal fade" id="modalJornada" tabindex="-1" aria-labelledby="modalJornadaLabel" aria-hidden="true">
-  <div class="modal-dialog">
+  <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="modalJornadaLabel">¿Qué tipo de jornada desea agregar?</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <h3 class="modal-title" id="modalJornadaLabel">
+          <i class="fas fa-plus-circle me-2"></i>¿Qué tipo de jornada desea agregar?
+        </h3>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <p>Seleccione el tipo de jornada que desea agregar:</p>
-        <div class="d-flex justify-content-around">
-          <button type="button" class="btn btn-warning" onclick="window.location.href='{% url 'agregar_jornada_por_trato' %}'">Por Trato</button>
-          <button type="button" class="btn btn-info" onclick="window.location.href='{% url 'agregar_jornada' %}'">Por Horas</button>
+        <p class="mb-4 text-muted">Seleccione el tipo de jornada que desea agregar:</p>
+        <div class="d-grid gap-3">
+          <button type="button" class="btn-modern btn-warning" onclick="window.location.href='{% url 'agregar_jornada_por_trato' %}'">
+            <i class="fas fa-handshake me-2"></i>Jornada por Trato
+          </button>
+          <button type="button" class="btn-modern btn-info" onclick="window.location.href='{% url 'agregar_jornada' %}'">
+            <i class="fas fa-clock me-2"></i>Jornada por Horas
+          </button>
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn-modern btn-outline" data-bs-dismiss="modal">
+          <i class="fas fa-times me-2"></i>Cancelar
+        </button>
       </div>
     </div>
   </div>
 </div>
 
-
-
-
-    <script>
-      function eliminarJornada(id) {
-        Swal.fire({
-          "title": "¿Estas Seguro?",
-          "text": "Esta acción no se puede deshacer",
-          "icon": "question",
-          "showCancelButton": true,
-          "cancelButtonText": "No, Cancelar",
-          "confirmButtonText": "Si, Eliminar",
-          "reverseButtons": true,
-          "confirmButtonColor": "dc3545",
-
-
-
-
-
-
-
-
-
-
-        })
-          .then(function (result) {
-            if (result.isConfirmed) {
-              window.location.href = "/eliminarjornada/" + id + "/"
-            }
-          })
-      }
-    </script>
-    <script>
-      function eliminarjornadaPorTrato(id) {
-        Swal.fire({
-          "title": "¿Estas Seguro?",
-          "text": "Esta acción no se puede deshacer",
-          "icon": "question",
-          "showCancelButton": true,
-          "cancelButtonText": "No, Cancelar",
-          "confirmButtonText": "Si, Eliminar",
-          "reverseButtons": true,
-          "confirmButtonColor": "dc3545",
-
-
-
-
-
-
-
-
-
-
-        })
-          .then(function (result) {
-            if (result.isConfirmed) {
-              window.location.href = "/eliminarjornadaPorTrato/" + id + "/"
-            }
-          })
-      }
-    </script>
-    
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+<!-- Modal Filtrar -->
+<div class="modal fade" id="searchModal" tabindex="-1" role="dialog" aria-labelledby="searchModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title" id="searchModalLabel">
+          <i class="fas fa-filter me-2"></i>Filtrar Jornadas
+        </h3>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form method="get" id="filterForm">
+          <div class="row">
+            <div class="col-12">
+              {{ filtered_jornadas.form.as_p }}
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-modern btn-outline" data-bs-dismiss="modal">
+          <i class="fas fa-times me-2"></i>Cancelar
+        </button>
+        <button type="submit" form="filterForm" class="btn-modern btn-success">
+          <i class="fas fa-search me-2"></i>Aplicar Filtros
+        </button>
+      </div>
+    </div>
   </div>
-  {% endblock %}
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+// Función para mostrar loading
+function showLoading() {
+  document.getElementById('loadingOverlay').style.display = 'flex';
+}
+
+function hideLoading() {
+  document.getElementById('loadingOverlay').style.display = 'none';
+}
+
+// Función para eliminar jornada por horas
+function eliminarJornada(id) {
+  Swal.fire({
+    title: '¿Estás Seguro?',
+    text: 'Esta acción no se puede deshacer',
+    icon: 'warning',
+    showCancelButton: true,
+    cancelButtonText: 'No, Cancelar',
+    confirmButtonText: 'Sí, Eliminar',
+    reverseButtons: true,
+    confirmButtonColor: '#dc2626',
+    cancelButtonColor: '#6b7280',
+    background: '#ffffff',
+    customClass: {
+      popup: 'rounded-lg shadow-xl',
+      title: 'text-lg font-semibold text-gray-800',
+      content: 'text-gray-600',
+      confirmButton: 'font-semibold rounded-lg px-4 py-2',
+      cancelButton: 'font-semibold rounded-lg px-4 py-2'
+    }
+  }).then(function (result) {
+    if (result.isConfirmed) {
+      showLoading();
+      window.location.href = "/eliminarjornada/" + id + "/";
+    }
+  });
+}
+
+// Función para eliminar jornada por trato
+function eliminarjornadaPorTrato(id) {
+  Swal.fire({
+    title: '¿Estás Seguro?',
+    text: 'Esta acción no se puede deshacer',
+    icon: 'warning',
+    showCancelButton: true,
+    cancelButtonText: 'No, Cancelar',
+    confirmButtonText: 'Sí, Eliminar',
+    reverseButtons: true,
+    confirmButtonColor: '#dc2626',
+    cancelButtonColor: '#6b7280',
+    background: '#ffffff',
+    customClass: {
+      popup: 'rounded-lg shadow-xl',
+      title: 'text-lg font-semibold text-gray-800',
+      content: 'text-gray-600',
+      confirmButton: 'font-semibold rounded-lg px-4 py-2',
+      cancelButton: 'font-semibold rounded-lg px-4 py-2'
+    }
+  }).then(function (result) {
+    if (result.isConfirmed) {
+      showLoading();
+      window.location.href = "/eliminarjornadaPorTrato/" + id + "/";
+    }
+  });
+}
+
+// Mejorar experiencia de usuario con efectos
+document.addEventListener('DOMContentLoaded', function() {
+  // Animar entrada de las filas de la tabla
+  const tableRows = document.querySelectorAll('.table-modern tbody tr');
+  tableRows.forEach((row, index) => {
+    row.style.animationDelay = `${index * 0.05}s`;
+    row.style.animation = 'fadeInUp 0.6s ease forwards';
+  });
+  
+  // Añadir efecto hover mejorado a los botones
+  const buttons = document.querySelectorAll('.btn-modern');
+  buttons.forEach(button => {
+    button.addEventListener('mouseenter', function() {
+      this.style.transform = 'translateY(-2px)';
+    });
+    
+    button.addEventListener('mouseleave', function() {
+      this.style.transform = 'translateY(0)';
+    });
+  });
+  
+  // Tooltip para botones pequeños en móvil
+  if (window.innerWidth <= 768) {
+    const actionButtons = document.querySelectorAll('.btn-sm');
+    actionButtons.forEach(button => {
+      button.setAttribute('data-bs-toggle', 'tooltip');
+      button.setAttribute('data-bs-placement', 'top');
+    });
+  }
+  
+  // Inicializar tooltips si Bootstrap está disponible
+  if (typeof bootstrap !== 'undefined') {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+      return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+  }
+  
+  // Mejorar el formulario de filtros
+  const filterForm = document.getElementById('filterForm');
+  if (filterForm) {
+    const formInputs = filterForm.querySelectorAll('input, select');
+    formInputs.forEach(input => {
+      input.classList.add('form-control');
+      input.addEventListener('focus', function() {
+        this.parentElement.style.transform = 'scale(1.02)';
+        this.parentElement.style.transition = 'transform 0.2s ease';
+      });
+      
+      input.addEventListener('blur', function() {
+        this.parentElement.style.transform = 'scale(1)';
+      });
+    });
+  }
+});
+
+// Animaciones CSS adicionales
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  @keyframes pulse {
+    0%, 100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.05);
+    }
+  }
+  
+  .btn-modern:active {
+    transform: translateY(1px) !important;
+  }
+  
+  .table-modern tbody tr {
+    opacity: 0;
+  }
+  
+  .task-card:hover,
+  .extra-card:hover,
+  .total-card:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+  }
+  
+  .employee-name:hover {
+    color: var(--primary-hover);
+    cursor: default;
+  }
+  
+  .info-badge:hover {
+    transform: scale(1.1);
+  }
+  
+  .status-badge:hover {
+    animation: pulse 1s infinite;
+  }
+  
+  /* Mejoras para el modal */
+  .modal.fade .modal-dialog {
+    transition: transform 0.4s ease-out, opacity 0.3s ease-out;
+    transform: translateY(-50px);
+  }
+  
+  .modal.show .modal-dialog {
+    transform: none;
+  }
+  
+  /* Efectos para elementos interactivos */
+  .dropdown-item {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .dropdown-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(37, 99, 235, 0.1), transparent);
+    transition: left 0.5s;
+  }
+  
+  .dropdown-item:hover::before {
+    left: 100%;
+  }
+`;
+document.head.appendChild(style);
+
+// Función para exportar con confirmación
+function exportarExcel(url) {
+  Swal.fire({
+    title: 'Exportando...',
+    text: 'Se está generando el archivo Excel',
+    icon: 'info',
+    showConfirmButton: false,
+    timer: 1500,
+    timerProgressBar: true
+  }).then(() => {
+    window.location.href = url;
+  });
+}
+
+// Mejorar los enlaces de exportación
+document.addEventListener('DOMContentLoaded', function() {
+  const exportLinks = document.querySelectorAll('a[href*="exportar_a_excel"]');
+  exportLinks.forEach(link => {
+    link.addEventListener('click', function(e) {
+      e.preventDefault();
+      exportarExcel(this.href);
+    });
+  });
+});
+</script>
+
+{% endblock %}

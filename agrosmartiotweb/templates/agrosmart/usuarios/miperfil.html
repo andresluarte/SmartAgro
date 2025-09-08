@@ -1,0 +1,42 @@
+{% extends 'agrosmart/base.html' %}
+{% load static %}
+
+{% block contenido %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+
+            <!-- Card de perfil -->
+            <div class="card shadow-lg rounded-4 border-0">
+                <div class="card-body text-center p-5">
+                    <div class="mb-3">
+                        <i class="fa-solid fa-circle-user fa-5x text-primary"></i>
+                    </div>
+                    <h3 class="fw-bold text-dark">{{ user.username }}</h3>
+                    <p class="text-muted mb-1">{{ user.get_user_type_display }}</p>
+                    <p class="text-muted"><i class="fa-solid fa-building"></i> 
+                        {{ user.empresa.nombre|default:"Sin empresa asignada" }}
+                    </p>
+                    <hr>
+                    <div class="row text-start mt-4">
+                        <div class="col-md-6 mb-3">
+                            <strong>Email:</strong> {{ user.email|default:"No registrado" }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <strong>Nombre:</strong> {{ user.first_name|default:"-" }} {{ user.last_name|default:"-" }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <strong>Usuario creado por:</strong> 
+                            {{ user.created_by.username|default:"-" }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <strong>Fecha de creación:</strong> {{ user.date_joined|date:"d M Y H:i" }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
