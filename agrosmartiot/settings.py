@@ -179,18 +179,25 @@ CSRF_TRUSTED_ORIGINS = ['https://smartagro-iot-fce1cd62dbea.herokuapp.com','http
 #import os
 
 import os
+import ssl
 
 # Obtener URL de Redis desde las variables de entorno
 REDIS_URL = os.environ.get("REDIS_TLS_URL") or os.environ.get("REDIS_URL")
 
 if REDIS_URL:
+    # Configuración SSL para Heroku Redis
+    ssl_context = ssl.create_default_context()
+    ssl_context.check_hostname = False
+    ssl_context.verify_mode = ssl.CERT_NONE
+    
     CHANNEL_LAYERS = {
         "default": {
             "BACKEND": "channels_redis.core.RedisChannelLayer",
             "CONFIG": {
-                "hosts": [REDIS_URL],
-                # IMPORTANTE: channels-redis 4.x maneja SSL automáticamente
-                # No necesitas pasar parámetros SSL adicionales
+                "hosts": [{
+                    "address": REDIS_URL,
+                    "ssl": ssl_context,
+                }],
             },
         },
     }
