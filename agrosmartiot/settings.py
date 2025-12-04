@@ -55,7 +55,8 @@ INSTALLED_APPS = [
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap4"
 
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
-ASGI_APPLICATION = 'agrosmartiot.asgi.application'
+WSGI_APPLICATION = 'agrosmartiot.wsgi.application'
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -90,7 +91,6 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'agrosmartiot.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
@@ -176,22 +176,25 @@ ALLOWED_HOSTS = [
 #django_heroku.settings(locals())
 CSRF_TRUSTED_ORIGINS = ['https://smartagro-iot-fce1cd62dbea.herokuapp.com','https://*.herokuapp.com']
 
-
 # Channel Layers - Al final del archivo
-if os.environ.get('REDIS_URL'):
-    # Producción en Heroku con Redis
+if os.environ.get("REDIS_URL"):
+    # Producción en Heroku con Redis (TLS obligatorio)
     CHANNEL_LAYERS = {
-        'default': {
-            'BACKEND': 'channels_redis.core.RedisChannelLayer',
-            'CONFIG': {
-                "hosts": [os.environ.get('REDIS_URL')],
+        "default": {
+            "BACKEND": "channels_redis.core.RedisChannelLayer",
+            "CONFIG": {
+                "hosts": [{
+                    "address": os.environ.get("REDIS_URL"),
+                    "ssl": True,             # Heroku requiere TLS
+                    "ssl_cert_reqs": None,   # Acepta certificado de Heroku
+                }],
             },
         },
     }
 else:
     # Desarrollo local
     CHANNEL_LAYERS = {
-        'default': {
-            'BACKEND': 'channels.layers.InMemoryChannelLayer'
+        "default": {
+            "BACKEND": "channels.layers.InMemoryChannelLayer"
         }
     }
