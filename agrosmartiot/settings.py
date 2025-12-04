@@ -176,23 +176,24 @@ ALLOWED_HOSTS = [
 #django_heroku.settings(locals())
 CSRF_TRUSTED_ORIGINS = ['https://smartagro-iot-fce1cd62dbea.herokuapp.com','https://*.herokuapp.com']
 
-# Channel Layers - Al final del archivo
-if os.environ.get("REDIS_URL"):
-    # Producción en Heroku con Redis (TLS obligatorio)
+#import os
+
+address = os.environ.get("REDIS_TLS_URL") or os.environ.get("REDIS_URL")
+
+if address:
     CHANNEL_LAYERS = {
         "default": {
             "BACKEND": "channels_redis.core.RedisChannelLayer",
             "CONFIG": {
                 "hosts": [{
-                    "address": os.environ.get("REDIS_URL"),
-                    "ssl": True,             # Heroku requiere TLS
-                    "ssl_cert_reqs": None,   # Acepta certificado de Heroku
+                    "address": address,
+                    "ssl": True,
+                    "ssl_cert_reqs": None,
                 }],
             },
         },
     }
 else:
-    # Desarrollo local
     CHANNEL_LAYERS = {
         "default": {
             "BACKEND": "channels.layers.InMemoryChannelLayer"
