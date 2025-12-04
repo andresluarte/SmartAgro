@@ -585,72 +585,168 @@ setInterval(() => {
 }, 3000);
 
 // Widget del clima (conservando la funcionalidad original)
+// Widget del clima - VERSIÓN CORREGIDA
 const openWeatherApiKey = 'b2240d2305cc3984b9662c4d473df3a3';
 
 function getLocation() {
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(showWeather, showError);
-    } else {
-        document.getElementById('weather-content').innerHTML = '<i class="fa-solid fa-exclamation-triangle"></i> Geolocalización no soportada.';
+    const weatherContent = document.getElementById('weather-content');
+    
+    // Verificar si el navegador soporta geolocalización
+    if (!navigator.geolocation) {
+        weatherContent.innerHTML = '<i class="fa-solid fa-exclamation-triangle"></i> Tu navegador no soporta geolocalización.';
+        return;
     }
+
+    // Verificar si estamos en HTTPS (requerido para geolocalización)
+    if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+        console.warn('Geolocalización requiere HTTPS. Usando ubicación por defecto.');
+        // Usar una ubicación por defecto (Temuco, Chile)
+        showWeatherByCity('Temuco', 'CL');
+        return;
+    }
+
+    weatherContent.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Obteniendo ubicación...';
+    
+    // Opciones para geolocalización
+    const options = {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+    };
+
+    navigator.geolocation.getCurrentPosition(showWeather, showError, options);
 }
 
 function showWeather(position) {
     const lat = position.coords.latitude;
     const lon = position.coords.longitude;
+    
+    console.log(`Ubicación obtenida: Lat ${lat}, Lon ${lon}`);
+    
+    // IMPORTANTE: Usar HTTPS para la API
     const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&lang=es&appid=${openWeatherApiKey}`;
 
-    fetch(url)
-        .then(response => response.json())
-        .then(data => {
-            const temp = Math.round(data.main.temp);
-            const description = data.weather[0].description;
-            const city = data.name;
-            const icon = `http://openweathermap.org/img/wn/${data.weather[0].icon}@2x.png`;
+    document.getElementById('weather-content').innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Cargando clima...';
 
-            document.getElementById('weather-content').innerHTML = `
-                <div class="weather-main">
-                    <img src="${icon}" alt="Weather icon" style="width: 60px; height: 60px;">
-                    <div>
-                        <div class="weather-temp">${temp}°C</div>
-                        <div style="color: #666; text-transform: capitalize; font-size: 0.9rem;">${description}</div>
-                    </div>
-                </div>
-                <h4 style="color: #08b522; margin: 1rem 0;">${city}</h4>
-                <div class="weather-details">
-                    <div><i class="fa-solid fa-eye"></i><br>Visibilidad<br><strong>${(data.visibility/1000)}km</strong></div>
-                    <div><i class="fa-solid fa-tint"></i><br>Humedad<br><strong>${data.main.humidity}%</strong></div>
-                    <div><i class="fa-solid fa-wind"></i><br>Viento<br><strong>${data.wind.speed}m/s</strong></div>
-                </div>
-            `;
+    fetch(url)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Error HTTP: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Datos del clima recibidos:', data);
+            displayWeather(data);
         })
         .catch(error => {
-            document.getElementById('weather-content').innerHTML = '<i class="fa-solid fa-exclamation-triangle"></i> No se pudo obtener el clima.';
-            console.error(error);
+            console.error('Error al obtener clima:', error);
+            document.getElementById('weather-content').innerHTML = `
+                <i class="fa-solid fa-exclamation-triangle"></i> 
+                <p style="color: #666; font-size: 0.9rem; margin-top: 0.5rem;">
+                    No se pudo obtener el clima. Intentando con ubicación por defecto...
+                </p>
+            `;
+            // Intentar con ubicación por defecto
+            showWeatherByCity('Temuco', 'CL');
         });
 }
 
-function showError(error) {
-    let message = 'Error de geolocalización';
-    switch(error.code) {
-        case error.PERMISSION_DENIED:
-            message = "Usuario denegó la solicitud de geolocalización.";
-            break;
-        case error.POSITION_UNAVAILABLE:
-            message = "La información de la ubicación no está disponible.";
-            break;
-        case error.TIMEOUT:
-            message = "La solicitud de ubicación ha caducado.";
-            break;
-        case error.UNKNOWN_ERROR:
-            message = "Un error desconocido ocurrió.";
-            break;
-    }
-    document.getElementById('weather-content').innerHTML = `<i class="fa-solid fa-exclamation-triangle"></i> ${message}`;
+function showWeatherByCity(city, countryCode) {
+    const url = `https://api.openweathermap.org/data/2.5/weather?q=${city},${countryCode}&units=metric&lang=es&appid=${openWeatherApiKey}`;
+    
+    fetch(url)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Error HTTP: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            displayWeather(data);
+        })
+        .catch(error => {
+            console.error('Error al obtener clima por ciudad:', error);
+            document.getElementById('weather-content').innerHTML = `
+                <i class="fa-solid fa-exclamation-triangle"></i> 
+                <p style="color: #666; font-size: 0.9rem; margin-top: 0.5rem;">
+                    No se pudo cargar la información del clima.
+                    <br>Verifica tu API Key o conexión a internet.
+                </p>
+            `;
+        });
 }
 
-// Inicializar
-getLocation();
+function displayWeather(data) {
+    const temp = Math.round(data.main.temp);
+    const description = data.weather[0].description;
+    const city = data.name;
+    // IMPORTANTE: Usar HTTPS para el icono
+    const icon = `https://openweathermap.org/img/wn/${data.weather[0].icon}@2x.png`;
+
+    document.getElementById('weather-content').innerHTML = `
+        <div class="weather-main">
+            <img src="${icon}" alt="${description}" style="width: 60px; height: 60px;">
+            <div>
+                <div class="weather-temp">${temp}°C</div>
+                <div style="color: #666; text-transform: capitalize; font-size: 0.9rem;">${description}</div>
+            </div>
+        </div>
+        <h4 style="color: #08b522; margin: 1rem 0;">${city}</h4>
+        <div class="weather-details">
+            <div><i class="fa-solid fa-eye"></i><br>Visibilidad<br><strong>${(data.visibility/1000).toFixed(1)}km</strong></div>
+            <div><i class="fa-solid fa-tint"></i><br>Humedad<br><strong>${data.main.humidity}%</strong></div>
+            <div><i class="fa-solid fa-wind"></i><br>Viento<br><strong>${data.wind.speed.toFixed(1)}m/s</strong></div>
+        </div>
+    `;
+}
+
+function showError(error) {
+    console.error('Error de geolocalización:', error);
+    
+    let message = 'Error de geolocalización';
+    let suggestion = '';
+    
+    switch(error.code) {
+        case error.PERMISSION_DENIED:
+            message = "Permiso de ubicación denegado";
+            suggestion = "Habilita los permisos de ubicación en tu navegador";
+            break;
+        case error.POSITION_UNAVAILABLE:
+            message = "Ubicación no disponible";
+            suggestion = "Verifica tu conexión GPS o red";
+            break;
+        case error.TIMEOUT:
+            message = "Tiempo de espera agotado";
+            suggestion = "Intenta nuevamente";
+            break;
+        default:
+            message = "Error desconocido";
+            suggestion = "Verifica tu conexión";
+            break;
+    }
+    
+    document.getElementById('weather-content').innerHTML = `
+        <i class="fa-solid fa-exclamation-triangle"></i> 
+        <p style="color: #666; font-size: 0.9rem; margin-top: 0.5rem;">
+            <strong>${message}</strong><br>
+            ${suggestion}
+        </p>
+    `;
+    
+    // Intentar con ubicación por defecto después de 2 segundos
+    setTimeout(() => {
+        document.getElementById('weather-content').innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Cargando ubicación por defecto...';
+        showWeatherByCity('Temuco', 'CL');
+    }, 2000);
+}
+
+// Inicializar cuando el DOM esté listo
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', getLocation);
+} else {
+    getLocation();
+}
 
 // Efectos adicionales
 

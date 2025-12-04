@@ -40,6 +40,7 @@ LOGOUT_REDIRECT_URL = '/'
 # Application definition
 
 INSTALLED_APPS = [
+    'daphne'
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -103,25 +104,19 @@ WSGI_APPLICATION = 'agrosmartiot.wsgi.application'
 #         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),  # Ubicación del archivo de la base de datos
 #     }
 # }
-CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": "channels.layers.InMemoryChannelLayer",  # local
-        # Para Redis:
-        # "BACKEND": "channels_redis.core.RedisChannelLayer",
-        # "CONFIG": {"hosts": [("127.0.0.1", 6379)]},
-    },
-}
+
 
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'smartagroiot',
-        'USER': 'postgres',
-        'PASSWORD': 'postgres',
-        'HOST': 'localhost',
+        'NAME': 'd6vjp9pblsa0c2',
+        'USER': 'u59j640n334lri',
+        'PASSWORD': 'p24b71f9a41726e50706096b53f39f27348007d0f1056c4a22d7ca1a931a746dc',
+        'HOST': 'cet8r1hlj0mlnt.cluster-czrs8kj4isg7.us-east-1.rds.amazonaws.com',
         'PORT': '5432',
     }
 }
+
 
 # settings.py
 AUTHENTICATION_BACKENDS = [
@@ -173,6 +168,26 @@ SESSION_COOKIE_SECURE = False  # Si no estás usando HTTPS, asegúrate de que es
 CSRF_COOKIE_SECURE = False     # Asegúrate de que sea False en desarrollo
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 #django_heroku.settings(locals())
 CSRF_TRUSTED_ORIGINS = ['https://web-production-3711.up.railway.app']
+
+
+# Channel Layers - Al final del archivo
+if os.environ.get('REDIS_URL'):
+    # Producción en Heroku con Redis
+    CHANNEL_LAYERS = {
+        'default': {
+            'BACKEND': 'channels_redis.core.RedisChannelLayer',
+            'CONFIG': {
+                "hosts": [os.environ.get('REDIS_URL')],
+            },
+        },
+    }
+else:
+    # Desarrollo local
+    CHANNEL_LAYERS = {
+        'default': {
+            'BACKEND': 'channels.layers.InMemoryChannelLayer'
+        }
+    }

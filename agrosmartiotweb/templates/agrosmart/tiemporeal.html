@@ -3,44 +3,45 @@
 {% block contenido %}
 <style>
     #weather-widget {
-    text-align: center;
-}
+        text-align: center;
+    }
 
-.weather-content {
-    margin-top: 1rem;
-}
+    .weather-content {
+        margin-top: 1rem;
+    }
 
-.weather-main {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 1rem;
-    margin: 1rem 0;
-    padding: 1rem;
-    background: linear-gradient(145deg, #f8fff9, #f0fdf4);
-    border-radius: 15px;
-}
+    .weather-main {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+        margin: 1rem 0;
+        padding: 1rem;
+        background: linear-gradient(145deg, #f8fff9, #f0fdf4);
+        border-radius: 15px;
+    }
 
-.weather-temp {
-    font-size: 2.5rem;
-    font-weight: 700;
-    color: #08b522;
-}
+    .weather-temp {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #08b522;
+    }
 
-.weather-details {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0.5rem;
-    margin-top: 1rem;
-    font-size: 0.85rem;
-    color: #666;
-}
-
+    .weather-details {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.5rem;
+        margin-top: 1rem;
+        font-size: 0.85rem;
+        color: #666;
+    }
 </style>
+
 <div class="container py-5">
     <h3 class="text-center mb-5 fw-bold" style="color:#2c3e50;">
         🌬️ Datos Sensor Aire en Tiempo Real
     </h3>
+    
     <div class="card shadow-lg border-0 rounded-4 mb-5" id="weather-widget">
         <div class="card-header bg-success text-white text-center fw-bold">
             <i class="fa-solid fa-cloud-sun"></i> Clima Actual
@@ -153,121 +154,178 @@
         });
     </script>
 
-    <!-- WebSocket -->
+    <!-- WebSocket para Sensores de Aire -->
     <script>
     document.addEventListener('DOMContentLoaded', function () {
-        const socket = new WebSocket('ws://' + window.location.host + '/ws/sensoresaire/');
+        // Función para obtener la URL correcta de WebSocket
+        function getWebSocketURL(endpoint) {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const host = window.location.host;
+            return `${protocol}//${host}/ws/${endpoint}/`;
+        }
 
-        socket.onopen = function() {
-            console.log("✅ WebSocket conectado");
-            socket.send(JSON.stringify({ message: 'Hola servidor WebSocket desde SmartAgro' }));
-        };
+        const wsUrl = getWebSocketURL('sensoresaire');
+        console.log('🔌 Conectando a:', wsUrl);
+        
+        let socket = null;
+        let reconnectAttempts = 0;
+        const maxReconnectAttempts = 5;
+        const reconnectDelay = 3000;
 
-        socket.onmessage = function(e) {
-            const data = JSON.parse(e.data);
-            if (data.sensor_id) {
-                const humidityEl = document.getElementById(`humidity-${data.sensor_id}`);
-                const temperatureEl = document.getElementById(`temperature-${data.sensor_id}`);
-                const latitudeEl = document.getElementById(`latitudeEl-${data.sensor_id}`);
-                const longitudeEl = document.getElementById(`longitudEl-${data.sensor_id}`);
-                const timestampEl = document.getElementById(`timestamp-${data.sensor_id}`);
-                const mapLinkEl = document.getElementById(`mapLink-${data.sensor_id}`);
+        function connectWebSocket() {
+            try {
+                socket = new WebSocket(wsUrl);
 
-                if (humidityEl) humidityEl.innerText = `${data.humidity}%`;
-                if (temperatureEl) temperatureEl.innerText = `${data.temperature}°C`;
-                if (latitudeEl) latitudeEl.innerText = data.latitude;
-                if (longitudeEl) longitudeEl.innerText = data.longitude;
-                if (timestampEl) timestampEl.innerText = `⏱️ Última actualización: ${data.timestamp}`;
-                if (mapLinkEl) mapLinkEl.href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(data.latitude)},${encodeURIComponent(data.longitude)}`;
+                socket.onopen = function() {
+                    console.log("✅ WebSocket Aire conectado exitosamente");
+                    reconnectAttempts = 0;
+                    socket.send(JSON.stringify({ 
+                        message: 'Hola servidor WebSocket desde SmartAgro - Sensores Aire' 
+                    }));
+                };
 
-                // Actualizar gráfico
-                const chart = window["chart_" + data.sensor_id];
-                if (chart) {
-                    chart.data.datasets[0].data = [
-                        Number(data.temperature),
-                        Number(data.humidity)
-                    ];
-                    chart.update();
-                }
+                socket.onmessage = function(e) {
+                    try {
+                        const data = JSON.parse(e.data);
+                        console.log('📦 Datos recibidos:', data);
+                        
+                        if (data.sensor_id) {
+                            const humidityEl = document.getElementById(`humidity-${data.sensor_id}`);
+                            const temperatureEl = document.getElementById(`temperature-${data.sensor_id}`);
+                            const latitudeEl = document.getElementById(`latitudeEl-${data.sensor_id}`);
+                            const longitudeEl = document.getElementById(`longitudEl-${data.sensor_id}`);
+                            const timestampEl = document.getElementById(`timestamp-${data.sensor_id}`);
+                            const mapLinkEl = document.getElementById(`mapLink-${data.sensor_id}`);
+
+                            if (humidityEl) humidityEl.innerText = `${data.humidity}%`;
+                            if (temperatureEl) temperatureEl.innerText = `${data.temperature}°C`;
+                            if (latitudeEl) latitudeEl.innerText = data.latitude;
+                            if (longitudeEl) longitudeEl.innerText = data.longitude;
+                            if (timestampEl) timestampEl.innerText = `⏱️ Última actualización: ${data.timestamp}`;
+                            if (mapLinkEl) {
+                                mapLinkEl.href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(data.latitude)},${encodeURIComponent(data.longitude)}`;
+                            }
+
+                            // Actualizar gráfico
+                            const chart = window["chart_" + data.sensor_id];
+                            if (chart) {
+                                chart.data.datasets[0].data = [
+                                    Number(data.temperature),
+                                    Number(data.humidity)
+                                ];
+                                chart.update();
+                            }
+                        }
+                    } catch (error) {
+                        console.error("❌ Error procesando mensaje:", error);
+                    }
+                };
+
+                socket.onclose = function(event) { 
+                    console.log("⚠️ WebSocket Aire desconectado. Código:", event.code, "Razón:", event.reason);
+                    
+                    // Intentar reconectar
+                    if (reconnectAttempts < maxReconnectAttempts) {
+                        reconnectAttempts++;
+                        console.log(`🔄 Reconectando... Intento ${reconnectAttempts}/${maxReconnectAttempts}`);
+                        setTimeout(connectWebSocket, reconnectDelay);
+                    } else {
+                        console.error("❌ No se pudo reconectar después de", maxReconnectAttempts, "intentos");
+                    }
+                };
+                
+                socket.onerror = function(error) { 
+                    console.error("❌ WebSocket error:", error); 
+                };
+            } catch (error) {
+                console.error("❌ Error creando WebSocket:", error);
             }
-        };
+        }
 
-        socket.onclose = function() { console.log("⚠️ WebSocket desconectado"); };
-        socket.onerror = function(error) { console.error("❌ WebSocket error:", error); };
+        // Iniciar conexión
+        connectWebSocket();
+
+        // Cerrar conexión cuando se salga de la página
+        window.addEventListener('beforeunload', function() {
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                socket.close();
+            }
+        });
     });
     </script>
+
+    <!-- API de Clima de OpenWeather -->
     <script>
-const openWeatherApiKey = 'b2240d2305cc3984b9662c4d473df3a3';
+    const openWeatherApiKey = 'b2240d2305cc3984b9662c4d473df3a3';
 
-function getLocation() {
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(showWeather, showError);
-    } else {
-        document.getElementById('weather-content').innerHTML =
-            '<i class="fa-solid fa-exclamation-triangle"></i> Geolocalización no soportada.';
-    }
-}
-
-function showWeather(position) {
-    const lat = position.coords.latitude;
-    const lon = position.coords.longitude;
-    const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&lang=es&appid=${openWeatherApiKey}`;
-
-    fetch(url)
-        .then(response => response.json())
-        .then(data => {
-            const temp = Math.round(data.main.temp);
-            const description = data.weather[0].description;
-            const city = data.name;
-            const icon = `http://openweathermap.org/img/wn/${data.weather[0].icon}@2x.png`;
-
-            document.getElementById('weather-content').innerHTML = `
-                <div class="weather-main">
-                    <img src="${icon}" alt="Weather icon" style="width: 60px; height: 60px;">
-                    <div>
-                        <div class="weather-temp">${temp}°C</div>
-                        <div style="color: #666; text-transform: capitalize; font-size: 0.9rem;">${description}</div>
-                    </div>
-                </div>
-                <h4 style="color: #08b522; margin: 1rem 0;">${city}</h4>
-                <div class="weather-details">
-                    <div><i class="fa-solid fa-eye"></i><br>Visibilidad<br><strong>${(data.visibility/1000)} km</strong></div>
-                    <div><i class="fa-solid fa-tint"></i><br>Humedad<br><strong>${data.main.humidity}%</strong></div>
-                    <div><i class="fa-solid fa-wind"></i><br>Viento<br><strong>${data.wind.speed} m/s</strong></div>
-                </div>
-            `;
-        })
-        .catch(error => {
+    function getLocation() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(showWeather, showError);
+        } else {
             document.getElementById('weather-content').innerHTML =
-                '<i class="fa-solid fa-exclamation-triangle"></i> No se pudo obtener el clima.';
-            console.error(error);
-        });
-}
-
-function showError(error) {
-    let message = 'Error de geolocalización';
-    switch(error.code) {
-        case error.PERMISSION_DENIED:
-            message = "Usuario denegó la solicitud de geolocalización.";
-            break;
-        case error.POSITION_UNAVAILABLE:
-            message = "La información de la ubicación no está disponible.";
-            break;
-        case error.TIMEOUT:
-            message = "La solicitud de ubicación ha caducado.";
-            break;
-        case error.UNKNOWN_ERROR:
-            message = "Un error desconocido ocurrió.";
-            break;
+                '<i class="fa-solid fa-exclamation-triangle"></i> Geolocalización no soportada.';
+        }
     }
-    document.getElementById('weather-content').innerHTML =
-        `<i class="fa-solid fa-exclamation-triangle"></i> ${message}`;
-}
 
-// Inicializar
-getLocation();
-</script>
+    function showWeather(position) {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&lang=es&appid=${openWeatherApiKey}`;
 
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                const temp = Math.round(data.main.temp);
+                const description = data.weather[0].description;
+                const city = data.name;
+                const icon = `https://openweathermap.org/img/wn/${data.weather[0].icon}@2x.png`;
+
+                document.getElementById('weather-content').innerHTML = `
+                    <div class="weather-main">
+                        <img src="${icon}" alt="Weather icon" style="width: 60px; height: 60px;">
+                        <div>
+                            <div class="weather-temp">${temp}°C</div>
+                            <div style="color: #666; text-transform: capitalize; font-size: 0.9rem;">${description}</div>
+                        </div>
+                    </div>
+                    <h4 style="color: #08b522; margin: 1rem 0;">${city}</h4>
+                    <div class="weather-details">
+                        <div><i class="fa-solid fa-eye"></i><br>Visibilidad<br><strong>${(data.visibility/1000)} km</strong></div>
+                        <div><i class="fa-solid fa-tint"></i><br>Humedad<br><strong>${data.main.humidity}%</strong></div>
+                        <div><i class="fa-solid fa-wind"></i><br>Viento<br><strong>${data.wind.speed} m/s</strong></div>
+                    </div>
+                `;
+            })
+            .catch(error => {
+                document.getElementById('weather-content').innerHTML =
+                    '<i class="fa-solid fa-exclamation-triangle"></i> No se pudo obtener el clima.';
+                console.error(error);
+            });
+    }
+
+    function showError(error) {
+        let message = 'Error de geolocalización';
+        switch(error.code) {
+            case error.PERMISSION_DENIED:
+                message = "Usuario denegó la solicitud de geolocalización.";
+                break;
+            case error.POSITION_UNAVAILABLE:
+                message = "La información de la ubicación no está disponible.";
+                break;
+            case error.TIMEOUT:
+                message = "La solicitud de ubicación ha caducado.";
+                break;
+            case error.UNKNOWN_ERROR:
+                message = "Un error desconocido ocurrió.";
+                break;
+        }
+        document.getElementById('weather-content').innerHTML =
+            `<i class="fa-solid fa-exclamation-triangle"></i> ${message}`;
+    }
+
+    // Inicializar clima
+    getLocation();
+    </script>
 
     {% else %}
     <div class="alert alert-info text-center py-4 rounded-4 shadow-sm">

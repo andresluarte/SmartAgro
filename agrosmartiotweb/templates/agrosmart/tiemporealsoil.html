@@ -68,7 +68,7 @@
         transform: translateY(-5px);
         box-shadow: 0 12px 25px rgba(0,0,0,0.18);
     }
-    .sensor-header h2 {
+    .sensor-header h3 {
         margin: 0;
         color: #004d40;
         font-size: 1.5em;
@@ -106,28 +106,82 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const socket = new WebSocket('ws://' + window.location.host + '/ws/sensores/');
+    // Función para obtener la URL correcta de WebSocket
+    function getWebSocketURL(endpoint) {
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const host = window.location.host;
+        return `${protocol}//${host}/ws/${endpoint}/`;
+    }
+
+    const wsUrl = getWebSocketURL('sensores');
+    console.log('🔌 Conectando a:', wsUrl);
     
-    socket.onopen = function() {
-        console.log("WebSocket conectado");
-        socket.send(JSON.stringify({ message: 'Hola servidor WebSocket desde SmartAgro' }));
-    };
+    let socket = null;
+    let reconnectAttempts = 0;
+    const maxReconnectAttempts = 5;
+    const reconnectDelay = 3000;
 
-    socket.onmessage = function(e) {
-        const data = JSON.parse(e.data);
-        if (data.sensor_id) {
-            const humidityEl = document.getElementById(`humidity-${data.sensor_id}`);
-            const temperatureEl = document.getElementById(`temperature-${data.sensor_id}`);
-            const timestampEl = document.getElementById(`timestamp-${data.sensor_id}`);
+    function connectWebSocket() {
+        try {
+            socket = new WebSocket(wsUrl);
+            
+            socket.onopen = function() {
+                console.log("✅ WebSocket conectado exitosamente");
+                reconnectAttempts = 0;
+                socket.send(JSON.stringify({ 
+                    message: 'Hola servidor WebSocket desde SmartAgro - Sensores Suelo' 
+                }));
+            };
 
-            if (humidityEl) humidityEl.innerText = `${data.humiditysoil}%`;
-            if (temperatureEl) temperatureEl.innerText = `${data.temperature}°C`;
-            if (timestampEl) timestampEl.innerText = data.timestamp;
+            socket.onmessage = function(e) {
+                try {
+                    const data = JSON.parse(e.data);
+                    console.log('📦 Datos recibidos:', data);
+                    
+                    if (data.sensor_id) {
+                        const humidityEl = document.getElementById(`humidity-${data.sensor_id}`);
+                        const temperatureEl = document.getElementById(`temperature-${data.sensor_id}`);
+                        const timestampEl = document.getElementById(`timestamp-${data.sensor_id}`);
+
+                        if (humidityEl) humidityEl.innerText = `${data.humiditysoil}%`;
+                        if (temperatureEl) temperatureEl.innerText = `${data.temperature}°C`;
+                        if (timestampEl) timestampEl.innerText = data.timestamp;
+                    }
+                } catch (error) {
+                    console.error("❌ Error procesando mensaje:", error);
+                }
+            };
+
+            socket.onclose = function(event) { 
+                console.log("⚠️ WebSocket desconectado. Código:", event.code, "Razón:", event.reason);
+                
+                // Intentar reconectar
+                if (reconnectAttempts < maxReconnectAttempts) {
+                    reconnectAttempts++;
+                    console.log(`🔄 Reconectando... Intento ${reconnectAttempts}/${maxReconnectAttempts}`);
+                    setTimeout(connectWebSocket, reconnectDelay);
+                } else {
+                    console.error("❌ No se pudo reconectar después de", maxReconnectAttempts, "intentos");
+                }
+            };
+            
+            socket.onerror = function(error) { 
+                console.error("❌ WebSocket error:", error); 
+            };
+        } catch (error) {
+            console.error("❌ Error creando WebSocket:", error);
         }
-    };
+    }
 
-    socket.onclose = function() { console.log("WebSocket desconectado"); };
-    socket.onerror = function(error) { console.error("WebSocket error:", error); };
+    // Iniciar conexión
+    connectWebSocket();
+
+    // Cerrar conexión cuando se salga de la página
+    window.addEventListener('beforeunload', function() {
+        if (socket && socket.readyState === WebSocket.OPEN) {
+            socket.close();
+        }
+    });
 });
 </script>
 {% endblock %}
