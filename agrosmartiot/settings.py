@@ -168,9 +168,13 @@ SESSION_COOKIE_SECURE = False  # Si no estás usando HTTPS, asegúrate de que es
 CSRF_COOKIE_SECURE = False     # Asegúrate de que sea False en desarrollo
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = [
+    'smartagro-iot-fce1cd62dbea.herokuapp.com',
+    '.herokuapp.com'
+]
+
 #django_heroku.settings(locals())
-CSRF_TRUSTED_ORIGINS = ['https://web-production-3711.up.railway.app']
+CSRF_TRUSTED_ORIGINS = ['https://smartagro-iot-fce1cd62dbea.herokuapp.com','https://*.herokuapp.com']
 
 
 # Channel Layers - Al final del archivo
