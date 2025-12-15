@@ -170,7 +170,7 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 
 ALLOWED_HOSTS = [
     'smartagro-iot-fce1cd62dbea.herokuapp.com',
-    '.herokuapp.com'
+    '.herokuapp.com','127.0.0.1','localhost'
 ]
 
 #django_heroku.settings(locals())
