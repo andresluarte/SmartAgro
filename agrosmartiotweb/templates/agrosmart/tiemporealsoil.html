@@ -300,25 +300,25 @@
     .sensor-card {
         padding: 1rem;
         margin: 0 auto; /* Centrar horizontalmente */
-        max-width: 10   0%; /* Evitar que se extienda demasiado */
+        max-width: 90%; /* Evitar que se extienda demasiado */
     }
     
     .metrics-grid {
         grid-template-columns: 1fr;
     }
 
-    /* Cambiar a flex para mejor centrado si es necesario */
+    /* Cambiar a grid para mejor centrado */
     .sensor-grid {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
+        display: grid;
+        grid-template-columns: 1fr;
+        justify-items: center;
     }
 }
 </style>
 
 
 
-<div class="sensor-dashboard">
+<div class="">
     <div class="dashboard-header">
         <h3>🌱 Monitoreo de Sensores de Suelo</h3>
         <p>Sistema de Monitoreo en Tiempo Real - SmartAgro</p>
@@ -331,12 +331,9 @@
                 <div class="sensor-header">
                     <div class="sensor-title">
                         <h3>{{ sensor.sensor_name }}</h2>
-                        <span class="sensor-id">ID: {{ sensor.sensor_id }}</span>
+                        <span class="sensor-id"> {{ sensor.sensor_id }}</span>
                     </div>
-                    <div class="status-badge">
-                        <span class="status-indicator"></span>
-                        Activo
-                    </div>
+                    
                 </div>
 
                 <!-- Métricas principales -->
@@ -421,31 +418,7 @@
                     </div>
 
                     <!-- Barra de progreso adicional -->
-                    <div class="chart-container">
-                        <div class="chart-title">📈 Nivel de Humedad</div>
-                        <div style="position: relative; background: #e2e8f0; height: 30px; border-radius: 15px; overflow: hidden;">
-                            <div class="humidity-bar" style="position: absolute; left: 0; top: 0; height: 100%; 
-                                background: linear-gradient(90deg, 
-                                    {% if sensor.latest_data.humiditysoil < 40 or sensor.latest_data.humiditysoil > 80 %}#f56565{% else %}#48bb78{% endif %} 0%, 
-                                    {% if sensor.latest_data.humiditysoil < 40 or sensor.latest_data.humiditysoil > 80 %}#fc8181{% else %}#68d391{% endif %} 100%);
-                                width: {% if sensor.latest_data.humiditysoil > 100 %}100{% else %}{{ sensor.latest_data.humiditysoil }}{% endif %}%; 
-                                transition: width 1s ease;
-                                display: flex;
-                                align-items: center;
-                                justify-content: flex-end;
-                                padding-right: 10px;
-                                color: white;
-                                font-weight: 600;
-                                font-size: 0.85rem;">
-                                {{ sensor.latest_data.humiditysoil }}%
-                            </div>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; margin-top: 0.5rem; font-size: 0.75rem; color: #718096;">
-                            <span>0% (Seco)</span>
-                            <span>50% (Moderado)</span>
-                            <span>100% (Saturado)</span>
-                        </div>
-                    </div>
+                    
 
                     <!-- Barra de progreso para Temperatura del Suelo -->
                     <div class="chart-container">
