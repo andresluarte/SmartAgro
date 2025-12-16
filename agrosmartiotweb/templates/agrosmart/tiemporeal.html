@@ -350,14 +350,14 @@
                         <span class="metric-status 
                             {% if data.latest_data.temperature >= 15 and data.latest_data.temperature <= 25 %}
                                 status-optimal
-                            {% elif data.latest_data.temperature >= 10 and data.latest_data.temperature < 15 or data.latest_data.temperature > 25 %}
+                            {% elif data.latest_data.temperature >= 10 and data.latest_data.temperature < 15 %}
                                 status-warning
                             {% else %}
                                 status-critical
                             {% endif %}">
                             {% if data.latest_data.temperature >= 15 and data.latest_data.temperature <= 25 %}
                                 Óptima
-                            {% elif data.latest_data.temperature >= 10 and data.latest_data.temperature < 15 or data.latest_data.temperature > 25 %}
+                            {% elif data.latest_data.temperature >= 10 and data.latest_data.temperature < 15 %}
                                 Moderada
                             {% else %}
                                 Crítica
@@ -371,14 +371,14 @@
                         <span class="metric-status 
                             {% if data.latest_data.humidity >= 40 and data.latest_data.humidity <= 60 %}
                                 status-optimal
-                            {% elif data.latest_data.humidity >= 30 and data.latest_data.humidity < 40 or data.latest_data.humidity > 60 %}
+                            {% elif data.latest_data.humidity >= 30 and data.latest_data.humidity < 40 %}
                                 status-warning
                             {% else %}
                                 status-critical
                             {% endif %}">
                             {% if data.latest_data.humidity >= 40 and data.latest_data.humidity <= 60 %}
                                 Óptima
-                            {% elif data.latest_data.humidity >= 30 and data.latest_data.humidity < 40 or data.latest_data.humidity > 60 %}
+                            {% elif data.latest_data.humidity >= 30 and data.latest_data.humidity < 40 %}
                                 Moderada
                             {% else %}
                                 Crítica
