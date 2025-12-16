@@ -2,335 +2,602 @@
 {% load crispy_forms_tags %}
 {% block contenido %}
 <style>
-    #weather-widget {
+    .sensor-dashboard {
+        padding: 2rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        overflow: hidden;
+    }
+
+    .dashboard-header {
         text-align: center;
+        color: white;
+        margin-bottom: 2rem;
     }
 
-    .weather-content {
-        margin-top: 1rem;
-    }
-
-    .weather-main {
+    .dashboard-header h3 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
         display: flex;
         align-items: center;
         justify-content: center;
         gap: 1rem;
-        margin: 1rem 0;
-        padding: 1rem;
-        background: linear-gradient(145deg, #f8fff9, #f0fdf4);
-        border-radius: 15px;
     }
 
-    .weather-temp {
-        font-size: 2.5rem;
-        font-weight: 700;
-        color: #08b522;
-    }
-
-    .weather-details {
+    .sensor-grid {
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
+        gap: 2rem;
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 1rem;
+        grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+    }
+
+    .sensor-card {
+        background: white;
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        animation: fadeIn 0.5s ease-in;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .sensor-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 5px;
+        background: linear-gradient(90deg, #667eea, #764ba2);
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .sensor-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 3px solid #667eea;
+    }
+
+    .sensor-title {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .sensor-title h5 {
+        font-size: 1.5rem;
+        color: #2d3748;
+        margin: 0;
+    }
+
+    .sensor-id {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .status-badge {
+        background: #48bb78;
+        color: white;
+        padding: 0.5rem 1.5rem;
+        border-radius: 50px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
         gap: 0.5rem;
+    }
+
+    .status-indicator {
+        width: 10px;
+        height: 10px;
+        background: white;
+        border-radius: 50%;
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% {
+            opacity: 1;
+        }
+        50% {
+            opacity: 0.5;
+        }
+    }
+
+    .metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .metric-card {
+        background: linear-gradient(135deg, #f6f8fb 0%, #e9ecef 100%);
+        border-radius: 15px;
+        padding: 1.5rem;
+        text-align: center;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .metric-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #667eea, #764ba2);
+    }
+
+    .metric-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .metric-icon {
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .metric-label {
+        color: #718096;
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .metric-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #2d3748;
+        margin-bottom: 0.5rem;
+    }
+
+    .metric-status {
+        font-size: 0.8rem;
+        font-weight: 600;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        display: inline-block;
+    }
+
+    .status-optimal {
+        background: #c6f6d5;
+        color: #22543d;
+    }
+
+    .status-warning {
+        background: #fef5e7;
+        color: #744210;
+    }
+
+    .status-critical {
+        background: #fed7d7;
+        color: #742a2a;
+    }
+
+    .chart-container {
+        margin-bottom: 2rem;
+        position: relative;
+        height: 250px;
+    }
+
+    .location-info {
+        background: #f7fafc;
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        border-left: 5px solid #667eea;
+    }
+
+    .location-title {
+        font-weight: 600;
+        color: #2d3748;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .location-coords {
+        color: #718096;
+        font-size: 0.9rem;
+    }
+
+    .insights-section {
+        background: linear-gradient(135deg, #e6fffa 0%, #b2f5ea 100%);
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        border-left: 5px solid #38b2ac;
+    }
+
+    .insights-title {
+        font-weight: 600;
+        color: #234e52;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .insight-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+        color: #2d3748;
+    }
+
+    .insight-icon {
+        width: 20px;
+        height: 20px;
+        background: #38b2ac;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 0.8rem;
+    }
+
+    .map-link {
+        display: inline-block;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 25px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: transform 0.3s ease;
+        margin-bottom: 1rem;
+    }
+
+    .map-link:hover {
+        transform: translateY(-2px);
+        color: white;
+    }
+
+    .timestamp {
+        color: #a0aec0;
+        font-size: 0.8rem;
+        text-align: center;
         margin-top: 1rem;
-        font-size: 0.85rem;
-        color: #666;
+    }
+
+    @media (max-width: 768px) {
+        .sensor-dashboard {
+            padding: 1rem 0.5rem;
+        }
+
+        .dashboard-header h3 {
+            font-size: 1.8rem;
+        }
+
+        .sensor-card {
+            padding: 1rem;
+        }
+
+        .sensor-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .metrics-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .metric-card {
+            padding: 1rem;
+        }
+
+        .chart-container {
+            height: 200px;
+        }
     }
 </style>
 
-<div class="container py-5">
-    <h3 class="text-center mb-5 fw-bold" style="color:#2c3e50;">
-        🌬️ Datos Sensor Aire en Tiempo Real
-    </h3>
-    
-    <div class="card shadow-lg border-0 rounded-4 mb-5" id="weather-widget">
-        <div class="card-header bg-success text-white text-center fw-bold">
-            <i class="fa-solid fa-cloud-sun"></i> Clima Actual
-        </div>
-        <div class="card-body p-4">
-            <div class="weather-content" id="weather-content">
-                <i class="fa-solid fa-spinner fa-spin"></i> Cargando información del clima...
-            </div>
-        </div>
+<div class="sensor-dashboard">
+    <div class="dashboard-header">
+        <h3>🌬️ Monitoreo de Sensores de Aire</h3>
+        <p>Sistema de Monitoreo en Tiempo Real - SmartAgro</p>
     </div>
 
     {% if sensor_data %}
-    <div class="row g-4">
-        {% for data in sensor_data %}
-        <div class="col-lg-6 col-md-12">
-            <div class="card shadow-lg border-0 rounded-4 h-100" style="overflow: hidden;">
-                <div class="card-header text-white" style="background: linear-gradient(135deg,#2980b9,#6dd5fa,#ffffff);">
-                    <h5 class="mb-0 fw-bold">Sensor ID: {{ data.sensor_id }}</h5>
-                    <small>{{ data.sensor_name }}</small>
+        <div class="sensor-grid">
+            {% for data in sensor_data %}
+            <div class="sensor-card">
+                <div class="sensor-header">
+                    <div class="sensor-title">
+                        <h5>{{ data.sensor_name }}</h5>
+                        <span class="sensor-id">ID: {{ data.sensor_id }}</span>
+                    </div>
+                    <div class="status-badge">
+                        <span class="status-indicator"></span>
+                        Activo
+                    </div>
                 </div>
-                <div class="card-body p-4">
-                    <div class="row text-center mb-4">
-                        <div class="col">
-                            <h6 class="fw-bold text-secondary">🌡️ Temperatura</h6>
-                            <span class="fs-4 fw-bold text-danger" id="temperature-{{ data.sensor_id }}">
-                                {{ data.latest_data.temperature }}°C
-                            </span>
-                        </div>
-                        <div class="col">
-                            <h6 class="fw-bold text-secondary">💧 Humedad</h6>
-                            <span class="fs-4 fw-bold text-primary" id="humidity-{{ data.sensor_id }}">
-                                {{ data.latest_data.humidity }}%
-                            </span>
-                        </div>
-                    </div>
 
-                    <div class="sensor-aire-chart-container mb-4" style="position: relative; width: 100%; height: 220px;">
-                        <canvas id="sensor-aire-chart-{{ data.sensor_id }}"></canvas>
+                <!-- Métricas principales -->
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-icon">🌡️</div>
+                        <div class="metric-label">Temperatura</div>
+                        <div class="metric-value" id="temperature-{{ data.sensor_id }}">{{ data.latest_data.temperature }}°C</div>
+                        <span class="metric-status 
+                            {% if data.latest_data.temperature >= 15 and data.latest_data.temperature <= 25 %}
+                                status-optimal
+                            {% elif data.latest_data.temperature >= 10 and data.latest_data.temperature < 15 or data.latest_data.temperature > 25 %}
+                                status-warning
+                            {% else %}
+                                status-critical
+                            {% endif %}">
+                            {% if data.latest_data.temperature >= 15 and data.latest_data.temperature <= 25 %}
+                                Óptima
+                            {% elif data.latest_data.temperature >= 10 and data.latest_data.temperature < 15 or data.latest_data.temperature > 25 %}
+                                Moderada
+                            {% else %}
+                                Crítica
+                            {% endif %}
+                        </span>
                     </div>
-
-                    <div class="row g-2 mb-3">
-                        <div class="col-6">
-                            <small class="text-muted fw-bold">📍 Latitud:</small>
-                            <div id="latitudeEl-{{ data.sensor_id }}">{{ data.latest_data.latitude }}</div>
-                        </div>
-                        <div class="col-6">
-                            <small class="text-muted fw-bold">📍 Longitud:</small>
-                            <div id="longitudEl-{{ data.sensor_id }}">{{ data.latest_data.longitude }}</div>
-                        </div>
+                    <div class="metric-card">
+                        <div class="metric-icon">💧</div>
+                        <div class="metric-label">Humedad</div>
+                        <div class="metric-value" id="humidity-{{ data.sensor_id }}">{{ data.latest_data.humidity }}%</div>
+                        <span class="metric-status 
+                            {% if data.latest_data.humidity >= 40 and data.latest_data.humidity <= 60 %}
+                                status-optimal
+                            {% elif data.latest_data.humidity >= 30 and data.latest_data.humidity < 40 or data.latest_data.humidity > 60 %}
+                                status-warning
+                            {% else %}
+                                status-critical
+                            {% endif %}">
+                            {% if data.latest_data.humidity >= 40 and data.latest_data.humidity <= 60 %}
+                                Óptima
+                            {% elif data.latest_data.humidity >= 30 and data.latest_data.humidity < 40 or data.latest_data.humidity > 60 %}
+                                Moderada
+                            {% else %}
+                                Crítica
+                            {% endif %}
+                        </span>
                     </div>
+                </div>
 
-                    <a id="mapLink-{{ data.sensor_id }}"
-                       href="https://www.google.com/maps/search/?api=1&query={{ data.latest_data.latitude|urlencode }},{{ data.latest_data.longitude|urlencode }}"
-                       target="_blank"
-                       class="btn btn-outline-primary w-100 rounded-pill fw-bold">
-                        Ver en Google Maps
-                    </a>
+                <!-- Gráfico -->
+                <div class="chart-container">
+                    <canvas id="chart-{{ data.sensor_id }}"></canvas>
+                </div>
 
-                    <div class="text-muted small mt-3 text-end" id="timestamp-{{ data.sensor_id }}">
-                        ⏱️ Última actualización: {{ data.latest_data.timestamp }}
+                <!-- Ubicación del Sensor -->
+                <div class="location-info">
+                    <div class="location-title">
+                        <i class="fa-solid fa-map-marker-alt"></i>
+                        Ubicación del Sensor
                     </div>
+                    <div class="location-coords">
+                        Latitud: <span id="latitudeEl-{{ data.sensor_id }}">{{ data.latest_data.latitude }}</span><br>
+                        Longitud: <span id="longitudEl-{{ data.sensor_id }}">{{ data.latest_data.longitude }}</span>
+                    </div>
+                </div>
+
+                <!-- Insights -->
+                <div class="insights-section">
+                    <div class="insights-title">
+                        <i class="fa-solid fa-lightbulb"></i>
+                        Insights y Recomendaciones
+                    </div>
+                    <div class="insight-item">
+                        <div class="insight-icon">🌱</div>
+                        <span>
+                            {% if data.latest_data.temperature >= 15 and data.latest_data.temperature <= 25 and data.latest_data.humidity >= 40 and data.latest_data.humidity <= 60 %}
+                                Condiciones óptimas para el crecimiento de cultivos.
+                            {% elif data.latest_data.temperature < 10 %}
+                                Temperatura baja: Riesgo de heladas. Considera protección para plantas.
+                            {% elif data.latest_data.temperature > 30 %}
+                                Temperatura alta: Posible estrés térmico en plantas. Aumenta riego.
+                            {% elif data.latest_data.humidity < 30 %}
+                                Humedad baja: Riesgo de sequía. Monitorea suelo y riega si es necesario.
+                            {% elif data.latest_data.humidity > 70 %}
+                                Humedad alta: Riesgo de enfermedades fúngicas. Mejora ventilación.
+                            {% else %}
+                                Condiciones moderadas. Monitorea cambios para optimizar cultivo.
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="insight-item">
+                        <div class="insight-icon">📊</div>
+                        <span>Datos actualizados en tiempo real para toma de decisiones precisa.</span>
+                    </div>
+                </div>
+
+                <!-- Enlace a mapa -->
+                <a id="mapLink-{{ data.sensor_id }}"
+                   href="https://www.google.com/maps/search/?api=1&query={{ data.latest_data.latitude|urlencode }},{{ data.latest_data.longitude|urlencode }}"
+                   target="_blank"
+                   class="map-link">
+                    <i class="fa-solid fa-external-link-alt"></i> Ver en Google Maps
+                </a>
+
+                <div class="timestamp" id="timestamp-{{ data.sensor_id }}">
+                    ⏱️ Última actualización: {{ data.latest_data.timestamp }}
                 </div>
             </div>
-        </div>
-        {% endfor %}
-    </div>
-
-    <!-- Cargar Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-    <!-- Inicializar gráficos -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            {% for data in sensor_data %}
-            const ctx{{ data.sensor_id }} = document.getElementById('sensor-aire-chart-{{ data.sensor_id }}').getContext('2d');
-
-            window["chart_{{ data.sensor_id }}"] = new Chart(ctx{{ data.sensor_id }}, {
-                type: 'bar',
-                data: {
-                    labels: ['Temperatura', 'Humedad'],
-                    datasets: [{
-                        label: 'Valores',
-                        data: [
-                            Number({{ data.latest_data.temperature|default:0 }}),
-                            Number({{ data.latest_data.humidity|default:0 }})
-                        ],
-                        backgroundColor: ['#e74c3c', '#3498db'],
-                        borderColor: ['#c0392b', '#2980b9'],
-                        borderWidth: 2,
-                        borderRadius: 8
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: { font: { size: 14 } },
-                            title: { display: true, text: 'Valores', font: { weight: 'bold' } }
-                        },
-                        x: { ticks: { font: { size: 14 } } }
-                    },
-                    plugins: {
-                        legend: { display: false }
-                    }
-                }
-            });
             {% endfor %}
-        });
-    </script>
-
-    <!-- WebSocket para Sensores de Aire -->
-    <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        // Función para obtener la URL correcta de WebSocket
-        function getWebSocketURL(endpoint) {
-            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const host = window.location.host;
-            return `${protocol}//${host}/ws/${endpoint}/`;
-        }
-
-        const wsUrl = getWebSocketURL('sensoresaire');
-        console.log('🔌 Conectando a:', wsUrl);
-        
-        let socket = null;
-        let reconnectAttempts = 0;
-        const maxReconnectAttempts = 5;
-        const reconnectDelay = 3000;
-
-        function connectWebSocket() {
-            try {
-                socket = new WebSocket(wsUrl);
-
-                socket.onopen = function() {
-                    console.log("✅ WebSocket Aire conectado exitosamente");
-                    reconnectAttempts = 0;
-                    socket.send(JSON.stringify({ 
-                        message: 'Hola servidor WebSocket desde SmartAgro - Sensores Aire' 
-                    }));
-                };
-
-                socket.onmessage = function(e) {
-                    try {
-                        const data = JSON.parse(e.data);
-                        console.log('📦 Datos recibidos:', data);
-                        
-                        if (data.sensor_id) {
-                            const humidityEl = document.getElementById(`humidity-${data.sensor_id}`);
-                            const temperatureEl = document.getElementById(`temperature-${data.sensor_id}`);
-                            const latitudeEl = document.getElementById(`latitudeEl-${data.sensor_id}`);
-                            const longitudeEl = document.getElementById(`longitudEl-${data.sensor_id}`);
-                            const timestampEl = document.getElementById(`timestamp-${data.sensor_id}`);
-                            const mapLinkEl = document.getElementById(`mapLink-${data.sensor_id}`);
-
-                            if (humidityEl) humidityEl.innerText = `${data.humidity}%`;
-                            if (temperatureEl) temperatureEl.innerText = `${data.temperature}°C`;
-                            if (latitudeEl) latitudeEl.innerText = data.latitude;
-                            if (longitudeEl) longitudeEl.innerText = data.longitude;
-                            if (timestampEl) timestampEl.innerText = `⏱️ Última actualización: ${data.timestamp}`;
-                            if (mapLinkEl) {
-                                mapLinkEl.href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(data.latitude)},${encodeURIComponent(data.longitude)}`;
-                            }
-
-                            // Actualizar gráfico
-                            const chart = window["chart_" + data.sensor_id];
-                            if (chart) {
-                                chart.data.datasets[0].data = [
-                                    Number(data.temperature),
-                                    Number(data.humidity)
-                                ];
-                                chart.update();
-                            }
-                        }
-                    } catch (error) {
-                        console.error("❌ Error procesando mensaje:", error);
-                    }
-                };
-
-                socket.onclose = function(event) { 
-                    console.log("⚠️ WebSocket Aire desconectado. Código:", event.code, "Razón:", event.reason);
-                    
-                    // Intentar reconectar
-                    if (reconnectAttempts < maxReconnectAttempts) {
-                        reconnectAttempts++;
-                        console.log(`🔄 Reconectando... Intento ${reconnectAttempts}/${maxReconnectAttempts}`);
-                        setTimeout(connectWebSocket, reconnectDelay);
-                    } else {
-                        console.error("❌ No se pudo reconectar después de", maxReconnectAttempts, "intentos");
-                    }
-                };
-                
-                socket.onerror = function(error) { 
-                    console.error("❌ WebSocket error:", error); 
-                };
-            } catch (error) {
-                console.error("❌ Error creando WebSocket:", error);
-            }
-        }
-
-        // Iniciar conexión
-        connectWebSocket();
-
-        // Cerrar conexión cuando se salga de la página
-        window.addEventListener('beforeunload', function() {
-            if (socket && socket.readyState === WebSocket.OPEN) {
-                socket.close();
-            }
-        });
-    });
-    </script>
-
-    <!-- API de Clima de OpenWeather -->
-    <script>
-    const openWeatherApiKey = 'b2240d2305cc3984b9662c4d473df3a3';
-
-    function getLocation() {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(showWeather, showError);
-        } else {
-            document.getElementById('weather-content').innerHTML =
-                '<i class="fa-solid fa-exclamation-triangle"></i> Geolocalización no soportada.';
-        }
-    }
-
-    function showWeather(position) {
-        const lat = position.coords.latitude;
-        const lon = position.coords.longitude;
-        const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&lang=es&appid=${openWeatherApiKey}`;
-
-        fetch(url)
-            .then(response => response.json())
-            .then(data => {
-                const temp = Math.round(data.main.temp);
-                const description = data.weather[0].description;
-                const city = data.name;
-                const icon = `https://openweathermap.org/img/wn/${data.weather[0].icon}@2x.png`;
-
-                document.getElementById('weather-content').innerHTML = `
-                    <div class="weather-main">
-                        <img src="${icon}" alt="Weather icon" style="width: 60px; height: 60px;">
-                        <div>
-                            <div class="weather-temp">${temp}°C</div>
-                            <div style="color: #666; text-transform: capitalize; font-size: 0.9rem;">${description}</div>
-                        </div>
-                    </div>
-                    <h4 style="color: #08b522; margin: 1rem 0;">${city}</h4>
-                    <div class="weather-details">
-                        <div><i class="fa-solid fa-eye"></i><br>Visibilidad<br><strong>${(data.visibility/1000)} km</strong></div>
-                        <div><i class="fa-solid fa-tint"></i><br>Humedad<br><strong>${data.main.humidity}%</strong></div>
-                        <div><i class="fa-solid fa-wind"></i><br>Viento<br><strong>${data.wind.speed} m/s</strong></div>
-                    </div>
-                `;
-            })
-            .catch(error => {
-                document.getElementById('weather-content').innerHTML =
-                    '<i class="fa-solid fa-exclamation-triangle"></i> No se pudo obtener el clima.';
-                console.error(error);
-            });
-    }
-
-    function showError(error) {
-        let message = 'Error de geolocalización';
-        switch(error.code) {
-            case error.PERMISSION_DENIED:
-                message = "Usuario denegó la solicitud de geolocalización.";
-                break;
-            case error.POSITION_UNAVAILABLE:
-                message = "La información de la ubicación no está disponible.";
-                break;
-            case error.TIMEOUT:
-                message = "La solicitud de ubicación ha caducado.";
-                break;
-            case error.UNKNOWN_ERROR:
-                message = "Un error desconocido ocurrió.";
-                break;
-        }
-        document.getElementById('weather-content').innerHTML =
-            `<i class="fa-solid fa-exclamation-triangle"></i> ${message}`;
-    }
-
-    // Inicializar clima
-    getLocation();
-    </script>
-
+        </div>
     {% else %}
-    <div class="alert alert-info text-center py-4 rounded-4 shadow-sm">
-        🚫 No hay datos disponibles para tus sensores.
-    </div>
+        <div class="alert alert-info text-center py-4 rounded-4 shadow-sm">
+            🚫 No hay datos disponibles para tus sensores de aire.
+        </div>
     {% endif %}
 </div>
+
+<!-- Cargar Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- Inicializar gráficos -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        {% for data in sensor_data %}
+        const ctx{{ data.sensor_id }} = document.getElementById('chart-{{ data.sensor_id }}').getContext('2d');
+
+        window["chart_{{ data.sensor_id }}"] = new Chart(ctx{{ data.sensor_id }}, {
+            type: 'bar',
+            data: {
+                labels: ['Temperatura (°C)', 'Humedad (%)'],
+                datasets: [{
+                    label: 'Valores Actuales',
+                    data: [
+                        Number({{ data.latest_data.temperature|default:0 }}),
+                        Number({{ data.latest_data.humidity|default:0 }})
+                    ],
+                    backgroundColor: ['#e74c3c', '#3498db'],
+                    borderColor: ['#c0392b', '#2980b9'],
+                    borderWidth: 2,
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { font: { size: 14 } },
+                        title: { display: true, text: 'Valores', font: { weight: 'bold' } }
+                    },
+                    x: { ticks: { font: { size: 14 } } }
+                },
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+        {% endfor %}
+    });
+</script>
+
+<!-- WebSocket para Sensores de Aire -->
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // Función para obtener la URL correcta de WebSocket
+    function getWebSocketURL(endpoint) {
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const host = window.location.host;
+        return `${protocol}//${host}/ws/${endpoint}/`;
+    }
+
+    const wsUrl = getWebSocketURL('sensoresaire');
+    console.log('🔌 Conectando a:', wsUrl);
+    
+    let socket = null;
+    let reconnectAttempts = 0;
+    const maxReconnectAttempts = 5;
+    const reconnectDelay = 3000;
+
+    function connectWebSocket() {
+        try {
+            socket = new WebSocket(wsUrl);
+
+            socket.onopen = function() {
+                console.log("✅ WebSocket Aire conectado exitosamente");
+                reconnectAttempts = 0;
+                socket.send(JSON.stringify({ 
+                    message: 'Hola servidor WebSocket desde SmartAgro - Sensores Aire' 
+                }));
+            };
+
+            socket.onmessage = function(e) {
+                try {
+                    const data = JSON.parse(e.data);
+                    console.log('📦 Datos recibidos:', data);
+                    
+                    if (data.sensor_id) {
+                        const humidityEl = document.getElementById(`humidity-${data.sensor_id}`);
+                        const temperatureEl = document.getElementById(`temperature-${data.sensor_id}`);
+                        const latitudeEl = document.getElementById(`latitudeEl-${data.sensor_id}`);
+                        const longitudeEl = document.getElementById(`longitudEl-${data.sensor_id}`);
+                        const timestampEl = document.getElementById(`timestamp-${data.sensor_id}`);
+                        const mapLinkEl = document.getElementById(`mapLink-${data.sensor_id}`);
+
+                        if (humidityEl) humidityEl.innerText = `${data.humidity}%`;
+                        if (temperatureEl) temperatureEl.innerText = `${data.temperature}°C`;
+                        if (latitudeEl) latitudeEl.innerText = data.latitude;
+                        if (longitudeEl) longitudeEl.innerText = data.longitude;
+                        if (timestampEl) timestampEl.innerText = `⏱️ Última actualización: ${data.timestamp}`;
+                        if (mapLinkEl) {
+                            mapLinkEl.href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(data.latitude)},${encodeURIComponent(data.longitude)}`;
+                        }
+
+                        // Actualizar gráfico
+                        const chart = window["chart_" + data.sensor_id];
+                        if (chart) {
+                            chart.data.datasets[0].data = [
+                                Number(data.temperature),
+                                Number(data.humidity)
+                            ];
+                            chart.update();
+                        }
+                    }
+                } catch (error) {
+                    console.error("❌ Error procesando mensaje:", error);
+                }
+            };
+
+            socket.onclose = function(event) { 
+                console.log("⚠️ WebSocket Aire desconectado. Código:", event.code, "Razón:", event.reason);
+                
+                // Intentar reconectar
+                if (reconnectAttempts < maxReconnectAttempts) {
+                    reconnectAttempts++;
+                    console.log(`🔄 Reconectando... Intento ${reconnectAttempts}/${maxReconnectAttempts}`);
+                    setTimeout(connectWebSocket, reconnectDelay);
+                } else {
+                    console.error("❌ No se pudo reconectar después de", maxReconnectAttempts, "intentos");
+                }
+            };
+            
+            socket.onerror = function(error) { 
+                console.error("❌ WebSocket error:", error); 
+            };
+        } catch (error) {
+            console.error("❌ Error creando WebSocket:", error);
+        }
+    }
+
+    // Iniciar conexión
+    connectWebSocket();
+
+    // Cerrar conexión cuando se salga de la página
+    window.addEventListener('beforeunload', function() {
+        if (socket && socket.readyState === WebSocket.OPEN) {
+            socket.close();
+        }
+    });
+});
+</script>
+
 {% endblock %}

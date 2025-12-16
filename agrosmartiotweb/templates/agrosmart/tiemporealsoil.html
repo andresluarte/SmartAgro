@@ -1,679 +1,527 @@
 {% extends 'agrosmart/base.html' %}
 {% block contenido %}
-<div class="container">
-    <h3 class="page-title">🌱 Monitoreo de Sensores de Suelo</h3>
-
-    <div class="section-container">
-        {% if sensor_data %}
-            {% for sensor in sensor_data %}
-                <div class="sensor-card">
-                    <div class="sensor-header">
-                        <div>
-                            <h3>Sensor {{ sensor.sensor_id }}</h3>
-                            <span>{{ sensor.sensor_name }}</span>
-                        </div>
-                        <div class="status-indicator" id="status-{{ sensor.sensor_id }}">
-                            <span class="status-dot"></span>
-                            <span class="status-text">Activo</span>
-                        </div>
-                    </div>
-
-                    <!-- Métricas principales con visualización mejorada -->
-                    <div class="metrics-grid">
-                        <div class="metric-box humidity-metric">
-                            <div class="metric-icon">💧</div>
-                            <div class="metric-content">
-                                <span class="metric-label">Humedad del Suelo</span>
-                                <div class="metric-value-container">
-                                    <strong class="metric-value" id="humidity-{{ sensor.sensor_id }}">{{ sensor.latest_data.humiditysoil }}%</strong>
-                                    <span class="metric-trend" id="humidity-trend-{{ sensor.sensor_id }}"></span>
-                                </div>
-                                <div class="progress-bar">
-                                    <div class="progress-fill humidity-fill" id="humidity-bar-{{ sensor.sensor_id }}" style="width: {{ sensor.latest_data.humiditysoil }}%"></div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="metric-box temperature-metric">
-                            <div class="metric-icon">🌡️</div>
-                            <div class="metric-content">
-                                <span class="metric-label">Temperatura del Suelo</span>
-                                <div class="metric-value-container">
-                                    <strong class="metric-value" id="temperature-{{ sensor.sensor_id }}">{{ sensor.latest_data.temperature }}°C</strong>
-                                    <span class="metric-trend" id="temp-trend-{{ sensor.sensor_id }}"></span>
-                                </div>
-                                <div class="progress-bar">
-                                    <div class="progress-fill temperature-fill" id="temp-bar-{{ sensor.sensor_id }}" style="width: 50%"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Panel de Análisis Inteligente -->
-                    <div class="analysis-panel" id="analysis-{{ sensor.sensor_id }}">
-                        <div class="analysis-header">
-                            <span class="analysis-icon">🔍</span>
-                            <span class="analysis-title">Análisis Automático</span>
-                        </div>
-                        <div class="analysis-content" id="analysis-content-{{ sensor.sensor_id }}">
-                            <p class="analyzing">Analizando condiciones del suelo...</p>
-                        </div>
-                    </div>
-
-                    <!-- Recomendaciones -->
-                    <div class="recommendations-panel" id="recommendations-{{ sensor.sensor_id }}">
-                        <div class="recommendation-header">
-                            <span class="recommendation-icon">💡</span>
-                            <span class="recommendation-title">Recomendaciones</span>
-                        </div>
-                        <div class="recommendations-list" id="recommendations-list-{{ sensor.sensor_id }}">
-                            <!-- Se llenará dinámicamente -->
-                        </div>
-                    </div>
-
-                    <!-- Footer con timestamp -->
-                    <div class="sensor-footer">
-                        <span class="update-time">
-                            <span class="clock-icon">🕐</span>
-                            Última actualización: <strong id="timestamp-{{ sensor.sensor_id }}">{{ sensor.latest_data.timestamp }}</strong>
-                        </span>
-                    </div>
-                </div>
-            {% endfor %}
-        {% else %}
-            <p class="no-data">No hay datos disponibles.</p>
-        {% endif %}
-    </div>
-</div>
-
 <style>
-    body {
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        background: linear-gradient(to bottom, #e0f7fa, #ffffff);
-        margin: 0;
-        padding: 0;
+    .sensor-dashboard {
+        padding: 2rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        overflow: hidden;
     }
-    .container {
-        max-width: 1400px;
-        margin: 30px auto;
-        padding: 0 20px;
-    }
-    .page-title {
+
+    .dashboard-header {
         text-align: center;
-        font-size: 2.2em;
-        color: #00796b;
-        margin-bottom: 30px;
-        text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        color: white;
+        margin-bottom: 2rem;
     }
-    .section-container {
+
+    .dashboard-header h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+    }
+
+    .sensor-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
-        gap: 30px;
+        gap: 2rem;
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 1rem;
     }
+
     .sensor-card {
         background: white;
-        border-radius: 16px;
-        box-shadow: 0 8px 20px rgba(0,0,0,0.12);
-        padding: 25px;
-        transition: transform 0.3s, box-shadow 0.3s;
-        border-top: 4px solid #00796b;
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        animation: fadeIn 0.5s ease-in;
     }
-    .sensor-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 12px 30px rgba(0,0,0,0.18);
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
+
     .sensor-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 20px;
-        padding-bottom: 15px;
-        border-bottom: 2px solid #e0f2f1;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 3px solid #667eea;
     }
-    .sensor-header h3 {
-        margin: 0;
-        color: #004d40;
-        font-size: 1.5em;
-    }
-    .sensor-header span {
-        color: #00796b;
-        font-size: 0.95em;
-    }
-    .status-indicator {
+
+    .sensor-title {
         display: flex;
         align-items: center;
-        gap: 8px;
-        padding: 6px 12px;
-        background: #e8f5e9;
-        border-radius: 20px;
+        gap: 1rem;
     }
-    .status-dot {
-        width: 8px;
-        height: 8px;
-        background: #4caf50;
+
+    .sensor-title h2 {
+        font-size: 1.5rem;
+        color: #2d3748;
+        margin: 0;
+    }
+
+    .sensor-id {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .status-badge {
+        background: #48bb78;
+        color: white;
+        padding: 0.5rem 1.5rem;
+        border-radius: 50px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .status-indicator {
+        width: 10px;
+        height: 10px;
+        background: white;
         border-radius: 50%;
         animation: pulse 2s infinite;
     }
+
     @keyframes pulse {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.5; }
-    }
-    .status-text {
-        font-size: 0.85em;
-        color: #2e7d32;
-        font-weight: 600;
+        0%, 100% {
+            opacity: 1;
+        }
+        50% {
+            opacity: 0.5;
+        }
     }
 
-    /* Métricas Grid */
     .metrics-grid {
         display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 15px;
-        margin-bottom: 20px;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
     }
-    .metric-box {
-        background: linear-gradient(135deg, #e0f2f1 0%, #ffffff 100%);
-        border-radius: 12px;
-        padding: 15px;
-        display: flex;
-        gap: 12px;
-        border-left: 4px solid #00796b;
-        transition: all 0.3s;
+
+    .metric-card {
+        background: linear-gradient(135deg, #f6f8fb 0%, #e9ecef 100%);
+        border-radius: 15px;
+        padding: 1.5rem;
+        text-align: center;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
-    .metric-box:hover {
-        transform: scale(1.02);
-        box-shadow: 0 4px 12px rgba(0,121,107,0.15);
+
+    .metric-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
     }
+
     .metric-icon {
-        font-size: 2em;
-        display: flex;
-        align-items: center;
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
     }
-    .metric-content {
-        flex: 1;
-    }
+
     .metric-label {
-        display: block;
-        font-size: 0.85em;
-        color: #00796b;
-        margin-bottom: 8px;
+        color: #718096;
+        font-size: 0.9rem;
         font-weight: 600;
+        margin-bottom: 0.5rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
-    .metric-value-container {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        margin-bottom: 8px;
-    }
+
     .metric-value {
-        font-size: 1.8em;
-        color: #004d40;
-    }
-    .metric-trend {
-        font-size: 1.2em;
-        transition: all 0.3s;
-    }
-    .progress-bar {
-        width: 100%;
-        height: 6px;
-        background: #e0e0e0;
-        border-radius: 10px;
-        overflow: hidden;
-    }
-    .progress-fill {
-        height: 100%;
-        transition: width 0.5s ease, background 0.3s;
-        border-radius: 10px;
-    }
-    .humidity-fill {
-        background: linear-gradient(90deg, #00bcd4, #0097a7);
-    }
-    .temperature-fill {
-        background: linear-gradient(90deg, #ff9800, #f57c00);
+        font-size: 2rem;
+        font-weight: 700;
+        color: #2d3748;
+        margin-bottom: 0.5rem;
     }
 
-    /* Panel de Análisis */
-    .analysis-panel {
-        background: linear-gradient(135deg, #fff3e0 0%, #ffffff 100%);
-        border-radius: 12px;
-        padding: 15px;
-        margin-bottom: 15px;
-        border-left: 4px solid #ff9800;
-    }
-    .analysis-header {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        margin-bottom: 12px;
-    }
-    .analysis-icon {
-        font-size: 1.3em;
-    }
-    .analysis-title {
-        font-weight: 600;
-        color: #e65100;
-        font-size: 0.95em;
-    }
-    .analysis-content {
-        color: #5d4037;
-        font-size: 0.9em;
-        line-height: 1.6;
-    }
-    .analyzing {
-        font-style: italic;
-        color: #757575;
-    }
-    .condition-badge {
+    .metric-status {
         display: inline-block;
-        padding: 4px 10px;
-        border-radius: 12px;
-        font-size: 0.85em;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
         font-weight: 600;
-        margin-right: 6px;
-        margin-top: 4px;
-    }
-    .condition-optimal {
-        background: #c8e6c9;
-        color: #2e7d32;
-    }
-    .condition-warning {
-        background: #fff9c4;
-        color: #f57f17;
-    }
-    .condition-alert {
-        background: #ffccbc;
-        color: #d84315;
     }
 
-    /* Panel de Recomendaciones */
-    .recommendations-panel {
-        background: linear-gradient(135deg, #e8f5e9 0%, #ffffff 100%);
-        border-radius: 12px;
-        padding: 15px;
-        margin-bottom: 15px;
-        border-left: 4px solid #4caf50;
+    .status-optimal {
+        background: #c6f6d5;
+        color: #22543d;
     }
-    .recommendation-header {
+
+    .status-warning {
+        background: #feebc8;
+        color: #7c2d12;
+    }
+
+    .status-critical {
+        background: #fed7d7;
+        color: #742a2a;
+    }
+
+    .charts-section {
+        margin: 2rem 0;
+    }
+
+    .chart-container {
+        background: #f7fafc;
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .chart-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #2d3748;
+        margin-bottom: 1rem;
         display: flex;
         align-items: center;
-        gap: 8px;
-        margin-bottom: 12px;
+        gap: 0.5rem;
     }
-    .recommendation-icon {
-        font-size: 1.3em;
+
+    .recommendations-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 15px;
+        padding: 1.5rem;
+        color: white;
+        margin-top: 2rem;
     }
-    .recommendation-title {
-        font-weight: 600;
-        color: #1b5e20;
-        font-size: 0.95em;
-    }
-    .recommendations-list {
+
+    .recommendations-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
         display: flex;
-        flex-direction: column;
-        gap: 8px;
+        align-items: center;
+        gap: 0.5rem;
     }
+
     .recommendation-item {
-        display: flex;
-        align-items: flex-start;
-        gap: 10px;
-        padding: 10px;
-        background: white;
-        border-radius: 8px;
-        font-size: 0.9em;
-        color: #2e7d32;
-        transition: all 0.2s;
-    }
-    .recommendation-item:hover {
-        background: #f1f8f4;
-        transform: translateX(4px);
-    }
-    .recommendation-item-icon {
-        font-size: 1.1em;
-        flex-shrink: 0;
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+        border-left: 4px solid #fbbf24;
     }
 
-    /* Footer */
-    .sensor-footer {
-        padding-top: 15px;
-        border-top: 2px solid #e0f2f1;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
+    .recommendation-item:last-child {
+        margin-bottom: 0;
     }
-    .update-time {
-        font-size: 0.85em;
-        color: #546e7a;
+
+    .timestamp {
+        text-align: center;
+        color: #718096;
+        margin-top: 1.5rem;
+        font-size: 0.9rem;
         display: flex;
         align-items: center;
-        gap: 6px;
-    }
-    .clock-icon {
-        font-size: 1.1em;
+        justify-content: center;
+        gap: 0.5rem;
     }
 
     .no-data {
         text-align: center;
-        font-size: 1.2em;
-        color: #777;
-        padding: 40px;
+        padding: 4rem;
+        background: white;
+        border-radius: 20px;
+        max-width: 600px;
+        margin: 2rem auto;
     }
 
-    @media (max-width: 768px) {
-        .metrics-grid {
-            grid-template-columns: 1fr;
-        }
-        .section-container {
-            grid-template-columns: 1fr;
-        }
+    .no-data-icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
     }
+
+    .gauge-container {
+        position: relative;
+        width: 120px;
+        height: 120px;
+        margin: 0 auto;
+    }
+
+    .gauge-background {
+        fill: none;
+        stroke: #e2e8f0;
+        stroke-width: 10;
+    }
+
+    .gauge-progress {
+        fill: none;
+        stroke-width: 10;
+        stroke-linecap: round;
+        transition: stroke-dasharray 1s ease;
+    }
+
+    .gauge-text {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #2d3748;
+    }
+    .humidity-bar {
+    position: relative;
+    background: #e2e8f0;
+    height: 30px;
+    border-radius: 15px;
+    overflow: hidden;
+    max-width: 600px;
+    margin: 0 auto; /* 🔥 CENTRADO RESPONSIVO */
+}
+@media (max-width: 768px) {
+    .sensor-dashboard {
+        padding: 1rem 0.5rem;
+    }
+    
+    .dashboard-header h3 {
+        font-size: 1.5rem;
+    }
+    
+    .sensor-card {
+        padding: 1rem;
+        margin: 0 auto; /* Centrar horizontalmente */
+        max-width: 100%; /* Evitar que se extienda demasiado */
+    }
+    
+    .metrics-grid {
+        grid-template-columns: 1fr;
+    }
+
+    /* Cambiar a flex para mejor centrado si es necesario */
+    .sensor-grid {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+}
 </style>
 
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    // Almacenar valores anteriores para calcular tendencias
-    const previousValues = {};
 
-    // Función para obtener la URL correcta de WebSocket
-    function getWebSocketURL(endpoint) {
-        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const host = window.location.host;
-        return `${protocol}//${host}/ws/${endpoint}/`;
-    }
 
-    // Sistema de análisis inteligente
-    function analyzeConditions(sensorId, humidity, temperature) {
-        const analysis = [];
-        const recommendations = [];
-        
-        // Análisis de humedad
-        if (humidity < 20) {
-            analysis.push({
-                type: 'alert',
-                text: 'Humedad crítica: Suelo muy seco'
-            });
-            recommendations.push({
-                icon: '💦',
-                text: 'Riego urgente requerido. Incrementar frecuencia de riego.'
-            });
-            recommendations.push({
-                icon: '⏰',
-                text: 'Programar riego para las próximas 2-4 horas.'
-            });
-        } else if (humidity < 35) {
-            analysis.push({
-                type: 'warning',
-                text: 'Humedad baja: Requiere atención'
-            });
-            recommendations.push({
-                icon: '🚿',
-                text: 'Iniciar riego en las próximas 12 horas.'
-            });
-            recommendations.push({
-                icon: '📊',
-                text: 'Monitorear evolución de humedad cada 2 horas.'
-            });
-        } else if (humidity > 80) {
-            analysis.push({
-                type: 'warning',
-                text: 'Humedad alta: Riesgo de saturación'
-            });
-            recommendations.push({
-                icon: '⚠️',
-                text: 'Suspender riego temporalmente. Mejorar drenaje.'
-            });
-            recommendations.push({
-                icon: '🍄',
-                text: 'Vigilar aparición de hongos o enfermedades.'
-            });
-        } else if (humidity >= 50 && humidity <= 70) {
-            analysis.push({
-                type: 'optimal',
-                text: 'Humedad óptima: Condiciones ideales'
-            });
-            recommendations.push({
-                icon: '✅',
-                text: 'Mantener programa de riego actual.'
-            });
-        } else {
-            analysis.push({
-                type: 'optimal',
-                text: 'Humedad aceptable'
-            });
-        }
+<div class="sensor-dashboard">
+    <div class="dashboard-header">
+        <h3>🌱 Monitoreo de Sensores de Suelo</h3>
+        <p>Sistema de Monitoreo en Tiempo Real - SmartAgro</p>
+    </div>
 
-        // Análisis de temperatura
-        if (temperature < 10) {
-            analysis.push({
-                type: 'alert',
-                text: 'Temperatura baja: Riesgo de estrés por frío'
-            });
-            recommendations.push({
-                icon: '🌡️',
-                text: 'Considerar protección térmica o cobertura del suelo.'
-            });
-            recommendations.push({
-                icon: '🌾',
-                text: 'Reducir riego para evitar enfriamiento adicional.'
-            });
-        } else if (temperature > 30) {
-            analysis.push({
-                type: 'warning',
-                text: 'Temperatura elevada: Estrés térmico posible'
-            });
-            recommendations.push({
-                icon: '☀️',
-                text: 'Aumentar frecuencia de riego en horas tempranas.'
-            });
-            recommendations.push({
-                icon: '🌿',
-                text: 'Evaluar cobertura vegetal o mulching.'
-            });
-        } else if (temperature >= 18 && temperature <= 25) {
-            analysis.push({
-                type: 'optimal',
-                text: 'Temperatura óptima para crecimiento'
-            });
-        }
-
-        // Análisis combinado
-        if (humidity < 30 && temperature > 28) {
-            recommendations.push({
-                icon: '🚨',
-                text: 'Condiciones críticas: Suelo seco + calor. Riego inmediato.'
-            });
-        }
-
-        if (humidity > 75 && temperature < 15) {
-            recommendations.push({
-                icon: '⚠️',
-                text: 'Riesgo de enfermedades por humedad + frío.'
-            });
-        }
-
-        // Recomendaciones generales
-        if (recommendations.length === 1) {
-            recommendations.push({
-                icon: '📈',
-                text: 'Continuar monitoreando parámetros cada hora.'
-            });
-        }
-
-        return { analysis, recommendations };
-    }
-
-    // Actualizar indicadores visuales
-    function updateSensorDisplay(sensorId, data) {
-        const humidityEl = document.getElementById(`humidity-${sensorId}`);
-        const temperatureEl = document.getElementById(`temperature-${sensorId}`);
-        const timestampEl = document.getElementById(`timestamp-${sensorId}`);
-        const humidityBar = document.getElementById(`humidity-bar-${sensorId}`);
-        const tempBar = document.getElementById(`temp-bar-${sensorId}`);
-        const humidityTrend = document.getElementById(`humidity-trend-${sensorId}`);
-        const tempTrend = document.getElementById(`temp-trend-${sensorId}`);
-
-        // Actualizar valores
-        if (humidityEl) {
-            const prevHumidity = parseFloat(humidityEl.textContent);
-            humidityEl.innerText = `${data.humiditysoil}%`;
-            
-            // Calcular tendencia
-            if (!isNaN(prevHumidity) && prevHumidity !== data.humiditysoil) {
-                if (data.humiditysoil > prevHumidity) {
-                    humidityTrend.innerHTML = '↗️';
-                    humidityTrend.title = 'Aumentando';
-                } else {
-                    humidityTrend.innerHTML = '↘️';
-                    humidityTrend.title = 'Disminuyendo';
-                }
-            }
-        }
-
-        if (temperatureEl) {
-            const prevTemp = parseFloat(temperatureEl.textContent);
-            temperatureEl.innerText = `${data.temperature}°C`;
-            
-            // Calcular tendencia
-            if (!isNaN(prevTemp) && prevTemp !== data.temperature) {
-                if (data.temperature > prevTemp) {
-                    tempTrend.innerHTML = '↗️';
-                    tempTrend.title = 'Aumentando';
-                } else {
-                    tempTrend.innerHTML = '↘️';
-                    tempTrend.title = 'Disminuyendo';
-                }
-            }
-        }
-
-        if (timestampEl) timestampEl.innerText = data.timestamp;
-        if (humidityBar) humidityBar.style.width = `${data.humiditysoil}%`;
-        if (tempBar) {
-            const tempPercent = Math.min((data.temperature / 40) * 100, 100);
-            tempBar.style.width = `${tempPercent}%`;
-        }
-
-        // Análisis inteligente
-        const { analysis, recommendations } = analyzeConditions(
-            sensorId, 
-            data.humiditysoil, 
-            data.temperature
-        );
-
-        // Actualizar panel de análisis
-        const analysisContent = document.getElementById(`analysis-content-${sensorId}`);
-        if (analysisContent) {
-            analysisContent.innerHTML = analysis.map(item => 
-                `<span class="condition-badge condition-${item.type}">${item.text}</span>`
-            ).join(' ');
-        }
-
-        // Actualizar recomendaciones
-        const recommendationsList = document.getElementById(`recommendations-list-${sensorId}`);
-        if (recommendationsList) {
-            recommendationsList.innerHTML = recommendations.map(rec => `
-                <div class="recommendation-item">
-                    <span class="recommendation-item-icon">${rec.icon}</span>
-                    <span>${rec.text}</span>
+    {% if sensor_data %}
+        <div class="sensor-grid">
+            {% for sensor in sensor_data %}
+            <div class="sensor-card">
+                <div class="sensor-header">
+                    <div class="sensor-title">
+                        <h3>{{ sensor.sensor_name }}</h2>
+                        <span class="sensor-id">ID: {{ sensor.sensor_id }}</span>
+                    </div>
+                    <div class="status-badge">
+                        <span class="status-indicator"></span>
+                        Activo
+                    </div>
                 </div>
-            `).join('');
-        }
-    }
 
-    const wsUrl = getWebSocketURL('sensores');
-    console.log('🔌 Conectando a:', wsUrl);
-    
-    let socket = null;
-    let reconnectAttempts = 0;
-    const maxReconnectAttempts = 5;
-    const reconnectDelay = 3000;
+                <!-- Métricas principales -->
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-icon">💧</div>
+                        <div class="metric-label">Humedad del Suelo</div>
+                        <div class="metric-value">{{ sensor.latest_data.humiditysoil }}%</div>
+                        <span class="metric-status 
+                            {% if sensor.latest_data.humiditysoil >= 60 and sensor.latest_data.humiditysoil <= 80 %}
+                                status-optimal
+                            {% elif sensor.latest_data.humiditysoil >= 40 and sensor.latest_data.humiditysoil < 60 or sensor.latest_data.humiditysoil > 80 %}
+                                status-warning
+                            {% else %}
+                                status-critical
+                            {% endif %}">
+                            {% if sensor.latest_data.humiditysoil >= 60 and sensor.latest_data.humiditysoil <= 80 %}
+                                Óptimo
+                            {% elif sensor.latest_data.humiditysoil >= 40 and sensor.latest_data.humiditysoil < 60 or sensor.latest_data.humiditysoil > 80 %}
+                                Moderado
+                            {% else %}
+                                Crítico
+                            {% endif %}
+                        </span>
+                    </div>
 
-    function connectWebSocket() {
-        try {
-            socket = new WebSocket(wsUrl);
-            
-            socket.onopen = function() {
-                console.log("✅ WebSocket conectado exitosamente");
-                reconnectAttempts = 0;
-                socket.send(JSON.stringify({ 
-                    message: 'Hola servidor WebSocket desde SmartAgro - Sensores Suelo' 
-                }));
-            };
+                    <div class="metric-card">
+                        <div class="metric-icon">🌡️</div>
+                        <div class="metric-label">Temperatura del Suelo</div>
+                        <div class="metric-value">{{ sensor.latest_data.temperature }}°C</div>
+                        <span class="metric-status 
+                            {% if sensor.latest_data.temperature >= 15 and sensor.latest_data.temperature <= 25 %}
+                                status-optimal
+                            {% elif sensor.latest_data.temperature >= 10 and sensor.latest_data.temperature < 15 or sensor.latest_data.temperature > 25 and sensor.latest_data.temperature <= 30 %}
+                                status-warning
+                            {% else %}
+                                status-critical
+                            {% endif %}">
+                            {% if sensor.latest_data.temperature >= 15 and sensor.latest_data.temperature <= 25 %}
+                                Óptimo
+                            {% elif sensor.latest_data.temperature >= 10 and sensor.latest_data.temperature < 15 or sensor.latest_data.temperature > 25 and sensor.latest_data.temperature <= 30 %}
+                                Aceptable
+                            {% else %}
+                                Alerta
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
 
-            socket.onmessage = function(e) {
-                try {
-                    const data = JSON.parse(e.data);
-                    console.log('📦 Datos recibidos:', data);
+                <!-- Gráficos circulares (gauges) -->
+                <div class="charts-section">
+                    <div class="chart-container">
+                        <div class="chart-title">📊 Indicadores Visuales</div>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 2rem;">
+                            <div>
+                                <div class="gauge-container">
+                                    <svg width="120" height="120" style="transform: rotate(-90deg);">
+                                        <circle class="gauge-background" cx="60" cy="60" r="50"></circle>
+                                        <circle class="gauge-progress" cx="60" cy="60" r="50"
+                                            style="stroke: {% if sensor.latest_data.humiditysoil >= 60 and sensor.latest_data.humiditysoil <= 80 %}#48bb78{% elif sensor.latest_data.humiditysoil >= 40 %}#ed8936{% else %}#f56565{% endif %}; 
+                                                   stroke-dasharray: {% widthratio sensor.latest_data.temperature 40 314 %} 314;">
+                                        </circle>
+                                    </svg>
+                                    <div class="gauge-text">{{ sensor.latest_data.humiditysoil }}%</div>
+                                </div>
+                                <div style="text-align: center; margin-top: 0.5rem; color: #718096; font-weight: 600;">Humedad</div>
+                            </div>
+                            <div>
+                                <div class="gauge-container">
+                                    <svg width="120" height="120" style="transform: rotate(-90deg);">
+                                        <circle class="gauge-background" cx="60" cy="60" r="50"></circle>
+                                        <circle class="gauge-progress" cx="60" cy="60" r="50"
+                                            style="stroke: {% if sensor.latest_data.temperature >= 15 and sensor.latest_data.temperature <= 25 %}#48bb78{% elif sensor.latest_data.temperature >= 10 and sensor.latest_data.temperature <= 30 %}#ed8936{% else %}#f56565{% endif %}; 
+                                                   stroke-dasharray: {% widthratio sensor.latest_data.temperature 40 314 %} 314;">
+                                        </circle>
+                                    </svg>
+                                    <div class="gauge-text">{{ sensor.latest_data.temperature }}°</div>
+                                </div>
+                                <div style="text-align: center; margin-top: 0.5rem; color: #718096; font-weight: 600;">Temperatura</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Barra de progreso adicional -->
+                    <div class="chart-container">
+                        <div class="chart-title">📈 Nivel de Humedad</div>
+                        <div style="position: relative; background: #e2e8f0; height: 30px; border-radius: 15px; overflow: hidden;">
+                            <div style="position: absolute; left: 0; top: 0; height: 100%; 
+                                background: linear-gradient(90deg, 
+                                    {% if sensor.latest_data.humiditysoil < 40 %}#f56565{% elif sensor.latest_data.humiditysoil <= 80 %}#48bb78{% else %}#4299e1{% endif %} 0%, 
+                                    {% if sensor.latest_data.humiditysoil < 40 %}#fc8181{% elif sensor.latest_data.humiditysoil <= 80 %}#68d391{% else %}#63b3ed{% endif %} 100%);
+                                width: {{ sensor.latest_data.humiditysoil }}%; 
+                                transition: width 1s ease;
+                                display: flex;
+                                align-items: center;
+                                justify-content: flex-end;
+                                padding-right: 10px;
+                                color: white;
+                                font-weight: 600;
+                                font-size: 0.85rem;">
+                                {{ sensor.latest_data.humiditysoil }}%
+                            </div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-top: 0.5rem; font-size: 0.75rem; color: #718096;">
+                            <span>0% (Seco)</span>
+                            <span>50% (Moderado)</span>
+                            <span>100% (Saturado)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recomendaciones inteligentes -->
+                <div class="recommendations-section">
+                    <div class="recommendations-title">💡 Recomendaciones Automáticas</div>
                     
-                    if (data.sensor_id) {
-                        updateSensorDisplay(data.sensor_id, data);
-                    }
-                } catch (error) {
-                    console.error("❌ Error procesando mensaje:", error);
-                }
-            };
+                    {% if sensor.latest_data.humiditysoil < 40 %}
+                        <div class="recommendation-item">
+                            <strong>⚠️ Humedad Baja Detectada</strong><br>
+                            El suelo está muy seco ({{ sensor.latest_data.humiditysoil }}%). Se recomienda riego inmediato para evitar estrés hídrico en los cultivos.
+                        </div>
+                    {% elif sensor.latest_data.humiditysoil >= 40 and sensor.latest_data.humiditysoil < 60 %}
+                        <div class="recommendation-item">
+                            <strong>💧 Humedad Moderada</strong><br>
+                            El nivel de humedad ({{ sensor.latest_data.humiditysoil }}%) es aceptable. Monitorear continuamente y considerar riego en las próximas 12-24 horas.
+                        </div>
+                    {% elif sensor.latest_data.humiditysoil >= 60 and sensor.latest_data.humiditysoil <= 80 %}
+                        <div class="recommendation-item">
+                            <strong>✅ Condiciones Óptimas</strong><br>
+                            La humedad del suelo ({{ sensor.latest_data.humiditysoil }}%) se encuentra en el rango ideal para el desarrollo de cultivos. Mantener estas condiciones.
+                        </div>
+                    {% else %}
+                        <div class="recommendation-item">
+                            <strong>🌊 Humedad Excesiva</strong><br>
+                            El suelo presenta exceso de humedad ({{ sensor.latest_data.humiditysoil }}%). Suspender riego y verificar drenaje para prevenir enfermedades fúngicas.
+                        </div>
+                    {% endif %}
 
-            socket.onclose = function(event) { 
-                console.log("⚠️ WebSocket desconectado. Código:", event.code);
-                
-                // Actualizar indicador de estado
-                document.querySelectorAll('.status-dot').forEach(dot => {
-                    dot.style.background = '#ff9800';
-                });
-                document.querySelectorAll('.status-text').forEach(text => {
-                    text.textContent = 'Reconectando...';
-                    text.style.color = '#f57c00';
-                });
-                
-                // Intentar reconectar
-                if (reconnectAttempts < maxReconnectAttempts) {
-                    reconnectAttempts++;
-                    console.log(`🔄 Reconectando... Intento ${reconnectAttempts}/${maxReconnectAttempts}`);
-                    setTimeout(connectWebSocket, reconnectDelay);
-                } else {
-                    console.error("❌ No se pudo reconectar");
-                    document.querySelectorAll('.status-dot').forEach(dot => {
-                        dot.style.background = '#f44336';
-                    });
-                    document.querySelectorAll('.status-text').forEach(text => {
-                        text.textContent = 'Desconectado';
-                        text.style.color = '#c62828';
-                    });
-                }
-            };
-            
-            socket.onerror = function(error) { 
-                console.error("❌ WebSocket error:", error); 
-            };
-        } catch (error) {
-            console.error("❌ Error creando WebSocket:", error);
-        }
-    }
+                    {% if sensor.latest_data.temperature < 10 %}
+                        <div class="recommendation-item">
+                            <strong>❄️ Temperatura Baja</strong><br>
+                            La temperatura del suelo ({{ sensor.latest_data.temperature }}°C) está por debajo del rango óptimo. Considerar protección para cultivos sensibles al frío.
+                        </div>
+                    {% elif sensor.latest_data.temperature >= 10 and sensor.latest_data.temperature < 15 %}
+                        <div class="recommendation-item">
+                            <strong>🌡️ Temperatura Fresca</strong><br>
+                            Temperatura del suelo ({{ sensor.latest_data.temperature }}°C) ligeramente baja. Monitorear desarrollo de cultivos y considerar ajustes si es necesario.
+                        </div>
+                    {% elif sensor.latest_data.temperature >= 15 and sensor.latest_data.temperature <= 25 %}
+                        <div class="recommendation-item">
+                            <strong>✅ Temperatura Ideal</strong><br>
+                            La temperatura del suelo ({{ sensor.latest_data.temperature }}°C) es óptima para la mayoría de cultivos. Condiciones favorables para crecimiento.
+                        </div>
+                    {% elif sensor.latest_data.temperature > 25 and sensor.latest_data.temperature <= 30 %}
+                        <div class="recommendation-item">
+                            <strong>☀️ Temperatura Elevada</strong><br>
+                            Temperatura del suelo ({{ sensor.latest_data.temperature }}°C) algo alta. Aumentar frecuencia de riego para compensar evaporación.
+                        </div>
+                    {% else %}
+                        <div class="recommendation-item">
+                            <strong>🔥 Temperatura Crítica</strong><br>
+                            Temperatura muy alta ({{ sensor.latest_data.temperature }}°C). Riego frecuente necesario y considerar mulching para reducir temperatura del suelo.
+                        </div>
+                    {% endif %}
 
-    // Inicializar análisis con datos actuales
-    document.querySelectorAll('[id^="humidity-"]').forEach(el => {
-        const sensorId = el.id.replace('humidity-', '');
-        const humidity = parseFloat(el.textContent);
-        const tempEl = document.getElementById(`temperature-${sensorId}`);
-        const temperature = tempEl ? parseFloat(tempEl.textContent) : 20;
-        
-        if (!isNaN(humidity) && !isNaN(temperature)) {
-            updateSensorDisplay(sensorId, {
-                humiditysoil: humidity,
-                temperature: temperature,
-                timestamp: document.getElementById(`timestamp-${sensorId}`).textContent,
-                sensor_id: sensorId
-            });
-        }
-    });
+                    {% if sensor.latest_data.humiditysoil >= 60 and sensor.latest_data.humiditysoil <= 80 and sensor.latest_data.temperature >= 15 and sensor.latest_data.temperature <= 25 %}
+                        <div class="recommendation-item">
+                            <strong>🌟 Condiciones Perfectas</strong><br>
+                            Tanto humedad como temperatura están en rangos óptimos. Excelentes condiciones para el desarrollo de cultivos.
+                        </div>
+                    {% endif %}
+                </div>
 
-    // Iniciar conexión
-    connectWebSocket();
+                <div class="timestamp">
+                    🕐 Última actualización: {{ sensor.latest_data.timestamp }}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="no-data">
+            <div class="no-data-icon">📊</div>
+            <h2 style="color: #2d3748; margin-bottom: 0.5rem;">No hay datos disponibles</h2>
+            <p style="color: #718096;">No se encontraron sensores activos o datos para mostrar en este momento.</p>
+        </div>
+    {% endif %}
+</div>
 
-    // Cerrar conexión cuando se salga de la página
-    window.addEventListener('beforeunload', function() {
-        if (socket && socket.readyState === WebSocket.OPEN) {
-            socket.close();
-        }
-    });
-});
-</script>
 {% endblock %}
