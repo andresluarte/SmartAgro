@@ -300,7 +300,7 @@
     .sensor-card {
         padding: 1rem;
         margin: 0 auto; /* Centrar horizontalmente */
-        max-width: 100%; /* Evitar que se extienda demasiado */
+        max-width: 10   0%; /* Evitar que se extienda demasiado */
     }
     
     .metrics-grid {
@@ -327,7 +327,7 @@
     {% if sensor_data %}
         <div class="sensor-grid">
             {% for sensor in sensor_data %}
-            <div class="sensor-card">
+            <div class="sensor-card" data-sensor-id="{{ sensor.sensor_id }}">
                 <div class="sensor-header">
                     <div class="sensor-title">
                         <h3>{{ sensor.sensor_name }}</h2>
@@ -345,7 +345,7 @@
                         <div class="metric-icon">💧</div>
                         <div class="metric-label">Humedad del Suelo</div>
                         <div class="metric-value">{{ sensor.latest_data.humiditysoil }}%</div>
-                        <span class="metric-status 
+                        <span class="status-badge status-badge-humidity 
                             {% if sensor.latest_data.humiditysoil >= 60 and sensor.latest_data.humiditysoil <= 80 %}
                                 status-optimal
                             {% elif sensor.latest_data.humiditysoil >= 40 and sensor.latest_data.humiditysoil < 60 or sensor.latest_data.humiditysoil > 80 %}
@@ -367,7 +367,7 @@
                         <div class="metric-icon">🌡️</div>
                         <div class="metric-label">Temperatura del Suelo</div>
                         <div class="metric-value">{{ sensor.latest_data.temperature }}°C</div>
-                        <span class="metric-status 
+                        <span class="status-badge status-badge-temperature 
                             {% if sensor.latest_data.temperature >= 15 and sensor.latest_data.temperature <= 25 %}
                                 status-optimal
                             {% elif sensor.latest_data.temperature >= 10 and sensor.latest_data.temperature < 15 or sensor.latest_data.temperature > 25 and sensor.latest_data.temperature <= 30 %}
@@ -392,12 +392,12 @@
                         <div class="chart-title">📊 Indicadores Visuales</div>
                         <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 2rem;">
                             <div>
-                                <div class="gauge-container">
+                                <div class="gauge-container humidity-gauge">
                                     <svg width="120" height="120" style="transform: rotate(-90deg);">
                                         <circle class="gauge-background" cx="60" cy="60" r="50"></circle>
-                                        <circle class="gauge-progress" cx="60" cy="60" r="50"
+                                        <circle class="gauge-circle-progress gauge-progress" cx="60" cy="60" r="50"
                                             style="stroke: {% if sensor.latest_data.humiditysoil >= 60 and sensor.latest_data.humiditysoil <= 80 %}#48bb78{% elif sensor.latest_data.humiditysoil >= 40 %}#ed8936{% else %}#f56565{% endif %}; 
-                                                   stroke-dasharray: {% widthratio sensor.latest_data.temperature 40 314 %} 314;">
+                                                   stroke-dasharray: {% widthratio sensor.latest_data.humiditysoil 100 314 %} 314;">
                                         </circle>
                                     </svg>
                                     <div class="gauge-text">{{ sensor.latest_data.humiditysoil }}%</div>
@@ -405,15 +405,15 @@
                                 <div style="text-align: center; margin-top: 0.5rem; color: #718096; font-weight: 600;">Humedad</div>
                             </div>
                             <div>
-                                <div class="gauge-container">
+                                <div class="gauge-container temperature-gauge">
                                     <svg width="120" height="120" style="transform: rotate(-90deg);">
                                         <circle class="gauge-background" cx="60" cy="60" r="50"></circle>
-                                        <circle class="gauge-progress" cx="60" cy="60" r="50"
+                                        <circle class="gauge-circle-progress gauge-progress" cx="60" cy="60" r="50"
                                             style="stroke: {% if sensor.latest_data.temperature >= 15 and sensor.latest_data.temperature <= 25 %}#48bb78{% elif sensor.latest_data.temperature >= 10 and sensor.latest_data.temperature <= 30 %}#ed8936{% else %}#f56565{% endif %}; 
                                                    stroke-dasharray: {% widthratio sensor.latest_data.temperature 40 314 %} 314;">
                                         </circle>
                                     </svg>
-                                    <div class="gauge-text">{{ sensor.latest_data.temperature }}°</div>
+                                    <div class="gauge-text">{{ sensor.latest_data.temperature }}°C</div>
                                 </div>
                                 <div style="text-align: center; margin-top: 0.5rem; color: #718096; font-weight: 600;">Temperatura</div>
                             </div>
@@ -424,11 +424,11 @@
                     <div class="chart-container">
                         <div class="chart-title">📈 Nivel de Humedad</div>
                         <div style="position: relative; background: #e2e8f0; height: 30px; border-radius: 15px; overflow: hidden;">
-                            <div style="position: absolute; left: 0; top: 0; height: 100%; 
+                            <div class="humidity-bar" style="position: absolute; left: 0; top: 0; height: 100%; 
                                 background: linear-gradient(90deg, 
-                                    {% if sensor.latest_data.humiditysoil < 40 %}#f56565{% elif sensor.latest_data.humiditysoil <= 80 %}#48bb78{% else %}#4299e1{% endif %} 0%, 
-                                    {% if sensor.latest_data.humiditysoil < 40 %}#fc8181{% elif sensor.latest_data.humiditysoil <= 80 %}#68d391{% else %}#63b3ed{% endif %} 100%);
-                                width: {{ sensor.latest_data.humiditysoil }}%; 
+                                    {% if sensor.latest_data.humiditysoil < 40 or sensor.latest_data.humiditysoil > 80 %}#f56565{% else %}#48bb78{% endif %} 0%, 
+                                    {% if sensor.latest_data.humiditysoil < 40 or sensor.latest_data.humiditysoil > 80 %}#fc8181{% else %}#68d391{% endif %} 100%);
+                                width: {% if sensor.latest_data.humiditysoil > 100 %}100{% else %}{{ sensor.latest_data.humiditysoil }}{% endif %}%; 
                                 transition: width 1s ease;
                                 display: flex;
                                 align-items: center;
@@ -446,6 +446,34 @@
                             <span>100% (Saturado)</span>
                         </div>
                     </div>
+
+                    <!-- Barra de progreso para Temperatura del Suelo -->
+                    <div class="chart-container">
+                        <div class="chart-title">🌡️ Temperatura del Suelo</div>
+                        <div style="position: relative; background: #e2e8f0; height: 30px; border-radius: 15px; overflow: hidden;">
+                            <div class="temperature-bar" style="position: absolute; left: 0; top: 0; height: 100%; 
+                                background: linear-gradient(90deg, 
+                                    {% if sensor.latest_data.temperature < 10 or sensor.latest_data.temperature > 25 %}#f56565{% elif sensor.latest_data.temperature >= 15 and sensor.latest_data.temperature <= 25 %}#48bb78{% else %}#ed8936{% endif %} 0%, 
+                                    {% if sensor.latest_data.temperature < 10 or sensor.latest_data.temperature > 25 %}#fc8181{% elif sensor.latest_data.temperature >= 15 and sensor.latest_data.temperature <= 25 %}#68d391{% else %}#fbbf24{% endif %} 100%);
+                                width: {% if sensor.latest_data.temperature > 40 %}100{% else %}{% widthratio sensor.latest_data.temperature 40 100 %}{% endif %}%; 
+                                transition: width 1s ease;
+                                display: flex;
+                                align-items: center;
+                                justify-content: flex-end;
+                                padding-right: 10px;
+                                color: white;
+                                font-weight: 600;
+                                font-size: 0.85rem;">
+                                {{ sensor.latest_data.temperature }}°C
+                            </div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-top: 0.5rem; font-size: 0.75rem; color: #718096;">
+                            <span>0°C (Frío)</span>
+                            <span>20°C (Óptimo)</span>
+                            <span>40°C (Calor)</span>
+                        </div>
+                    </div>
+                    
                 </div>
 
                 <!-- Recomendaciones inteligentes -->
@@ -523,5 +551,233 @@
         </div>
     {% endif %}
 </div>
+
+<!-- WebSocket para Sensores de Suelo -->
+<script>
+    let socket;
+    let reconnectDelay = 1000; // 1 segundo inicial
+    const maxReconnectDelay = 30000; // máximo 30 segundos
+
+    function getWebSocketURL(endpoint) {
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const host = window.location.host;
+        return `${protocol}//${host}/ws/${endpoint}/`;
+    }
+
+    const wsUrl = getWebSocketURL('sensores');
+
+    function connectWebSocket() {
+        try {
+            socket = new WebSocket(wsUrl);
+
+            socket.onopen = function(event) {
+                console.log("✅ WebSocket Suelo conectado exitosamente");
+                reconnectDelay = 1000; // reset delay on successful connection
+                
+                // Enviar mensaje de saludo
+                socket.send(JSON.stringify({
+                    message: 'Hola servidor WebSocket desde SmartAgro - Sensores Suelo'
+                }));
+            };
+
+            socket.onmessage = function(event) {
+                try {
+                    const data = JSON.parse(event.data);
+                    console.log("📡 Datos recibidos del WebSocket Suelo:", data);
+                    
+                    // Actualizar datos en tiempo real
+                    updateSensorData(data);
+                } catch (error) {
+                    console.error("❌ Error procesando mensaje WebSocket:", error);
+                }
+            };
+
+            socket.onclose = function(event) {
+                console.log("⚠️ WebSocket Suelo desconectado. Código:", event.code);
+                
+                // Intentar reconectar con backoff exponencial
+                if (reconnectDelay < maxReconnectDelay) {
+                    reconnectDelay *= 2;
+                }
+                setTimeout(connectWebSocket, reconnectDelay);
+            };
+
+            socket.onerror = function(error) {
+                console.error("❌ WebSocket error:", error);
+            };
+        } catch (error) {
+            console.error("❌ Error creando WebSocket:", error);
+        }
+    }
+
+    function updateSensorData(data) {
+        const sensorId = data.sensor_id;
+        const humiditysoil = data.humiditysoil;
+        const temperature = data.temperature;
+        const timestamp = data.timestamp;
+
+        // Buscar el contenedor del sensor
+        const sensorContainer = document.querySelector(`[data-sensor-id="${sensorId}"]`);
+        if (!sensorContainer) {
+            console.warn(`⚠️ No se encontró contenedor para sensor ${sensorId}`);
+            return;
+        }
+
+        // Actualizar timestamp
+        const timestampElement = sensorContainer.querySelector('.timestamp');
+        if (timestampElement) {
+            const date = new Date(timestamp);
+            timestampElement.innerHTML = `🕐 Última actualización: ${date.toLocaleString()}`;
+        }
+
+        // Actualizar barra de humedad
+        const humidityBar = sensorContainer.querySelector('.humidity-bar');
+        if (humidityBar) {
+            // Calcular el porcentaje (asegurarse de que no exceda 100%)
+            const percentage = Math.min(humiditysoil, 100);
+            humidityBar.style.width = `${percentage}%`;
+            
+            // Actualizar color según el rango
+            let color1, color2;
+            if (humiditysoil < 40) {
+                color1 = '#f56565';
+                color2 = '#fc8181';
+            } else if (humiditysoil <= 80) {
+                color1 = '#48bb78';
+                color2 = '#68d391';
+            } else {
+                color1 = '#4299e1';
+                color2 = '#63b3ed';
+            }
+            humidityBar.style.background = `linear-gradient(90deg, ${color1} 0%, ${color2} 100%)`;
+            
+            // Actualizar texto
+            humidityBar.textContent = `${humiditysoil}%`;
+        }
+
+        // Actualizar status de humedad
+        const humidityStatus = sensorContainer.querySelector('.status-badge-humidity');
+        if (humidityStatus) {
+            let statusText, statusClass;
+            if (humiditysoil < 40) {
+                statusText = 'Crítico';
+                statusClass = 'status-critical';
+            } else if (humiditysoil <= 59) {
+                statusText = 'Moderado';
+                statusClass = 'status-moderate';
+            } else if (humiditysoil <= 80) {
+                statusText = 'Óptimo';
+                statusClass = 'status-optimal';
+            } else {
+                statusText = 'Crítico';
+                statusClass = 'status-critical';
+            }
+            humidityStatus.textContent = statusText;
+            humidityStatus.className = `status-badge ${statusClass}`;
+        }
+
+        // Actualizar status de temperatura
+        const tempStatus = sensorContainer.querySelector('.status-badge-temperature');
+        if (tempStatus) {
+            let statusText, statusClass;
+            if (temperature < 10 || temperature > 25) {
+                statusText = 'Crítico';
+                statusClass = 'status-critical';
+            } else if (temperature >= 10 && temperature <= 25) {
+                statusText = 'Óptimo';
+                statusClass = 'status-optimal';
+            } else {
+                statusText = 'Moderado';
+                statusClass = 'status-moderate';
+            }
+            tempStatus.textContent = statusText;
+            tempStatus.className = `status-badge ${statusClass}`;
+        }
+
+        // Actualizar gauges
+        updateGauge(sensorContainer, 'humidity', humiditysoil);
+        updateGauge(sensorContainer, 'temperature', temperature);
+
+        // Actualizar recomendaciones
+        updateRecommendations(sensorContainer, humiditysoil, temperature);
+    }
+
+    function updateGauge(container, type, value) {
+        const gauge = container.querySelector(`.${type}-gauge`);
+        if (!gauge) return;
+
+        const percentage = type === 'humidity' ? Math.min(value, 100) : Math.min((value / 40) * 100, 100);
+        const circle = gauge.querySelector('.gauge-circle-progress');
+        const circumference = 2 * Math.PI * 45; // radio 45
+        const offset = circumference - (percentage / 100) * circumference;
+        circle.style.strokeDashoffset = offset;
+
+        const text = gauge.querySelector('.gauge-text');
+        if (text) {
+            text.textContent = type === 'humidity' ? `${value}%` : `${value}°C`;
+        }
+    }
+
+    function updateRecommendations(container, humidity, temperature) {
+        const recommendationsContainer = container.querySelector('.recommendations-section');
+        if (!recommendationsContainer) return;
+
+        // Limpiar recomendaciones existentes
+        const existingItems = recommendationsContainer.querySelectorAll('.recommendation-item');
+        existingItems.forEach(item => item.remove());
+
+        // Insertar nuevas recomendaciones después del título
+        const title = recommendationsContainer.querySelector('.recommendations-title');
+        
+        if (humidity < 40) {
+            addRecommendation(title, '⚠️ Humedad Baja Detectada', `El suelo está muy seco (${humidity}%). Se recomienda riego inmediato para evitar estrés hídrico en los cultivos.`);
+        } else if (humidity >= 40 && humidity < 60) {
+            addRecommendation(title, '💧 Humedad Moderada', `El nivel de humedad (${humidity}%) es aceptable. Monitorear continuamente y considerar riego en las próximas 12-24 horas.`);
+        } else if (humidity >= 60 && humidity <= 80) {
+            addRecommendation(title, '✅ Condiciones Óptimas', `La humedad del suelo (${humidity}%) se encuentra en el rango ideal para el desarrollo de cultivos. Mantener estas condiciones.`);
+        } else {
+            addRecommendation(title, '🌊 Humedad Excesiva', `El suelo presenta exceso de humedad (${humidity}%). Suspender riego y verificar drenaje para prevenir enfermedades fúngicas.`);
+        }
+
+        if (temperature < 10) {
+            addRecommendation(title, '❄️ Temperatura Baja', `La temperatura del suelo (${temperature}°C) está por debajo del rango óptimo. Considerar protección para cultivos sensibles al frío.`);
+        } else if (temperature >= 10 && temperature < 15) {
+            addRecommendation(title, '🌡️ Temperatura Fresca', `Temperatura del suelo (${temperature}°C) ligeramente baja. Monitorear desarrollo de cultivos y considerar ajustes si es necesario.`);
+        } else if (temperature >= 15 && temperature <= 25) {
+            addRecommendation(title, '✅ Temperatura Ideal', `La temperatura del suelo (${temperature}°C) es óptima para la mayoría de cultivos. Condiciones favorables para crecimiento.`);
+        } else if (temperature > 25 && temperature <= 30) {
+            addRecommendation(title, '☀️ Temperatura Elevada', `Temperatura del suelo (${temperature}°C) algo alta. Aumentar frecuencia de riego para compensar evaporación.`);
+        } else {
+            addRecommendation(title, '🔥 Temperatura Crítica', `Temperatura muy alta (${temperature}°C). Riego frecuente necesario y considerar mulching para reducir temperatura del suelo.`);
+        }
+
+        if (humidity >= 60 && humidity <= 80 && temperature >= 15 && temperature <= 25) {
+            addRecommendation(title, '🌟 Condiciones Perfectas', 'Tanto humedad como temperatura están en rangos óptimos. Excelentes condiciones para el desarrollo de cultivos.');
+        }
+    }
+
+    function addRecommendation(afterElement, title, content) {
+        const item = document.createElement('div');
+        item.className = 'recommendation-item';
+        item.innerHTML = `<strong>${title}</strong><br>${content}`;
+        afterElement.parentNode.insertBefore(item, afterElement.nextSibling);
+    }
+
+    // Iniciar conexión WebSocket cuando la página cargue
+    document.addEventListener('DOMContentLoaded', function() {
+        connectWebSocket();
+    });
+
+    // Función para enviar datos de prueba (opcional)
+    function sendTestData(sensorId, humidity, temperature) {
+        if (socket && socket.readyState === WebSocket.OPEN) {
+            socket.send(JSON.stringify({
+                sensor_id: sensorId,
+                humiditysoil: humidity,
+                temperature: temperature
+            }));
+        }
+    }
+</script>
 
 {% endblock %}

@@ -5,7 +5,7 @@
     position: fixed;
     top: 0;
     right: 0; /* Cambiamos "left" por "right" para posicionarlo a la derecha */
-    background-color: #caffca;
+    background-color: white;
     overflow-x: hidden;
     transition: 0.3s;
     z-index: 9999; /* Asegúrate de que esté al frente de todos los demás elementos */
@@ -23,7 +23,7 @@
     padding: 10px 25px;
     text-decoration: none;
     font-size: 18px;
-    color: #818181;
+    color: #333;
     display: block;
     transition: 0.3s;
 }

@@ -354,7 +354,7 @@ textarea {
     z-index: 999;
     top: 0;
     right: 0; /* lado derecho */
-    background-color: #a0cfa9a4;
+    background-color: white;
     overflow-x: hidden;
     transition: 0.4s;
     padding-top: 60px;
@@ -363,7 +363,7 @@ textarea {
 .sidenav a {
     display: block;
     padding: 12px;
-    color: #1e331f;
+    color: #000000;
     font-size: 22px;
     transition: 0.3s;
 }
