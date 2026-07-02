@@ -1174,8 +1174,9 @@ def device_status_api(request, tipo, sensor_id):
         return JsonResponse({'status': 'no_data'})
     return JsonResponse({'status': 'ok', 'data': data})
     
-
-@csrf_exempt
+#DATOS SENSOR SUELO
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 
 from django.core.cache import cache
 from django.http import JsonResponse
