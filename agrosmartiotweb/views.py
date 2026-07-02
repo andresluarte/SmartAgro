@@ -1174,67 +1174,80 @@ def device_status_api(request, tipo, sensor_id):
         return JsonResponse({'status': 'no_data'})
     return JsonResponse({'status': 'ok', 'data': data})
     
-#DATOS SENSOR SUELO
-from channels.layers import get_channel_layer
-from asgiref.sync import async_to_sync
+
 @csrf_exempt
 
+from django.core.cache import cache
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+
+@csrf_exempt
 def receive_data_soil(request):
     if request.method == 'POST':
-        # Obtener la API Key desde la cabecera 'Authorization'
-        api_key = request.headers.get('Authorization')
-        
-        if not api_key:
-            return JsonResponse({'status': 'error', 'message': 'API Key no proporcionada'}, status=400)
 
-        # Verificar que la API Key sea válida
+        api_key = request.headers.get('Authorization')
+        if not api_key:
+            return JsonResponse(
+                {'status': 'error', 'message': 'API Key no proporcionada'},
+                status=400
+            )
+
         sensor = SensorSuelo.objects.filter(api_key=api_key).first()
         if not sensor:
-            return JsonResponse({'status': 'error', 'message': 'API Key inválida'}, status=403)
+            return JsonResponse(
+                {'status': 'error', 'message': 'API Key inválida'},
+                status=403
+            )
 
-        # Obtener los datos enviados en la solicitud
         humiditysoil = request.POST.get('humiditysoil')
         temperature = request.POST.get('temperature')
         fecha_registro = request.POST.get('fecha_registro')
 
+        if not all([humiditysoil, temperature, fecha_registro]):
+            return JsonResponse(
+                {'status': 'error', 'message': 'Datos incompletos'},
+                status=400
+            )
 
-        # Verificar que los datos obligatorios estén presentes
-        if not all([humiditysoil, temperature,fecha_registro]):
-            return JsonResponse({'status': 'error', 'message': 'Datos incompletos'}, status=400)
-
-        # Crear una nueva entrada de datos asociada al sensor
+        # Guardar histórico en BD
         HumidityTemperaturaSoil.objects.create(
             humiditysoil=humiditysoil,
             temperature=temperature,
             sensor=sensor,
-            fecha_registro=fecha_registro  # Asociar los datos al sensor encontrado por la API Key
+            fecha_registro=fecha_registro
         )
-          # Preparar los datos para enviarlos al WebSocket
-        data = {
+
+        # Estado actual del dispositivo SOLO EN CACHE
+        device_status = {
             'sensor_id': sensor.id,
-            'sensor_name': sensor.name,  # Si tienes el nombre del sensor en el modelo
+            'sensor_name': sensor.name,
             'humiditysoil': humiditysoil,
             'temperature': temperature,
-            'timestamp': fecha_registro  # Aquí asumes que la fecha está en formato adecuado
+            'battery': request.POST.get('battery'),
+            'battery_voltage': request.POST.get('battery_voltage'),
+            'operator': request.POST.get('operator'),
+            'network_type': request.POST.get('network_type'),
+            'signal_rssi': request.POST.get('signal_rssi'),
+            'signal_quality': request.POST.get('signal_quality'),
+            'timestamp': fecha_registro,
         }
-        channel_layer = get_channel_layer()
-        # Enviar los datos por WebSocket al grupo de sensores
-        if channel_layer is not None:
-            async_to_sync(channel_layer.group_send)(
-                "sensores",
-                {
-                    "type": "sensor_update",
-                    "data": data,
-                }
-            )
-        else:
-            print("Error: channel_layer es None — revisa la configuración de CHANNEL_LAYERS")
 
-        return JsonResponse({'status': 'success', 'message': 'Datos de humedad del suelo recibidos correctamente'})
+        # Expira automáticamente después de 15 minutos
+        cache.set(
+            f'device_status_soil_{sensor.id}',
+            device_status,
+            timeout=900
+        )
 
-    return JsonResponse({'status': 'error', 'message': 'Método no permitido'}, status=405)
+        return JsonResponse({
+            'status': 'success',
+            'message': 'Datos de humedad del suelo recibidos correctamente'
+        })
 
-
+    return JsonResponse(
+        {'status': 'error', 'message': 'Método no permitido'},
+        status=405
+    )
 
 
 from .serializers import TemperatureHumidityLocationSerializer

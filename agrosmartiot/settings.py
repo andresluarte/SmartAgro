@@ -178,6 +178,7 @@ CSRF_TRUSTED_ORIGINS = ['https://smartagro-iot-fce1cd62dbea.herokuapp.com','http
 
 #import os
 
+import ssl
 import os
 
 REDIS_URL = os.environ.get("REDIS_TLS_URL") or os.environ.get("REDIS_URL")
@@ -187,7 +188,12 @@ if REDIS_URL:
         "default": {
             "BACKEND": "channels_redis.core.RedisChannelLayer",
             "CONFIG": {
-                "hosts": [REDIS_URL],
+                "hosts": [{
+                    "address": REDIS_URL,
+                    "ssl": {
+                        "cert_reqs": ssl.CERT_NONE,
+                    },
+                }],
             },
         },
     }
@@ -197,5 +203,4 @@ else:
             "BACKEND": "channels.layers.InMemoryChannelLayer"
         }
     }
-
 ASGI_APPLICATION = 'agrosmartiot.asgi.application'
