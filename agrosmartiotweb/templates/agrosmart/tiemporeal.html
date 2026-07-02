@@ -3,16 +3,32 @@
 {% block contenido %}
 <style>
     .air-sensor-dashboard {
-        padding: 1rem 0.5rem;
+        padding: 2.5rem 0.5rem 3rem;
         background: #f8f9fa;
         min-height: 100vh;
         overflow-x: hidden;
     }
 
+    /* ===== Header como banner con gradiente ===== */
     .dashboard-header {
         text-align: center;
         color: white;
-        margin-bottom: 2rem;
+        background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
+        max-width: 1400px;
+        margin: 0 auto 3rem auto;
+        padding: 2.5rem 1.5rem;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(59, 130, 246, 0.35);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .dashboard-header::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at 20% 20%, rgba(255,255,255,0.15), transparent 60%);
+        pointer-events: none;
     }
 
     .dashboard-header h3 {
@@ -23,6 +39,15 @@
         align-items: center;
         justify-content: center;
         gap: 1rem;
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .dashboard-header p {
+        margin: 0;
+        font-size: 1rem;
+        opacity: 0.92;
+        font-weight: 500;
+        letter-spacing: 0.3px;
     }
 
     .sensor-grid {
@@ -154,6 +179,54 @@
         color: #1f2937;
         font-weight: 700;
         font-size: 1rem;
+    }
+
+    /* ===== Secciones diferenciadas dentro de la tarjeta ===== */
+    .section-block {
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .section-title {
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 1.25rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid rgba(0, 0, 0, 0.07);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .sensor-data-section {
+        background: linear-gradient(135deg, #eff6ff 0%, #f0f9ff 100%);
+        border: 1px solid #bfdbfe;
+    }
+
+    .sensor-data-section .section-title {
+        color: #1d4ed8;
+        border-bottom-color: rgba(59, 130, 246, 0.25);
+    }
+
+    .device-status-section {
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        border: 1px solid #e2e8f0;
+    }
+
+    .device-status-section .section-title {
+        color: #475569;
+        border-bottom-color: rgba(100, 116, 139, 0.2);
+    }
+
+    .section-block .metrics-grid {
+        margin-bottom: 0;
+    }
+
+    .section-block .location-section {
+        margin-top: 1.5rem;
+        background: white;
     }
 
     /* Sensor Cards */
@@ -343,7 +416,7 @@
         fill: none;
         stroke-width: 12;
         stroke-linecap: round;
-        transition: stroke-dasharray 1s ease;
+        transition: stroke-dasharray 1s ease, stroke 0.3s ease;
     }
 
     .gauge-text {
@@ -470,54 +543,117 @@
         }
     }
 
+    /* ===== Battery specific ===== */
+    .battery-icon {
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+        display: inline-block;
+    }
+
+    /* ===== Signal specific (estilo celular: barritas + tecnología + operador) ===== */
+    .signal-bars {
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        gap: 4px;
+        height: 32px;
+        margin: 0 auto 0.6rem auto;
+    }
+
+    .signal-bars .bar {
+        width: 7px;
+        border-radius: 2px;
+        background: #e2e8f0;
+        transition: background 0.3s ease;
+    }
+
+    .signal-bars .bar:nth-child(1) { height: 30%; }
+    .signal-bars .bar:nth-child(2) { height: 55%; }
+    .signal-bars .bar:nth-child(3) { height: 78%; }
+    .signal-bars .bar:nth-child(4) { height: 100%; }
+
+    .signal-bars.signal-weak .bar.active { background: #ef4444; }
+    .signal-bars.signal-medium .bar.active { background: #f59e0b; }
+    .signal-bars.signal-strong .bar.active { background: #10b981; }
+    .signal-bars.signal-none .bar { background: #e2e8f0; }
+
+    .network-type-badge {
+        display: inline-block;
+        padding: 0.2rem 0.7rem;
+        border-radius: 20px;
+        font-weight: 700;
+        font-size: 0.78rem;
+        margin-top: 0.4rem;
+        letter-spacing: 0.3px;
+    }
+
+    .network-2g { background: #e2e8f0; color: #475569; }
+    .network-3g { background: #dbeafe; color: #1e40af; }
+    .network-4g { background: #d1fae5; color: #065f46; }
+    .network-5g { background: #ede9fe; color: #5b21b6; }
+    .network-unknown { background: #f1f5f9; color: #94a3b8; }
+
+    .carrier-name {
+        color: #64748b;
+        font-size: 0.82rem;
+        font-weight: 600;
+        margin-top: 0.4rem;
+    }
+
     /* Responsive Design */
     @media (max-width: 768px) {
         .air-sensor-dashboard {
-            padding: 1rem 0.5rem;
+            padding: 1.5rem 0.5rem 2rem;
         }
-        
+
+        .dashboard-header {
+            padding: 1.75rem 1.25rem;
+            margin-bottom: 2rem;
+            border-radius: 16px;
+        }
+
         .dashboard-header h3 {
-            font-size: 1.8rem;
+            font-size: 1.6rem;
         }
-        
+
         .sensor-card {
             padding: 1.5rem;
         }
-        
+
         .weather-card {
             padding: 1.5rem;
         }
-        
+
         .weather-main {
             flex-direction: column;
             gap: 1rem;
         }
-        
+
         .weather-temp {
             font-size: 2.5rem;
         }
-        
+
         .metrics-grid {
             grid-template-columns: 1fr;
         }
-        
+
         .location-grid {
             grid-template-columns: 1fr;
         }
-        
+
         .sensor-header {
             flex-direction: column;
             gap: 1rem;
             align-items: flex-start;
         }
-        
+
         .gauges-grid {
             grid-template-columns: repeat(2, 1fr);
         }
     }
 </style>
 
-<div class="">
+<div class="air-sensor-dashboard">
     <div class="dashboard-header">
         <h3>🌬️ Monitoreo de Sensores de Aire</h3>
         <p>Sistema de Monitoreo en Tiempo Real - SmartAgro</p>
@@ -551,50 +687,127 @@
                     </div>
                 </div>
 
-                <!-- Métricas principales -->
-                <div class="metrics-grid">
-                    <div class="metric-card">
-                        <div class="metric-icon">🌡️</div>
-                        <div class="metric-label">Temperatura</div>
-                        <div class="metric-value" id="temperature-{{ data.sensor_id }}">{{ data.latest_data.temperature }}°C</div>
-                        <span class="metric-status 
-                            {% if data.latest_data.temperature >= 18 and data.latest_data.temperature <= 26 %}
-                                status-optimal
-                            {% elif data.latest_data.temperature >= 15 and data.latest_data.temperature < 18 or data.latest_data.temperature > 26 and data.latest_data.temperature <= 30 %}
-                                status-warning
-                            {% else %}
-                                status-critical
-                            {% endif %}">
-                            {% if data.latest_data.temperature >= 18 and data.latest_data.temperature <= 26 %}
-                                Óptimo
-                            {% elif data.latest_data.temperature >= 15 and data.latest_data.temperature <= 30 %}
-                                Aceptable
-                            {% else %}
-                                Alerta
-                            {% endif %}
-                        </span>
+                <!-- ===== SECCIÓN 1: Datos del Sensor ===== -->
+                <div class="section-block sensor-data-section">
+                    <div class="section-title">📡 Datos del Sensor</div>
+
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <div class="metric-icon">🌡️</div>
+                            <div class="metric-label">Temperatura</div>
+                            <div class="metric-value" id="temperature-{{ data.sensor_id }}">{{ data.latest_data.temperature }}°C</div>
+                            <span class="metric-status 
+                                {% if data.latest_data.temperature >= 18 and data.latest_data.temperature <= 26 %}
+                                    status-optimal
+                                {% elif data.latest_data.temperature >= 15 and data.latest_data.temperature < 18 or data.latest_data.temperature > 26 and data.latest_data.temperature <= 30 %}
+                                    status-warning
+                                {% else %}
+                                    status-critical
+                                {% endif %}" id="temp-status-{{ data.sensor_id }}">
+                                {% if data.latest_data.temperature >= 18 and data.latest_data.temperature <= 26 %}
+                                    Óptimo
+                                {% elif data.latest_data.temperature >= 15 and data.latest_data.temperature <= 30 %}
+                                    Aceptable
+                                {% else %}
+                                    Alerta
+                                {% endif %}
+                            </span>
+                        </div>
+
+                        <div class="metric-card">
+                            <div class="metric-icon">💧</div>
+                            <div class="metric-label">Humedad Relativa</div>
+                            <div class="metric-value" id="humidity-{{ data.sensor_id }}">{{ data.latest_data.humidity }}%</div>
+                            <span class="metric-status 
+                                {% if data.latest_data.humidity >= 40 and data.latest_data.humidity <= 60 %}
+                                    status-optimal
+                                {% elif data.latest_data.humidity >= 30 and data.latest_data.humidity < 40 or data.latest_data.humidity > 60 and data.latest_data.humidity <= 70 %}
+                                    status-warning
+                                {% else %}
+                                    status-critical
+                                {% endif %}" id="humidity-status-{{ data.sensor_id }}">
+                                {% if data.latest_data.humidity >= 40 and data.latest_data.humidity <= 60 %}
+                                    Óptimo
+                                {% elif data.latest_data.humidity >= 30 and data.latest_data.humidity <= 70 %}
+                                    Moderado
+                                {% else %}
+                                    Crítico
+                                {% endif %}
+                            </span>
+                        </div>
                     </div>
 
-                    <div class="metric-card">
-                        <div class="metric-icon">💧</div>
-                        <div class="metric-label">Humedad Relativa</div>
-                        <div class="metric-value" id="humidity-{{ data.sensor_id }}">{{ data.latest_data.humidity }}%</div>
-                        <span class="metric-status 
-                            {% if data.latest_data.humidity >= 40 and data.latest_data.humidity <= 60 %}
-                                status-optimal
-                            {% elif data.latest_data.humidity >= 30 and data.latest_data.humidity < 40 or data.latest_data.humidity > 60 and data.latest_data.humidity <= 70 %}
-                                status-warning
-                            {% else %}
-                                status-critical
-                            {% endif %}">
-                            {% if data.latest_data.humidity >= 40 and data.latest_data.humidity <= 60 %}
-                                Óptimo
-                            {% elif data.latest_data.humidity >= 30 and data.latest_data.humidity <= 70 %}
-                                Moderado
-                            {% else %}
-                                Crítico
-                            {% endif %}
-                        </span>
+                    <!-- Ubicación GPS -->
+                    <div class="location-section">
+                        <div class="location-grid">
+                            <div class="location-item">
+                                <div class="location-label">📍 Latitud</div>
+                                <div class="location-value" id="latitudeEl-{{ data.sensor_id }}">{{ data.latest_data.latitude }}</div>
+                            </div>
+                            <div class="location-item">
+                                <div class="location-label">📍 Longitud</div>
+                                <div class="location-value" id="longitudEl-{{ data.sensor_id }}">{{ data.latest_data.longitude }}</div>
+                            </div>
+                        </div>
+                        <a id="mapLink-{{ data.sensor_id }}"
+                           href="https://www.google.com/maps/search/?api=1&query={{ data.latest_data.latitude|urlencode }},{{ data.latest_data.longitude|urlencode }}"
+                           target="_blank"
+                           class="map-button">
+                            🗺️ Ver Ubicación en Google Maps
+                        </a>
+                    </div>
+                </div>
+
+                <!-- ===== SECCIÓN 2: Estado del Dispositivo ===== -->
+                <div class="section-block device-status-section">
+                    <div class="section-title">🔧 Estado del Dispositivo</div>
+
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <div class="battery-icon" id="battery-icon-{{ data.sensor_id }}">
+                                {% if data.latest_data.battery >= 60 %}🔋{% elif data.latest_data.battery >= 20 %}🪫{% else %}🪫{% endif %}
+                            </div>
+                            <div class="metric-label">Batería</div>
+                            <div class="metric-value" id="battery-{{ data.sensor_id }}">{{ data.latest_data.battery }}%</div>
+                            <span class="metric-status 
+                                {% if data.latest_data.battery >= 60 %}
+                                    status-optimal
+                                {% elif data.latest_data.battery >= 20 %}
+                                    status-warning
+                                {% else %}
+                                    status-critical
+                                {% endif %}" id="battery-status-{{ data.sensor_id }}">
+                                {% if data.latest_data.battery >= 60 %}
+                                    Óptimo
+                                {% elif data.latest_data.battery >= 20 %}
+                                    Baja
+                                {% else %}
+                                    Crítica
+                                {% endif %}
+                            </span>
+                        </div>
+
+                        <!-- Señal Celular -->
+                        <div class="metric-card">
+                            <div class="signal-bars 
+                                {% if data.latest_data.signal_strength >= 75 %}signal-strong
+                                {% elif data.latest_data.signal_strength >= 40 %}signal-medium
+                                {% elif data.latest_data.signal_strength > 0 %}signal-weak
+                                {% else %}signal-none
+                                {% endif %}" id="signal-bars-{{ data.sensor_id }}">
+                                <span class="bar {% if data.latest_data.signal_strength >= 1 %}active{% endif %}"></span>
+                                <span class="bar {% if data.latest_data.signal_strength >= 25 %}active{% endif %}"></span>
+                                <span class="bar {% if data.latest_data.signal_strength >= 50 %}active{% endif %}"></span>
+                                <span class="bar {% if data.latest_data.signal_strength >= 75 %}active{% endif %}"></span>
+                            </div>
+                            <div class="metric-label">Señal Celular</div>
+                            <span class="network-type-badge network-{{ data.latest_data.network_type|default:"unknown"|lower }}" id="network-type-{{ data.sensor_id }}">
+                                {{ data.latest_data.network_type|default:"Sin datos" }}
+                            </span>
+                            <div class="carrier-name" id="carrier-{{ data.sensor_id }}">
+                                📶 {{ data.latest_data.carrier|default:"Operador desconocido" }}
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -606,12 +819,12 @@
                             <div class="gauge-container">
                                 <svg width="140" height="140" style="transform: rotate(-90deg);">
                                     <circle class="gauge-background" cx="70" cy="70" r="60"></circle>
-                                    <circle class="gauge-progress" cx="70" cy="70" r="60"
+                                    <circle class="gauge-progress" id="gauge-temp-{{ data.sensor_id }}" cx="70" cy="70" r="60"
                                         style="stroke: {% if data.latest_data.temperature >= 18 and data.latest_data.temperature <= 26 %}#10b981{% elif data.latest_data.temperature >= 15 and data.latest_data.temperature <= 30 %}#f59e0b{% else %}#ef4444{% endif %}; 
                                                stroke-dasharray: {% widthratio data.latest_data.temperature 50 377 %} 377;">
                                     </circle>
                                 </svg>
-                                <div class="gauge-text">{{ data.latest_data.temperature }}°</div>
+                                <div class="gauge-text" id="gauge-temp-text-{{ data.sensor_id }}">{{ data.latest_data.temperature }}°</div>
                             </div>
                             <div class="gauge-label">Temperatura</div>
                         </div>
@@ -619,14 +832,40 @@
                             <div class="gauge-container">
                                 <svg width="140" height="140" style="transform: rotate(-90deg);">
                                     <circle class="gauge-background" cx="70" cy="70" r="60"></circle>
-                                    <circle class="gauge-progress" cx="70" cy="70" r="60"
+                                    <circle class="gauge-progress" id="gauge-humidity-{{ data.sensor_id }}" cx="70" cy="70" r="60"
                                         style="stroke: {% if data.latest_data.humidity >= 40 and data.latest_data.humidity <= 60 %}#10b981{% elif data.latest_data.humidity >= 30 and data.latest_data.humidity <= 70 %}#f59e0b{% else %}#3b82f6{% endif %}; 
                                                stroke-dasharray: {% widthratio data.latest_data.humidity 100 377 %} 377;">
                                     </circle>
                                 </svg>
-                                <div class="gauge-text">{{ data.latest_data.humidity }}%</div>
+                                <div class="gauge-text" id="gauge-humidity-text-{{ data.sensor_id }}">{{ data.latest_data.humidity }}%</div>
                             </div>
                             <div class="gauge-label">Humedad</div>
+                        </div>
+                        <div>
+                            <div class="gauge-container">
+                                <svg width="140" height="140" style="transform: rotate(-90deg);">
+                                    <circle class="gauge-background" cx="70" cy="70" r="60"></circle>
+                                    <circle class="gauge-progress" id="gauge-battery-{{ data.sensor_id }}" cx="70" cy="70" r="60"
+                                        style="stroke: {% if data.latest_data.battery >= 60 %}#10b981{% elif data.latest_data.battery >= 20 %}#f59e0b{% else %}#ef4444{% endif %}; 
+                                               stroke-dasharray: {% widthratio data.latest_data.battery 100 377 %} 377;">
+                                    </circle>
+                                </svg>
+                                <div class="gauge-text" id="gauge-battery-text-{{ data.sensor_id }}">{{ data.latest_data.battery }}%</div>
+                            </div>
+                            <div class="gauge-label">Batería</div>
+                        </div>
+                        <div>
+                            <div class="gauge-container">
+                                <svg width="140" height="140" style="transform: rotate(-90deg);">
+                                    <circle class="gauge-background" cx="70" cy="70" r="60"></circle>
+                                    <circle class="gauge-progress" id="gauge-signal-{{ data.sensor_id }}" cx="70" cy="70" r="60"
+                                        style="stroke: {% if data.latest_data.signal_strength >= 75 %}#10b981{% elif data.latest_data.signal_strength >= 40 %}#f59e0b{% else %}#ef4444{% endif %}; 
+                                               stroke-dasharray: {% widthratio data.latest_data.signal_strength 100 377 %} 377;">
+                                    </circle>
+                                </svg>
+                                <div class="gauge-text" id="gauge-signal-text-{{ data.sensor_id }}">{{ data.latest_data.signal_strength }}%</div>
+                            </div>
+                            <div class="gauge-label">Señal</div>
                         </div>
                     </div>
                 </div>
@@ -637,26 +876,6 @@
                     <div class="chart-canvas">
                         <canvas id="sensor-aire-chart-{{ data.sensor_id }}"></canvas>
                     </div>
-                </div>
-
-                <!-- Ubicación -->
-                <div class="location-section">
-                    <div class="location-grid">
-                        <div class="location-item">
-                            <div class="location-label">📍 Latitud</div>
-                            <div class="location-value" id="latitudeEl-{{ data.sensor_id }}">{{ data.latest_data.latitude }}</div>
-                        </div>
-                        <div class="location-item">
-                            <div class="location-label">📍 Longitud</div>
-                            <div class="location-value" id="longitudEl-{{ data.sensor_id }}">{{ data.latest_data.longitude }}</div>
-                        </div>
-                    </div>
-                    <a id="mapLink-{{ data.sensor_id }}"
-                       href="https://www.google.com/maps/search/?api=1&query={{ data.latest_data.latitude|urlencode }},{{ data.latest_data.longitude|urlencode }}"
-                       target="_blank"
-                       class="map-button">
-                        🗺️ Ver Ubicación en Google Maps
-                    </a>
                 </div>
 
                 <div class="timestamp" id="timestamp-{{ data.sensor_id }}">
@@ -686,20 +905,26 @@ document.addEventListener('DOMContentLoaded', function () {
     window["chart_{{ data.sensor_id }}"] = new Chart(ctx{{ data.sensor_id }}, {
         type: 'bar',
         data: {
-            labels: ['Temperatura (°C)', 'Humedad (%)'],
+            labels: ['Temperatura (°C)', 'Humedad (%)', 'Batería (%)', 'Señal (%)'],
             datasets: [{
                 label: 'Valores Actuales',
                 data: [
                     Number({{ data.latest_data.temperature|default:0 }}),
-                    Number({{ data.latest_data.humidity|default:0 }})
+                    Number({{ data.latest_data.humidity|default:0 }}),
+                    Number({{ data.latest_data.battery|default:0 }}),
+                    Number({{ data.latest_data.signal_strength|default:0 }})
                 ],
                 backgroundColor: [
                     'rgba(239, 68, 68, 0.8)',
-                    'rgba(59, 130, 246, 0.8)'
+                    'rgba(59, 130, 246, 0.8)',
+                    'rgba(16, 185, 129, 0.8)',
+                    'rgba(168, 85, 247, 0.8)'
                 ],
                 borderColor: [
                     'rgba(239, 68, 68, 1)',
-                    'rgba(59, 130, 246, 1)'
+                    'rgba(59, 130, 246, 1)',
+                    'rgba(16, 185, 129, 1)',
+                    'rgba(168, 85, 247, 1)'
                 ],
                 borderWidth: 2,
                 borderRadius: 10
@@ -754,98 +979,167 @@ document.addEventListener('DOMContentLoaded', function () {
 
 <!-- WebSocket para Sensores de Aire -->
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    function getWebSocketURL(endpoint) {
-        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const host = window.location.host;
-        return `${protocol}//${host}/ws/${endpoint}/`;
-    }
+    document.addEventListener('DOMContentLoaded', function () {
+        const POLLING_INTERVAL_MS = 5000; // ajusta según lo agresivo que quieras el polling
+        const GAUGE_CIRCUMFERENCE = 377;
 
-    const wsUrl = getWebSocketURL('sensoresaire');
-    console.log('🔌 Conectando a:', wsUrl);
-    
-    let socket = null;
-    let reconnectAttempts = 0;
-    const maxReconnectAttempts = 5;
-    const reconnectDelay = 3000;
+        function setGauge(circleId, textId, value, max, color) {
+            const circle = document.getElementById(circleId);
+            const text = document.getElementById(textId);
+            if (!circle) return;
+            const clamped = Math.max(0, Math.min(Number(value), max));
+            const dash = (clamped / max) * GAUGE_CIRCUMFERENCE;
+            circle.style.strokeDasharray = `${dash} ${GAUGE_CIRCUMFERENCE}`;
+            circle.style.stroke = color;
+            if (text) text.innerText = max === 50 ? `${value}°` : `${value}%`;
+        }
 
-    function connectWebSocket() {
-        try {
-            socket = new WebSocket(wsUrl);
+        function statusFor(value, thresholds) {
+            const v = Number(value);
+            if (v >= thresholds.optimal[0] && v <= thresholds.optimal[1]) {
+                return { cls: 'status-optimal', label: thresholds.optimalLabel || 'Óptimo' };
+            }
+            if (v >= thresholds.warning[0] && v <= thresholds.warning[1]) {
+                return { cls: 'status-warning', label: thresholds.warningLabel || 'Aceptable' };
+            }
+            return { cls: 'status-critical', label: thresholds.criticalLabel || 'Alerta' };
+        }
 
-            socket.onopen = function() {
-                console.log("✅ WebSocket Aire conectado exitosamente");
-                reconnectAttempts = 0;
-                socket.send(JSON.stringify({ 
-                    message: 'Hola servidor WebSocket desde SmartAgro - Sensores Aire' 
-                }));
-            };
+        function applyStatus(elId, statusResult) {
+            const el = document.getElementById(elId);
+            if (!el) return;
+            el.classList.remove('status-optimal', 'status-warning', 'status-critical');
+            el.classList.add(statusResult.cls);
+            el.innerText = statusResult.label;
+        }
 
-            socket.onmessage = function(e) {
-                try {
-                    const data = JSON.parse(e.data);
-                    console.log('📦 Datos recibidos:', data);
-                    
-                    if (data.sensor_id) {
-                        const humidityEl = document.getElementById(`humidity-${data.sensor_id}`);
-                        const temperatureEl = document.getElementById(`temperature-${data.sensor_id}`);
-                        const latitudeEl = document.getElementById(`latitudeEl-${data.sensor_id}`);
-                        const longitudeEl = document.getElementById(`longitudEl-${data.sensor_id}`);
-                        const timestampEl = document.getElementById(`timestamp-${data.sensor_id}`);
-                        const mapLinkEl = document.getElementById(`mapLink-${data.sensor_id}`);
+        function updateSignalBars(sensorId, strength) {
+            const container = document.getElementById(`signal-bars-${sensorId}`);
+            if (!container) return;
+            const bars = container.querySelectorAll('.bar');
+            const thresholds = [1, 25, 50, 75];
+            bars.forEach((bar, i) => bar.classList.toggle('active', Number(strength) >= thresholds[i]));
+            container.classList.remove('signal-weak', 'signal-medium', 'signal-strong', 'signal-none');
+            if (strength >= 75) container.classList.add('signal-strong');
+            else if (strength >= 40) container.classList.add('signal-medium');
+            else if (strength > 0) container.classList.add('signal-weak');
+            else container.classList.add('signal-none');
+        }
 
-                        if (humidityEl) humidityEl.innerText = `${data.humidity}%`;
-                        if (temperatureEl) temperatureEl.innerText = `${data.temperature}°C`;
-                        if (latitudeEl) latitudeEl.innerText = data.latitude;
-                        if (longitudeEl) longitudeEl.innerText = data.longitude;
-                        if (timestampEl) timestampEl.innerText = `🕐 Última actualización: ${data.timestamp}`;
-                        if (mapLinkEl) {
-                            mapLinkEl.href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(data.latitude)},${encodeURIComponent(data.longitude)}`;
-                        }
+        function updateNetworkBadge(sensorId, networkType) {
+            const el = document.getElementById(`network-type-${sensorId}`);
+            if (!el || !networkType) return;
+            el.classList.remove('network-2g', 'network-3g', 'network-4g', 'network-5g', 'network-unknown');
+            el.classList.add(`network-${String(networkType).toLowerCase()}`);
+            el.innerText = networkType;
+        }
 
-                        // Actualizar gráfico
-                        const chart = window["chart_" + data.sensor_id];
-                        if (chart) {
-                            chart.data.datasets[0].data = [
-                                Number(data.temperature),
-                                Number(data.humidity)
-                            ];
-                            chart.update();
-                        }
+        function aplicarDatos(data) {
+            const sensorId = data.sensor_id;
+
+            const humidityEl = document.getElementById(`humidity-${sensorId}`);
+            const temperatureEl = document.getElementById(`temperature-${sensorId}`);
+            const batteryEl = document.getElementById(`battery-${sensorId}`);
+            const batteryIconEl = document.getElementById(`battery-icon-${sensorId}`);
+            const carrierEl = document.getElementById(`carrier-${sensorId}`);
+            const latitudeEl = document.getElementById(`latitudeEl-${sensorId}`);
+            const longitudeEl = document.getElementById(`longitudEl-${sensorId}`);
+            const timestampEl = document.getElementById(`timestamp-${sensorId}`);
+            const mapLinkEl = document.getElementById(`mapLink-${sensorId}`);
+
+            if (humidityEl && data.humidity !== undefined) humidityEl.innerText = `${data.humidity}%`;
+            if (temperatureEl && data.temperature !== undefined) temperatureEl.innerText = `${data.temperature}°C`;
+            if (batteryEl && data.battery !== undefined) batteryEl.innerText = `${data.battery}%`;
+            if (batteryIconEl && data.battery !== undefined) {
+                batteryIconEl.innerText = Number(data.battery) >= 60 ? '🔋' : '🪫';
+            }
+            if (carrierEl && data.operator) carrierEl.innerText = `📶 ${data.operator}`;
+            if (latitudeEl && data.latitude) latitudeEl.innerText = data.latitude;
+            if (longitudeEl && data.longitude) longitudeEl.innerText = data.longitude;
+            if (timestampEl && data.timestamp) timestampEl.innerText = `🕐 Última actualización: ${data.timestamp}`;
+            if (mapLinkEl && data.latitude && data.longitude) {
+                mapLinkEl.href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(data.latitude)},${encodeURIComponent(data.longitude)}`;
+            }
+
+            if (data.temperature !== undefined) {
+                const tempStatus = statusFor(data.temperature, {
+                    optimal: [18, 26], optimalLabel: 'Óptimo',
+                    warning: [15, 30], warningLabel: 'Aceptable',
+                    criticalLabel: 'Alerta'
+                });
+                applyStatus(`temp-status-${sensorId}`, tempStatus);
+                setGauge(`gauge-temp-${sensorId}`, `gauge-temp-text-${sensorId}`, data.temperature, 50,
+                    tempStatus.cls === 'status-optimal' ? '#10b981' : tempStatus.cls === 'status-warning' ? '#f59e0b' : '#ef4444');
+            }
+
+            if (data.humidity !== undefined) {
+                const humStatus = statusFor(data.humidity, {
+                    optimal: [40, 60], optimalLabel: 'Óptimo',
+                    warning: [30, 70], warningLabel: 'Moderado',
+                    criticalLabel: 'Crítico'
+                });
+                applyStatus(`humidity-status-${sensorId}`, humStatus);
+                setGauge(`gauge-humidity-${sensorId}`, `gauge-humidity-text-${sensorId}`, data.humidity, 100,
+                    humStatus.cls === 'status-optimal' ? '#10b981' : humStatus.cls === 'status-warning' ? '#f59e0b' : '#3b82f6');
+            }
+
+            if (data.battery !== undefined) {
+                const battStatus = statusFor(data.battery, {
+                    optimal: [60, 100], optimalLabel: 'Óptimo',
+                    warning: [20, 59], warningLabel: 'Baja',
+                    criticalLabel: 'Crítica'
+                });
+                applyStatus(`battery-status-${sensorId}`, battStatus);
+                setGauge(`gauge-battery-${sensorId}`, `gauge-battery-text-${sensorId}`, data.battery, 100,
+                    battStatus.cls === 'status-optimal' ? '#10b981' : battStatus.cls === 'status-warning' ? '#f59e0b' : '#ef4444');
+            }
+
+            if (data.signal_rssi !== undefined) {
+                // RSSI típico SIM7600 va de 0-31 (AT+CSQ) -> lo pasamos a % aprox
+                const signalPct = Math.round((Number(data.signal_rssi) / 31) * 100);
+                updateSignalBars(sensorId, signalPct);
+                const signalColor = signalPct >= 75 ? '#10b981' : signalPct >= 40 ? '#f59e0b' : '#ef4444';
+                setGauge(`gauge-signal-${sensorId}`, `gauge-signal-text-${sensorId}`, signalPct, 100, signalColor);
+            }
+
+            if (data.network_type) {
+                updateNetworkBadge(sensorId, data.network_type);
+            }
+
+            const chart = window["chart_" + sensorId];
+            if (chart) {
+                chart.data.datasets[0].data = [
+                    Number(data.temperature ?? chart.data.datasets[0].data[0]),
+                    Number(data.humidity ?? chart.data.datasets[0].data[1]),
+                    Number(data.battery ?? chart.data.datasets[0].data[2]),
+                    Number(data.signal_rssi !== undefined ? Math.round((Number(data.signal_rssi) / 31) * 100) : chart.data.datasets[0].data[3])
+                ];
+                chart.update();
+            }
+        }
+
+        function pollSensor(sensorId) {
+            fetch(`/api/device-status/aire/${sensorId}/`)
+                .then(res => res.json())
+                .then(resp => {
+                    if (resp.status === 'ok' && resp.data) {
+                        aplicarDatos(resp.data);
                     }
-                } catch (error) {
-                    console.error("❌ Error procesando mensaje:", error);
-                }
-            };
-
-            socket.onclose = function(event) { 
-                console.log("⚠️ WebSocket Aire desconectado. Código:", event.code);
-                
-                if (reconnectAttempts < maxReconnectAttempts) {
-                    reconnectAttempts++;
-                    console.log(`🔄 Reconectando... Intento ${reconnectAttempts}/${maxReconnectAttempts}`);
-                    setTimeout(connectWebSocket, reconnectDelay);
-                } else {
-                    console.error("❌ No se pudo reconectar después de", maxReconnectAttempts, "intentos");
-                }
-            };
-            
-            socket.onerror = function(error) { 
-                console.error("❌ WebSocket error:", error); 
-            };
-        } catch (error) {
-            console.error("❌ Error creando WebSocket:", error);
+                })
+                .catch(err => console.error('❌ Error en polling:', err));
         }
-    }
 
-    connectWebSocket();
+        const sensorIds = [
+            {% for data in sensor_data %}{{ data.sensor_id }}{% if not forloop.last %}, {% endif %}{% endfor %}
+        ];
 
-    window.addEventListener('beforeunload', function() {
-        if (socket && socket.readyState === WebSocket.OPEN) {
-            socket.close();
+        function pollTodos() {
+            sensorIds.forEach(pollSensor);
         }
+
+        pollTodos();
+        setInterval(pollTodos, POLLING_INTERVAL_MS);
     });
-});
 </script>
 
 <!-- API de Clima de OpenWeather -->

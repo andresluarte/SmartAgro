@@ -1106,6 +1106,8 @@ from .models import HumidityTemperaturaSoil, SensorAire, SensorSuelo
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
+from django.core.cache import cache
+
 @csrf_exempt
 def receive_data(request):
     if request.method == 'POST':
@@ -1126,6 +1128,7 @@ def receive_data(request):
         if not all([temperature, humidity, latitude, longitude, fecha_registro]):
             return JsonResponse({'status': 'error', 'message': 'Datos incompletos'}, status=400)
 
+        # Esto sigue guardándose en BD como siempre
         TemperatureHumidityLocation.objects.create(
             temperature=temperature,
             humidity=humidity,
@@ -1135,34 +1138,41 @@ def receive_data(request):
             fecha_registro=fecha_registro
         )
 
-        # Enviar datos por WebSocket
-        data = {
+        # ---- Estado del dispositivo: SOLO EN CACHÉ (no BD) ----
+        device_status = {
             'sensor_id': sensor.id,
             'sensor_name': sensor.name,
             'temperature': temperature,
             'humidity': humidity,
             'latitude': latitude,
             'longitude': longitude,
-            'timestamp': fecha_registro
+            'battery': request.POST.get('battery'),
+            'battery_voltage': request.POST.get('battery_voltage'),
+            'operator': request.POST.get('operator'),
+            'network_type': request.POST.get('network_type'),
+            'signal_rssi': request.POST.get('signal_rssi'),
+            'signal_quality': request.POST.get('signal_quality'),
+            'timestamp': fecha_registro,
         }
-        channel_layer = get_channel_layer()
-        # Enviar los datos por WebSocket al grupo de sensores
-        if channel_layer is not None:
-            async_to_sync(channel_layer.group_send)(
-                "sensoresaire",
-                {
-                    "type": "sensor_update",
-                    "data": data,
-                }
-            )
-        else:
-            print("Error: channel_layer es None — revisa la configuración de CHANNEL_LAYERS")
+        # Timeout de 15 min: si el sensor deja de reportar, el dato "caduca" solo
+        cache.set(f'device_status_aire_{sensor.id}', device_status, timeout=900)
 
-        
         return JsonResponse({'status': 'success', 'message': 'Datos recibidos correctamente'})
 
     return JsonResponse({'status': 'error', 'message': 'Método no permitido'}, status=405)
 
+def device_status_api(request, tipo, sensor_id):
+    """
+    tipo: 'aire' o 'suelo'
+    Devuelve el último estado cacheado del dispositivo. No toca la BD.
+    """
+    if tipo not in ('aire', 'suelo'):
+        return JsonResponse({'status': 'error', 'message': 'tipo inválido'}, status=400)
+
+    data = cache.get(f'device_status_{tipo}_{sensor_id}')
+    if data is None:
+        return JsonResponse({'status': 'no_data'})
+    return JsonResponse({'status': 'ok', 'data': data})
     
 #DATOS SENSOR SUELO
 from channels.layers import get_channel_layer

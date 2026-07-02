@@ -129,6 +129,7 @@ urlpatterns = [
 
     path('cosechas_list/', views.cosechas_list, name='cosechas_list'),  # Lista de cosechas
     path('crear_cosecha', views.crear_cosecha, name='crear_cosecha'),  # Crear nueva cosecha
+    path('api/device-status/<str:tipo>/<int:sensor_id>/', views.device_status_api, name='device_status_api'),
 
 
 
