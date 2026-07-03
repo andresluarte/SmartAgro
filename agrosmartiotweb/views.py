@@ -1253,10 +1253,6 @@ def receive_data_soil(request):
             'message': 'Datos de humedad del suelo recibidos correctamente'
         })
 
-        return JsonResponse({
-            'status': 'success',
-            'message': 'Datos de humedad del suelo recibidos correctamente'
-        })
 
     return JsonResponse(
         {'status': 'error', 'message': 'Método no permitido'},
