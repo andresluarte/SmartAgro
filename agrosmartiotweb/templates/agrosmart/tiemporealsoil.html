@@ -538,6 +538,15 @@
         .gauges-grid { grid-template-columns: repeat(2, 1fr); }
         .sensor-header { flex-direction: column; align-items: flex-start; }
     }
+    .sensor-card.new-data-flash {
+    animation: newDataFlash 0.9s ease;
+    }
+
+    @keyframes newDataFlash {
+        0%   { box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); }
+        30%  { box-shadow: 0 0 0 4px #48bb78, 0 10px 30px rgba(0, 0, 0, 0.2); }
+        100% { box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); }
+    }
 </style>
 
 <div class="sensor-dashboard">
@@ -807,10 +816,15 @@
 </div>
 
 <!-- Polling HTTP para Sensores de Suelo -->
+<!-- Polling HTTP para Sensores de Suelo -->
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const POLLING_INTERVAL_MS = 5000; // ajusta según lo agresivo que quieras el polling
+    const POLLING_INTERVAL_MS = 4000; // frecuencia de chequeo (no de actualización visual)
     const GAUGE_CIRCUMFERENCE = 314; // 2 * PI * 50
+    const STALE_TIMEOUT_MS = 15 * 60 * 1000; // 15 min, igual al timeout del cache en Django
+
+    // Guarda el último timestamp visto y la hora local en que se detectó, por sensor
+    const lastState = {}; // { [sensorId]: { timestamp: '...', receivedAt: Date } }
 
     function setGauge(circleId, textId, value, max, color, suffix) {
         const circle = document.getElementById(circleId);
@@ -874,7 +888,6 @@ document.addEventListener('DOMContentLoaded', function () {
             const item = document.createElement('div');
             item.className = 'recommendation-item';
             item.innerHTML = `<strong>${label}</strong><br>${content}`;
-            title.parentNode.insertBefore(item, title.nextSibling.nextSibling || null);
             container.appendChild(item);
         }
 
@@ -902,6 +915,28 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (humidity >= 60 && humidity <= 80 && temperature >= 15 && temperature <= 25) {
             add('🌟 Condiciones Perfectas', 'Tanto humedad como temperatura están en rangos óptimos. Excelentes condiciones para el desarrollo de cultivos.');
+        }
+    }
+
+    // Flash visual para indicar que llegó un dato NUEVO (no solo un tick de polling)
+    function flashNewData(sensorId) {
+        const card = document.querySelector(`[data-sensor-id="${sensorId}"]`);
+        if (!card) return;
+        card.classList.remove('new-data-flash'); // reinicia animación si estaba activa
+        void card.offsetWidth; // fuerza reflow para poder re-disparar la animación
+        card.classList.add('new-data-flash');
+        setTimeout(() => card.classList.remove('new-data-flash'), 900);
+    }
+
+    function markSensorOffline(sensorId, isOffline) {
+        const badge = document.querySelector(`[data-sensor-id="${sensorId}"] .status-badge`);
+        if (!badge) return;
+        if (isOffline) {
+            badge.style.background = '#a0aec0';
+            badge.innerHTML = '<span class="status-indicator"></span> Sin datos recientes';
+        } else {
+            badge.style.background = '#48bb78';
+            badge.innerHTML = '<span class="status-indicator"></span> Activo';
         }
     }
 
@@ -968,7 +1003,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         if (data.signal_rssi !== undefined) {
-            // RSSI típico SIM7600 va de 0-31 (AT+CSQ) -> lo pasamos a % aprox
             const signalPct = Math.round((Number(data.signal_rssi) / 31) * 100);
             updateSignalBars(sensorId, signalPct);
             const signalColor = signalPct >= 75 ? '#48bb78' : signalPct >= 40 ? '#ed8936' : '#f56565';
@@ -982,14 +1016,27 @@ document.addEventListener('DOMContentLoaded', function () {
         if (data.humiditysoil !== undefined && data.temperature !== undefined) {
             updateRecommendations(sensorId, Number(data.humiditysoil), Number(data.temperature));
         }
+
+        markSensorOffline(sensorId, false);
     }
 
     function pollSensor(sensorId) {
         fetch(`/api/device-status/suelo/${sensorId}/`)
             .then(res => res.json())
             .then(resp => {
-                if (resp.status === 'ok' && resp.data) {
-                    aplicarDatos(resp.data);
+                if (resp.status !== 'ok' || !resp.data) return;
+
+                const data = resp.data;
+                const prev = lastState[sensorId];
+                const isNewData = !prev || prev.timestamp !== data.timestamp;
+
+                if (isNewData) {
+                    aplicarDatos(data);
+                    flashNewData(sensorId);
+                    lastState[sensorId] = { timestamp: data.timestamp, receivedAt: Date.now() };
+                } else if (prev && (Date.now() - prev.receivedAt > STALE_TIMEOUT_MS)) {
+                    // Mismo timestamp desde hace mucho -> el sensor dejó de reportar
+                    markSensorOffline(sensorId, true);
                 }
             })
             .catch(err => console.error('❌ Error en polling:', err));
