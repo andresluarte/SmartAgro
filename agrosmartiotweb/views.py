@@ -1234,11 +1234,24 @@ def receive_data_soil(request):
         }
 
         # Expira automáticamente después de 15 minutos
+        # Verificar qué se está guardando
+        print(f"GUARDANDO CACHE: device_status_soil_{sensor.id}")
+        print(device_status)
+
         cache.set(
             f'device_status_soil_{sensor.id}',
             device_status,
             timeout=900
         )
+
+        # Verificar si quedó guardado
+        print("LEYENDO CACHE:")
+        print(cache.get(f'device_status_soil_{sensor.id}'))
+
+        return JsonResponse({
+            'status': 'success',
+            'message': 'Datos de humedad del suelo recibidos correctamente'
+        })
 
         return JsonResponse({
             'status': 'success',
