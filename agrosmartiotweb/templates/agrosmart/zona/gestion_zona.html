@@ -197,7 +197,6 @@
       <script>                                                
         const sectores = {{ sectores_json|safe }};
         const huertos = {{ huertos_json|safe }};
-        const sensores = {{ sensores_json|safe }};
         let map;
         let infoWindow;
 
@@ -291,74 +290,6 @@
             } catch (error) {
               console.error('Error cargando huerto:', huerto.fields.nombre, error);
             }
-          });
-          // Cargar sensores
-          // =======================
-          // SENSORES GPS
-          // =======================
-
-          sensores.forEach((sensor) => {
-
-              if (!sensor.lat || !sensor.lng) return;
-
-              const marker = new google.maps.Marker({
-                  position: {
-                      lat: parseFloat(sensor.lat),
-                      lng: parseFloat(sensor.lng)
-                  },
-                  map: map,
-                  title: sensor.nombre,
-                  icon: {
-                      url: "https://maps.google.com/mapfiles/ms/icons/green-dot.png"
-                  },
-                  zIndex: 999
-              });
-
-              bounds.extend(
-                  new google.maps.LatLng(
-                      parseFloat(sensor.lat),
-                      parseFloat(sensor.lng)
-                  )
-              );
-
-              marker.addListener("click", () => {
-
-                  const contenido = `
-                      <div style="min-width:250px;">
-                          <h6 style="color:green;margin-bottom:8px;">
-                              📡 SENSOR AIRE
-                          </h6>
-
-                          <strong>${sensor.nombre}</strong>
-
-                          <hr>
-
-                          🌡️ Temperatura:
-                          <strong>${sensor.temperatura} °C</strong>
-                          <br>
-
-                          💧 Humedad:
-                          <strong>${sensor.humedad} %</strong>
-                          <br>
-
-                          📍 Latitud:
-                          <small>${sensor.lat}</small>
-                          <br>
-
-                          📍 Longitud:
-                          <small>${sensor.lng}</small>
-                          <br>
-
-                          🕒 Última lectura:
-                          <small>${sensor.fecha}</small>
-                      </div>
-                  `;
-
-                  infoWindow.setContent(contenido);
-                  infoWindow.open(map, marker);
-
-              });
-
           });
 
           // Ajustar el mapa para mostrar todos los elementos
