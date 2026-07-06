@@ -20,6 +20,7 @@ class Sector(models.Model):
     nombre = models.CharField(max_length=50)
     descripcion = models.TextField(blank=True, null=True)  # Campo opcional
     superficie = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)  # Opcional
+    
     TIPO_USO_CHOICES = [
         ('cultivo', 'Cultivo'),
         ('pastoreo', 'Pastoreo'),
@@ -542,6 +543,7 @@ class SensorAire(models.Model):
     name = models.CharField(max_length=100, unique=True)  # Nombre único para cada sensor
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     api_key = models.CharField(max_length=64, blank=True, null=True, unique=True)  # API Key única
+    
 
     def save(self, *args, **kwargs):
         # Generar una API Key única si no existe
