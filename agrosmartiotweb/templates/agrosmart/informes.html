@@ -3,162 +3,685 @@
 {% block contenido %}
 {% load static %}
 
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
 
 <style>
-    body {
-        background-color: #f7f8fa;
-    }
-    .card {
-        border-radius: 15px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }
-    .card-header {
-        font-weight: bold;
-        font-size: 1.1rem;
-    }
-    .chart-container {
-        position: relative;
-        width: 100%;
-        height: 300px;
-    }
-    @media (min-width: 992px) {
-        .chart-container { height: 350px; }
-    }
+  #smartagro-dash {
+    --agro-forest: #163429;
+    --agro-forest-2: #1E4636;
+    --agro-moss: #2F5D45;
+    --agro-amber: #D9A441;
+    --agro-sky: #3E8FA6;
+    --agro-clay: #9C6B42;
+    --agro-bg: #F4F6F1;
+    --agro-card: #FFFFFF;
+    --agro-ink: #16211B;
+    --agro-ink-soft: #52605A;
+    --agro-line: #DFE5DA;
+    --agro-danger: #C0563A;
+    --radius: 14px;
+    font-family: 'Inter', system-ui, sans-serif;
+    color: var(--agro-ink);
+    background: var(--agro-bg);
+    padding: 0 0 3rem 0;
+  }
+
+  #smartagro-dash * { box-sizing: border-box; }
+
+  #smartagro-dash .mono { font-family: 'JetBrains Mono', monospace; }
+
+  /* ---------- Header / status band ---------- */
+  #smartagro-dash .station-header {
+    background: linear-gradient(135deg, var(--agro-forest) 0%, var(--agro-forest-2) 100%);
+    color: #EFF4EE;
+    padding: 1.75rem 1.5rem 1.5rem;
+    border-radius: 0 0 22px 22px;
+    margin-bottom: 1.75rem;
+    position: relative;
+    overflow: hidden;
+  }
+  #smartagro-dash .station-header::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image:
+      radial-gradient(circle at 85% 20%, rgba(217,164,65,0.16) 0%, transparent 45%),
+      radial-gradient(circle at 10% 90%, rgba(62,143,166,0.14) 0%, transparent 40%);
+    pointer-events: none;
+  }
+  #smartagro-dash .station-top {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: space-between;
+    align-items: flex-start;
+    position: relative;
+    z-index: 1;
+  }
+  #smartagro-dash .brand {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+  }
+  #smartagro-dash .brand-mark {
+    width: 42px; height: 42px;
+    border-radius: 11px;
+    background: rgba(217,164,65,0.16);
+    border: 1px solid rgba(217,164,65,0.4);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.3rem;
+    flex-shrink: 0;
+  }
+  #smartagro-dash .brand-text h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600;
+    font-size: 1.4rem;
+    margin: 0;
+    letter-spacing: -0.01em;
+  }
+  #smartagro-dash .brand-text p {
+    margin: 0.15rem 0 0;
+    font-size: 0.82rem;
+    color: #B9C7BE;
+  }
+  #smartagro-dash .station-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+  }
+  #smartagro-dash .chip {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.12);
+    padding: 0.42rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    color: #DCE6DE;
+    white-space: nowrap;
+  }
+  #smartagro-dash .chip strong {
+    font-family: 'JetBrains Mono', monospace;
+    color: #fff;
+    font-weight: 600;
+  }
+  #smartagro-dash .live-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #6FCF97;
+    box-shadow: 0 0 0 rgba(111,207,151,0.5);
+    animation: pulse-dot 2.2s infinite;
+    flex-shrink: 0;
+  }
+  @keyframes pulse-dot {
+    0% { box-shadow: 0 0 0 0 rgba(111,207,151,0.55); }
+    70% { box-shadow: 0 0 0 7px rgba(111,207,151,0); }
+    100% { box-shadow: 0 0 0 0 rgba(111,207,151,0); }
+  }
+
+  /* ---------- KPI strip ---------- */
+  #smartagro-dash .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.9rem;
+    margin-top: 1.4rem;
+    position: relative;
+    z-index: 1;
+  }
+  #smartagro-dash .kpi {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 0.85rem 1rem;
+  }
+  #smartagro-dash .kpi-label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #AEC0B4;
+    display: flex; align-items: center; gap: 0.35rem;
+  }
+  #smartagro-dash .kpi-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #fff;
+    margin-top: 0.2rem;
+  }
+  #smartagro-dash .kpi-value small { font-size: 0.95rem; color: #C7D4CB; font-weight: 500; }
+
+  /* ---------- Container ---------- */
+  #smartagro-dash .dash-container { max-width: 1280px; margin: 0 auto; padding: 0 1.25rem; }
+
+  /* ---------- Filter bar ---------- */
+  #smartagro-dash .filter-bar {
+    background: var(--agro-card);
+    border: 1px solid var(--agro-line);
+    border-radius: var(--radius);
+    padding: 1rem 1.15rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.9rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 1px 3px rgba(22,52,41,0.05);
+  }
+  #smartagro-dash .filter-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  #smartagro-dash .filter-group label {
+    font-size: 0.78rem;
+    color: var(--agro-ink-soft);
+    font-weight: 500;
+  }
+  #smartagro-dash .filter-bar input[type="date"] {
+    border: 1px solid var(--agro-line);
+    border-radius: 8px;
+    padding: 0.4rem 0.6rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.82rem;
+    color: var(--agro-ink);
+    background: #FBFCFA;
+  }
+  #smartagro-dash .filter-bar input[type="date"]:focus-visible,
+  #smartagro-dash .preset-btn:focus-visible,
+  #smartagro-dash .icon-btn:focus-visible {
+    outline: 2px solid var(--agro-sky);
+    outline-offset: 2px;
+  }
+  #smartagro-dash .preset-group { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-left: auto; }
+  #smartagro-dash .preset-btn {
+    border: 1px solid var(--agro-line);
+    background: #FBFCFA;
+    color: var(--agro-ink-soft);
+    font-size: 0.78rem;
+    font-weight: 500;
+    padding: 0.4rem 0.75rem;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  #smartagro-dash .preset-btn:hover { border-color: var(--agro-moss); color: var(--agro-moss); }
+  #smartagro-dash .preset-btn.active {
+    background: var(--agro-moss);
+    border-color: var(--agro-moss);
+    color: #fff;
+  }
+
+  /* ---------- Chart cards ---------- */
+  #smartagro-dash .charts-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+  }
+  #smartagro-dash .charts-grid .span-2 { grid-column: 1 / -1; }
+
+  #smartagro-dash .card {
+    background: var(--agro-card);
+    border: 1px solid var(--agro-line);
+    border-radius: var(--radius);
+    box-shadow: 0 1px 3px rgba(22,52,41,0.05);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  #smartagro-dash .card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.95rem 1.1rem 0.8rem;
+    border-bottom: 1px solid var(--agro-line);
+  }
+  #smartagro-dash .card-title {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--agro-ink);
+  }
+  #smartagro-dash .swatch { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+  #smartagro-dash .card-actions { display: flex; gap: 0.35rem; }
+  #smartagro-dash .icon-btn {
+    border: 1px solid var(--agro-line);
+    background: #fff;
+    color: var(--agro-ink-soft);
+    width: 30px; height: 30px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.85rem;
+    transition: all 0.15s ease;
+  }
+  #smartagro-dash .icon-btn:hover { border-color: var(--agro-moss); color: var(--agro-moss); background: #F2F7F3; }
+
+  #smartagro-dash .card-body { padding: 1rem 1.1rem 1.15rem; position: relative; }
+  #smartagro-dash .chart-container { position: relative; width: 100%; height: 300px; }
+  @media (min-width: 992px) { #smartagro-dash .chart-container { height: 320px; } }
+
+  #smartagro-dash .chart-hint {
+    font-size: 0.72rem;
+    color: var(--agro-ink-soft);
+    margin-top: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+
+  #smartagro-dash .empty-state {
+    position: absolute;
+    inset: 1rem 1.1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    color: var(--agro-ink-soft);
+    font-size: 0.85rem;
+    text-align: center;
+    background: rgba(244,246,241,0.85);
+    border-radius: 10px;
+  }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 900px) {
+    #smartagro-dash .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    #smartagro-dash .charts-grid { grid-template-columns: 1fr; }
+    #smartagro-dash .preset-group { margin-left: 0; width: 100%; }
+  }
+  @media (max-width: 560px) {
+    #smartagro-dash .station-top { flex-direction: column; }
+    #smartagro-dash .kpi-grid { grid-template-columns: 1fr 1fr; }
+    #smartagro-dash .filter-bar { flex-direction: column; align-items: stretch; }
+    #smartagro-dash .filter-group { justify-content: space-between; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    #smartagro-dash .live-dot { animation: none; }
+  }
 </style>
 
-<div class="container my-5">
-    <h3 class="text-center mb-4">📊 Dashboard de Sensores</h3>
+<div id="smartagro-dash">
 
-    <!-- Filtro de rango de fechas -->
-    <div class="row justify-content-center mb-4 g-2">
-        <div class="col-md-5 col-sm-12 text-center">
-            <input type="date" id="startDate" class="form-control" value="{{ today_date }}">
+  <!-- ================= Estación / header ================= -->
+  <header class="station-header">
+    <div class="dash-container">
+      <div class="station-top">
+        <div class="brand">
+          <div class="brand-mark">🌱</div>
+          <div class="brand-text">
+            <h1>SmartAgro</h1>
+            <p>Estación de monitoreo agrícola · lectura en tiempo real</p>
+          </div>
         </div>
-        <div class="col-md-5 col-sm-12 text-center">
-            <input type="date" id="endDate" class="form-control" value="{{ today_date }}">
+
+        <div class="station-chips">
+          <span class="chip"><span class="live-dot"></span> <span id="chip-status">En línea</span></span>
+          <span class="chip">📡 <strong id="chip-updated">--:--</strong></span>
+          <span class="chip">📶 <strong id="chip-signal">GSM/4G</strong></span>
+          <span class="chip">🛰️ <strong id="chip-gps">GPS activo</strong></span>
         </div>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="kpi">
+          <div class="kpi-label">🌡️ Temp. aire</div>
+          <div class="kpi-value" id="kpi-air-temp">-- <small>°C</small></div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">💧 Humedad aire</div>
+          <div class="kpi-value" id="kpi-air-hum">-- <small>%</small></div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">🌱 Humedad suelo</div>
+          <div class="kpi-value" id="kpi-soil-hum">-- <small>%</small></div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">🌡️ Temp. suelo</div>
+          <div class="kpi-value" id="kpi-soil-temp">-- <small>°C</small></div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="dash-container">
+
+    <!-- ================= Filtros ================= -->
+    <div class="filter-bar">
+      <div class="filter-group">
+        <label for="startDate">Desde</label>
+        <input type="date" id="startDate" value="{{ today_date }}">
+      </div>
+      <div class="filter-group">
+        <label for="endDate">Hasta</label>
+        <input type="date" id="endDate" value="{{ today_date }}">
+      </div>
+      <div class="preset-group" id="presetGroup">
+        <button type="button" class="preset-btn" data-range="today">Hoy</button>
+        <button type="button" class="preset-btn" data-range="7">7 días</button>
+        <button type="button" class="preset-btn" data-range="30">30 días</button>
+        <button type="button" class="preset-btn" data-range="all">Todo</button>
+      </div>
     </div>
 
-    <!-- Gráficos -->
-    <div class="row g-4">
-        <div class="col-lg-6 col-md-12">
-            <div class="card">
-                <div class="card-header bg-gradient-primary text-dark text-center">
-                    Temperatura y Humedad Aire
-                </div>
-                <div class="card-body">
-                    <div class="chart-container">
-                        <canvas id="tempHumidityChart"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <!-- ================= Gráficos ================= -->
+    <div class="charts-grid">
 
-        <div class="col-lg-6 col-md-12">
-            <div class="card">
-                <div class="card-header bg-gradient-success text-dark text-center">
-                    Humedad y Temperatura del Suelo
-                </div>
-                <div class="card-body">
-                    <div class="chart-container">
-                        <canvas id="soilHumidityChart"></canvas>
-                    </div>
-                </div>
-            </div>
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title"><span class="swatch" style="background:#FF6384"></span> Temperatura y humedad del aire</div>
+          <div class="card-actions">
+            <button type="button" class="icon-btn" data-reset-zoom="tempHumidityChart" title="Restablecer zoom">⟳</button>
+            <button type="button" class="icon-btn" data-download="tempHumidityChart" title="Descargar gráfico">⬇</button>
+          </div>
         </div>
+        <div class="card-body">
+          <div class="chart-container"><canvas id="tempHumidityChart"></canvas></div>
+          <div class="chart-hint">🖱️ Arrastra para desplazar · rueda del mouse o pellizca para hacer zoom</div>
+        </div>
+      </div>
 
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header bg-gradient-warning text-dark text-center">
-                    Temperatura y Humedad Aire Última Hora
-                </div>
-                <div class="card-body">
-                    <div class="chart-container">
-                        <canvas id="lastHourTempHumidityChart"></canvas>
-                    </div>
-                </div>
-            </div>
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title"><span class="swatch" style="background:#4BC0C0"></span> Humedad y temperatura del suelo</div>
+          <div class="card-actions">
+            <button type="button" class="icon-btn" data-reset-zoom="soilHumidityChart" title="Restablecer zoom">⟳</button>
+            <button type="button" class="icon-btn" data-download="soilHumidityChart" title="Descargar gráfico">⬇</button>
+          </div>
         </div>
+        <div class="card-body">
+          <div class="chart-container"><canvas id="soilHumidityChart"></canvas></div>
+          <div class="chart-hint">🖱️ Arrastra para desplazar · rueda del mouse o pellizca para hacer zoom</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title"><span class="swatch" style="background:#FFCE56"></span> Temperatura y humedad del aire · última hora</div>
+          <div class="card-actions">
+            <button type="button" class="icon-btn" data-reset-zoom="lastHourTempHumidityChart" title="Restablecer zoom">⟳</button>
+            <button type="button" class="icon-btn" data-download="lastHourTempHumidityChart" title="Descargar gráfico">⬇</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="chart-container"><canvas id="lastHourTempHumidityChart"></canvas></div>
+          <div class="chart-hint">🖱️ Arrastra para desplazar · rueda del mouse o pellizca para hacer zoom</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title"><span class="swatch" style="background:#4BC0C0"></span> Temperatura y humedad del suelo · última hora</div>
+          <div class="card-actions">
+            <button type="button" class="icon-btn" data-reset-zoom="lastHourSoilChart" title="Restablecer zoom">⟳</button>
+            <button type="button" class="icon-btn" data-download="lastHourSoilChart" title="Descargar gráfico">⬇</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="chart-container"><canvas id="lastHourSoilChart"></canvas></div>
+          <div class="chart-hint">🖱️ Arrastra para desplazar · rueda del mouse o pellizca para hacer zoom</div>
+        </div>
+      </div>
+
     </div>
+  </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const rawTempHumidityData = JSON.parse('{{ temp_humidity_data|escapejs }}');
-    const rawSoilData = JSON.parse('{{ soil_data|escapejs }}');
-    const rawLastHourData = JSON.parse('{{ last_hour_data_air|escapejs }}');
+document.addEventListener('DOMContentLoaded', function () {
+  const rawTempHumidityData = JSON.parse('{{ temp_humidity_data|escapejs }}');
+  const rawSoilData = JSON.parse('{{ soil_data|escapejs }}');
+  const rawLastHourData = JSON.parse('{{ last_hour_data_air|escapejs }}');
+  const rawLastHourSoilData = JSON.parse('{{ last_hour_data_soil|escapejs }}');
 
-    const tempHumidityCtx = document.getElementById('tempHumidityChart').getContext('2d');
-    const soilHumidityCtx = document.getElementById('soilHumidityChart').getContext('2d');
-    const lastHourCtx = document.getElementById('lastHourTempHumidityChart').getContext('2d');
+  const tempHumidityCtx = document.getElementById('tempHumidityChart').getContext('2d');
+  const soilHumidityCtx = document.getElementById('soilHumidityChart').getContext('2d');
+  const lastHourCtx = document.getElementById('lastHourTempHumidityChart').getContext('2d');
+  const lastHourSoilCtx = document.getElementById('lastHourSoilChart').getContext('2d');
 
-    let tempHumidityChart, soilHumidityChart, lastHourChart;
+  let tempHumidityChart, soilHumidityChart, lastHourChart, lastHourSoilChart;
+  const charts = {};
 
-    function createCharts() {
-        const startDate = document.getElementById('startDate').value;
-        const endDate = document.getElementById('endDate').value;
-
-        // Filtrar datos por rango de fechas
-        const filterByRange = (data) => data.filter(d => (!startDate || d.date >= startDate) && (!endDate || d.date <= endDate));
-
-        const tempHumidityData = filterByRange(rawTempHumidityData);
-        const soilData = filterByRange(rawSoilData);
-        const lastHourData = filterByRange(rawLastHourData);
-
-        const tempLabels = tempHumidityData.map(e => e.hour);
-        const tempValues = tempHumidityData.map(e => e.avg_temp);
-        const humValues = tempHumidityData.map(e => e.avg_humidity);
-
-        const soilLabels = soilData.map(e => e.hour);
-        const soilHumValues = soilData.map(e => e.avg_humidity_soil);
-        const soilTempValues = soilData.map(e => e.avg_temp);
-
-        const lastHourLabels = lastHourData.map(e => e.minute);
-        const lastHourTempValues = lastHourData.map(e => e.avg_temp_hour);
-        const lastHourHumValues = lastHourData.map(e => e.avg_humidity_hour);
-
-        const options = {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { position: 'top', labels: { boxWidth: 20, padding: 10 } },
-                tooltip: { mode: 'index', intersect: false }
-            },
-            interaction: { mode: 'index', intersect: false },
-            scales: {
-                x: { grid: { color: '#eee' } },
-                y: { beginAtZero: true, grid: { color: '#eee' } }
-            }
-        };
-
-        const createLineChart = (ctx, labels, datasets) => {
-            return new Chart(ctx, { type: 'line', data: { labels: labels, datasets: datasets }, options: options });
-        };
-
-        if(tempHumidityChart) tempHumidityChart.destroy();
-        tempHumidityChart = createLineChart(tempHumidityCtx, tempLabels, [
-            { label: 'Temperatura (°C)', data: tempValues, borderColor: '#FF6384', backgroundColor: 'rgba(255,99,132,0.2)', tension: 0.4, fill: true },
-            { label: 'Humedad (%)', data: humValues, borderColor: '#36A2EB', backgroundColor: 'rgba(54,162,235,0.2)', tension: 0.4, fill: true }
-        ]);
-
-        if(soilHumidityChart) soilHumidityChart.destroy();
-        soilHumidityChart = createLineChart(soilHumidityCtx, soilLabels, [
-            { label: 'Humedad Suelo (%)', data: soilHumValues, borderColor: '#4BC0C0', backgroundColor: 'rgba(75,192,192,0.2)', tension: 0.4, fill: true },
-            { label: 'Temperatura (°C)', data: soilTempValues, borderColor: '#9966FF', backgroundColor: 'rgba(153,102,255,0.2)', tension: 0.4, fill: true }
-        ]);
-
-        if(lastHourChart) lastHourChart.destroy();
-        lastHourChart = createLineChart(lastHourCtx, lastHourLabels, [
-            { label: 'Temperatura Última Hora (°C)', data: lastHourTempValues, borderColor: '#FFCE56', backgroundColor: 'rgba(255,206,86,0.2)', tension: 0.4, fill: true },
-            { label: 'Humedad Última Hora (%)', data: lastHourHumValues, borderColor: '#9966FF', backgroundColor: 'rgba(153,102,255,0.2)', tension: 0.4, fill: true }
-        ]);
+  // ---------- KPIs (últimos valores conocidos) ----------
+  function setKpi(id, value, unit) {
+    const el = document.getElementById(id);
+    if (value === undefined || value === null || Number.isNaN(value)) {
+      el.innerHTML = '-- <small>' + unit + '</small>';
+    } else {
+      el.innerHTML = Number(value).toFixed(1) + ' <small>' + unit + '</small>';
     }
+  }
 
+  function updateKpis() {
+    const lastAir = rawTempHumidityData[rawTempHumidityData.length - 1];
+    const lastSoil = rawSoilData[rawSoilData.length - 1];
+    setKpi('kpi-air-temp', lastAir ? lastAir.avg_temp : null, '°C');
+    setKpi('kpi-air-hum', lastAir ? lastAir.avg_humidity : null, '%');
+    setKpi('kpi-soil-hum', lastSoil ? lastSoil.avg_humidity_soil : null, '%');
+    setKpi('kpi-soil-temp', lastSoil ? lastSoil.avg_temp : null, '°C');
+
+    const now = new Date();
+    document.getElementById('chip-updated').textContent =
+      now.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  // ---------- Empty state helper ----------
+  function toggleEmptyState(canvasId, isEmpty) {
+    const container = document.getElementById(canvasId).closest('.chart-container');
+    let empty = container.querySelector('.empty-state');
+    if (isEmpty) {
+      document.getElementById(canvasId).style.visibility = 'hidden';
+      if (!empty) {
+        empty = document.createElement('div');
+        empty.className = 'empty-state';
+        empty.innerHTML = '📭 <span>Sin datos registrados en este rango de fechas</span>';
+        container.appendChild(empty);
+      }
+    } else {
+      document.getElementById(canvasId).style.visibility = 'visible';
+      if (empty) empty.remove();
+    }
+  }
+
+  const baseOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: { mode: 'index', intersect: false },
+    plugins: {
+      legend: { position: 'top', labels: { boxWidth: 12, padding: 14, usePointStyle: true, font: { family: 'Inter', size: 12 } } },
+      tooltip: {
+        mode: 'index',
+        intersect: false,
+        backgroundColor: '#163429',
+        titleFont: { family: 'JetBrains Mono', size: 12 },
+        bodyFont: { family: 'Inter', size: 12 },
+        padding: 10,
+        cornerRadius: 8
+      },
+      zoom: {
+        pan: { enabled: true, mode: 'x' },
+        zoom: {
+          wheel: { enabled: true },
+          pinch: { enabled: true },
+          mode: 'x'
+        }
+      }
+    },
+    scales: {
+      x: { grid: { color: '#EEF2EC' }, ticks: { font: { family: 'Inter', size: 11 } } },
+      y: { beginAtZero: true, grid: { color: '#EEF2EC' }, ticks: { font: { family: 'Inter', size: 11 } } }
+    }
+  };
+
+  // Cada gráfico recibe su propia copia de las opciones para que el zoom/pan
+  // de uno no interfiera con el estado de los otros.
+  function cloneOptions() {
+    return {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: JSON.parse(JSON.stringify(baseOptions.plugins)),
+      scales: JSON.parse(JSON.stringify(baseOptions.scales))
+    };
+  }
+
+  function buildChart(ctx, labels, datasets) {
+    const opts = cloneOptions();
+    opts.plugins.zoom.pan.enabled = true;
+    opts.plugins.zoom.zoom.wheel.enabled = true;
+    opts.plugins.zoom.zoom.pinch.enabled = true;
+    return new Chart(ctx, { type: 'line', data: { labels, datasets }, options: opts });
+  }
+
+  function createCharts() {
+    const startDate = document.getElementById('startDate').value;
+    const endDate = document.getElementById('endDate').value;
+
+    // Los registros no traen un campo "date" separado: "hour" y "minute"
+    // vienen como "YYYY-MM-DD HH:MM:SS". Extraemos los primeros 10 caracteres
+    // para comparar contra los <input type="date"> (que entregan "YYYY-MM-DD").
+    const dateKeyOf = (d) => (d.hour || d.minute || '').slice(0, 10);
+
+    const filterByRange = (data) => data.filter(d => {
+      const key = dateKeyOf(d);
+      if (!key) return true; // si no hay forma de saber la fecha, no lo ocultamos
+      if (startDate && key < startDate) return false;
+      if (endDate && key > endDate) return false;
+      return true;
+    });
+
+    const tempHumidityData = filterByRange(rawTempHumidityData);
+    const soilData = filterByRange(rawSoilData);
+    const lastHourData = filterByRange(rawLastHourData);
+    const lastHourSoilData = filterByRange(rawLastHourSoilData);
+
+    // ----- Temp/Humedad aire -----
+    const tempLabels = tempHumidityData.map(e => e.hour);
+    const tempValues = tempHumidityData.map(e => e.avg_temp);
+    const humValues = tempHumidityData.map(e => e.avg_humidity);
+
+    if (tempHumidityChart) tempHumidityChart.destroy();
+    tempHumidityChart = buildChart(tempHumidityCtx, tempLabels, [
+      { label: 'Temperatura (°C)', data: tempValues, borderColor: '#FF6384', backgroundColor: 'rgba(255,99,132,0.15)', tension: 0.35, fill: true, pointRadius: 2, pointHoverRadius: 5 },
+      { label: 'Humedad (%)', data: humValues, borderColor: '#36A2EB', backgroundColor: 'rgba(54,162,235,0.12)', tension: 0.35, fill: true, pointRadius: 2, pointHoverRadius: 5 }
+    ]);
+    charts.tempHumidityChart = tempHumidityChart;
+    toggleEmptyState('tempHumidityChart', tempHumidityData.length === 0);
+
+    // ----- Suelo -----
+    const soilLabels = soilData.map(e => e.hour);
+    const soilHumValues = soilData.map(e => e.avg_humidity_soil);
+    const soilTempValues = soilData.map(e => e.avg_temp);
+
+    if (soilHumidityChart) soilHumidityChart.destroy();
+    soilHumidityChart = buildChart(soilHumidityCtx, soilLabels, [
+      { label: 'Humedad suelo (%)', data: soilHumValues, borderColor: '#4BC0C0', backgroundColor: 'rgba(75,192,192,0.15)', tension: 0.35, fill: true, pointRadius: 2, pointHoverRadius: 5 },
+      { label: 'Temperatura (°C)', data: soilTempValues, borderColor: '#9966FF', backgroundColor: 'rgba(153,102,255,0.12)', tension: 0.35, fill: true, pointRadius: 2, pointHoverRadius: 5 }
+    ]);
+    charts.soilHumidityChart = soilHumidityChart;
+    toggleEmptyState('soilHumidityChart', soilData.length === 0);
+
+    // ----- Última hora -----
+    const lastHourLabels = lastHourData.map(e => e.minute);
+    const lastHourTempValues = lastHourData.map(e => e.avg_temp_hour);
+    const lastHourHumValues = lastHourData.map(e => e.avg_humidity_hour);
+
+    if (lastHourChart) lastHourChart.destroy();
+    lastHourChart = buildChart(lastHourCtx, lastHourLabels, [
+      { label: 'Temperatura última hora (°C)', data: lastHourTempValues, borderColor: '#FFCE56', backgroundColor: 'rgba(255,206,86,0.15)', tension: 0.35, fill: true, pointRadius: 2, pointHoverRadius: 5 },
+      { label: 'Humedad última hora (%)', data: lastHourHumValues, borderColor: '#9966FF', backgroundColor: 'rgba(153,102,255,0.12)', tension: 0.35, fill: true, pointRadius: 2, pointHoverRadius: 5 }
+    ]);
+    charts.lastHourTempHumidityChart = lastHourChart;
+    toggleEmptyState('lastHourTempHumidityChart', lastHourData.length === 0);
+
+    // ----- Suelo última hora -----
+    const lastHourSoilLabels = lastHourSoilData.map(e => e.minute);
+    const lastHourSoilTempValues = lastHourSoilData.map(e => e.avg_temp_soil_hour);
+    const lastHourSoilHumValues = lastHourSoilData.map(e => e.avg_humidity_soil_hour);
+
+    if (lastHourSoilChart) lastHourSoilChart.destroy();
+    lastHourSoilChart = buildChart(lastHourSoilCtx, lastHourSoilLabels, [
+      { label: 'Temperatura suelo (°C)', data: lastHourSoilTempValues, borderColor: '#9966FF', backgroundColor: 'rgba(153,102,255,0.15)', tension: 0.35, fill: true, pointRadius: 2, pointHoverRadius: 5 },
+      { label: 'Humedad suelo (%)', data: lastHourSoilHumValues, borderColor: '#4BC0C0', backgroundColor: 'rgba(75,192,192,0.12)', tension: 0.35, fill: true, pointRadius: 2, pointHoverRadius: 5 }
+    ]);
+    charts.lastHourSoilChart = lastHourSoilChart;
+    toggleEmptyState('lastHourSoilChart', lastHourSoilData.length === 0);
+
+    updateKpis();
+  }
+
+  // ---------- Presets de fecha ----------
+  function toISO(d) { return d.toISOString().slice(0, 10); }
+
+  function applyPreset(range, btn) {
+    document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+
+    const today = new Date();
+    const startInput = document.getElementById('startDate');
+    const endInput = document.getElementById('endDate');
+
+    if (range === 'today') {
+      startInput.value = toISO(today);
+      endInput.value = toISO(today);
+    } else if (range === 'all') {
+      startInput.value = '';
+      endInput.value = '';
+    } else {
+      const days = parseInt(range, 10);
+      const start = new Date(today);
+      start.setDate(start.getDate() - (days - 1));
+      startInput.value = toISO(start);
+      endInput.value = toISO(today);
+    }
     createCharts();
-    document.getElementById('startDate').addEventListener('change', createCharts);
-    document.getElementById('endDate').addEventListener('change', createCharts);
+  }
+
+  document.getElementById('presetGroup').addEventListener('click', function (e) {
+    const btn = e.target.closest('.preset-btn');
+    if (!btn) return;
+    applyPreset(btn.dataset.range, btn);
+  });
+
+  document.getElementById('startDate').addEventListener('change', function () {
+    document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+    createCharts();
+  });
+  document.getElementById('endDate').addEventListener('change', function () {
+    document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+    createCharts();
+  });
+
+  // ---------- Acciones de cada tarjeta: reset zoom / descargar ----------
+  document.querySelectorAll('[data-reset-zoom]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const chart = charts[btn.dataset.resetZoom];
+      if (chart && chart.resetZoom) chart.resetZoom();
+    });
+  });
+
+  document.querySelectorAll('[data-download]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const chart = charts[btn.dataset.download];
+      if (!chart) return;
+      const link = document.createElement('a');
+      link.download = btn.dataset.download + '.png';
+      link.href = chart.toBase64Image();
+      link.click();
+    });
+  });
+
+  createCharts();
 });
 </script>
 {% endblock %}

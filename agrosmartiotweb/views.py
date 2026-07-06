@@ -1235,18 +1235,18 @@ def receive_data_soil(request):
 
         # Expira automáticamente después de 15 minutos
         # Verificar qué se está guardando
-        print(f"GUARDANDO CACHE: device_status_soil_{sensor.id}")
+        print(f"GUARDANDO CACHE: device_status_suelo_{sensor.id}")
         print(device_status)
 
         cache.set(
-            f'device_status_soil_{sensor.id}',
+            f'device_status_suelo_{sensor.id}',  # ✅ coincide con tipo="suelo" en la URL
             device_status,
             timeout=900
         )
 
         # Verificar si quedó guardado
         print("LEYENDO CACHE:")
-        print(cache.get(f'device_status_soil_{sensor.id}'))
+        print(cache.get(f'device_status_suelo_{sensor.id}'))
 
         return JsonResponse({
             'status': 'success',
@@ -1404,7 +1404,7 @@ def informes(request):
     # Promedio por hora para TemperatureHumidityLocation (sensores de aire)
     temp_humidity_data = (
         TemperatureHumidityLocation.objects
-        .filter(sensor__in=user_sensors_air)  # Filtrar solo los datos de los sensores del usuario
+        .filter(sensor__in=user_sensors_air)
         .annotate(hour=TruncHour('timestamp'))
         .values('hour')
         .annotate(
@@ -1440,6 +1440,19 @@ def informes(request):
         .order_by('hour')
     )
 
+    # NUEVO: datos de la última hora para temperatura y humedad del suelo
+    last_hour_data_soil = (
+        HumidityTemperaturaSoil.objects
+        .filter(sensor__in=user_sensors_soil, timestamp__gte=timezone.now() - timedelta(hours=1))
+        .annotate(minute=TruncMinute('timestamp'))
+        .values('minute')
+        .annotate(
+            avg_humidity_soil_hour=Avg('humiditysoil'),
+            avg_temp_soil_hour=Avg('temperature')
+        )
+        .order_by('minute')
+    )
+
     # Redondear los valores de los datos
     temp_humidity_data = [
         {
@@ -1448,7 +1461,6 @@ def informes(request):
             'avg_humidity': round(entry['avg_humidity'], 2),
         } for entry in temp_humidity_data
     ]
-
     soil_data = [
         {
             'hour': entry['hour'].strftime('%Y-%m-%d %H:%M:%S'),
@@ -1456,7 +1468,6 @@ def informes(request):
             'avg_temp': round(entry['avg_temp'], 2),
         } for entry in soil_data
     ]
-
     last_hour_data_air = [
         {
             'minute': entry['minute'].strftime('%Y-%m-%d %H:%M:%S'),
@@ -1464,15 +1475,21 @@ def informes(request):
             'avg_humidity_hour': round(entry['avg_humidity_hour'], 2),
         } for entry in last_hour_data_air
     ]
+    last_hour_data_soil = [
+        {
+            'minute': entry['minute'].strftime('%Y-%m-%d %H:%M:%S'),
+            'avg_temp_soil_hour': round(entry['avg_temp_soil_hour'], 2),
+            'avg_humidity_soil_hour': round(entry['avg_humidity_soil_hour'], 2),
+        } for entry in last_hour_data_soil
+    ]
 
     context = {
         'temp_humidity_data': json.dumps(temp_humidity_data),
         'soil_data': json.dumps(soil_data),
         'last_hour_data_air': json.dumps(last_hour_data_air),
-      
-        
+        'last_hour_data_soil': json.dumps(last_hour_data_soil),
     }
-    
+
     return render(request, 'agrosmart/informes.html', context)
 
 
