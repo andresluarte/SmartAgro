@@ -575,12 +575,9 @@ class DecimalEncoder(json.JSONEncoder):
         if isinstance(obj, Decimal):
             return float(obj)
         return super(DecimalEncoder, self).default(obj)
-
-def gestion_zona(request):
-    # Obtener sectores del usuario
-    sectores = Sector.objects.filter(user=request.user)
     
-    # Serializar sectores para JavaScript
+def gestion_zona(request):
+    sectores = Sector.objects.filter(user=request.user)
     sectores_data = []
     for sector in sectores:
         sectores_data.append({
@@ -594,11 +591,8 @@ def gestion_zona(request):
                 'estado': sector.estado if hasattr(sector, 'estado') else '',
             }
         })
-    
-    # Obtener huertos del usuario
+
     huertos = Huerto.objects.filter(user=request.user).select_related('sector')
-    
-    # Serializar huertos para JavaScript
     huertos_data = []
     for huerto in huertos:
         huertos_data.append({
@@ -610,19 +604,39 @@ def gestion_zona(request):
                 'sector_id': huerto.sector.id if huerto.sector else None,
             }
         })
-    
-    # Convertir a JSON para el template usando el encoder personalizado
+
+    # --- SENSORES DE AIRE ---
+    sensores_aire = SensorAire.objects.filter(user=request.user)
+    sensores_data = []
+    for sensor in sensores_aire:
+        latest = TemperatureHumidityLocation.objects.filter(sensor=sensor).order_by('-timestamp').first()
+
+        if not latest or latest.latitude is None or latest.longitude is None:
+            continue
+
+        sensores_data.append({
+            'pk': sensor.pk,
+            'fields': {
+                'nombre': sensor.name,
+                'lat': float(latest.latitude),
+                'lng': float(latest.longitude),
+                'temperature': float(latest.temperature),
+                'humidity': float(latest.humidity),
+                'timestamp': latest.timestamp.strftime('%d-%m-%Y %H:%M'),
+            }
+        })
+
     sectores_json = json.dumps(sectores_data, cls=DecimalEncoder)
     huertos_json = json.dumps(huertos_data, cls=DecimalEncoder)
-    
+    sensores_json = json.dumps(sensores_data, cls=DecimalEncoder)
+
     context = {
         'sectores': sectores,
         'sectores_json': sectores_json,
         'huertos_json': huertos_json,
+        'sensores_json': sensores_json,
     }
-    
     return render(request, 'agrosmart/zona/gestion_zona.html', context)
-
 
 from django.shortcuts import render, redirect
 from .forms import SectorForm, HuertoForm, LoteForm,HuertoPoligonForm
@@ -1277,27 +1291,45 @@ from datetime import timedelta
 from django.utils import timezone
 
 
+# =========================================================================
+# REEMPLAZA tu función combined_data_view (la que renderiza tiemporeal.html)
+# por esta versión. NO TOCA la API (receive_data, receive_data_soil,
+# device_status_api siguen exactamente igual).
+#
+# Lo único que cambia: además de los sensores de AIRE, ahora también
+# se consultan TODOS los sensores de SUELO del usuario y se pasan al
+# mismo template en la variable `sensor_data_soil`.
+# =========================================================================
+
+from django.contrib.auth.decorators import login_required
+from django.db.models import Avg
+from django.utils import timezone
+from datetime import timedelta
+from django.shortcuts import render
+
+from .models import (
+    TemperatureHumidityLocation,
+    SensorAire,
+    SensorSuelo,
+    HumidityTemperaturaSoil,
+)
+
+
+@login_required
 def combined_data_view(request):
     user = request.user
-    sensors = SensorAire.objects.filter(user=user)
 
-    if not sensors.exists():
-        return render(request, 'agrosmart/tiemporeal.html', {
-            'sensor_data': [],
-            'no_sensors_message': "No tienes sensores registrados.",
-        })
+    sensors_aire = SensorAire.objects.filter(user=user)
+    sensors_suelo = SensorSuelo.objects.filter(user=user)
 
+    # ---------- SENSORES DE AIRE (igual que antes) ----------
     sensor_data = []
-    for sensor in sensors:
-        # Obtener el dato más reciente basado en fecha_registro
-        latest_data = TemperatureHumidityLocation.objects.filter(sensor=sensor).order_by('-timestamp').first()
+    for sensor in sensors_aire:
+        latest_data = TemperatureHumidityLocation.objects.filter(
+            sensor=sensor
+        ).order_by('-timestamp').first()
+
         if latest_data:
-            temperature = float(latest_data.temperature)
-            humidity = float(latest_data.humidity)
-
-        
-
-            # Calcular el promedio de las últimas 24 horas por hora usando fecha_registro
             twenty_four_hours_ago = timezone.now() - timedelta(hours=24)
             hourly_data = TemperatureHumidityLocation.objects.filter(
                 sensor=sensor, fecha_registro__gte=twenty_four_hours_ago
@@ -1306,34 +1338,50 @@ def combined_data_view(request):
                 avg_humidity=Avg('humidity')
             ).order_by('fecha_registro__hour')
 
-            # Preparar datos para el gráfico
-            hourly_temperature = [data['avg_temperature'] for data in hourly_data]
-            hourly_humidity = [data['avg_humidity'] for data in hourly_data]
-            hours = [data['fecha_registro__hour'] for data in hourly_data]
+            hourly_temperature = [d['avg_temperature'] for d in hourly_data]
+            hourly_humidity = [d['avg_humidity'] for d in hourly_data]
+            hours = [d['fecha_registro__hour'] for d in hourly_data]
 
             sensor_data.append({
                 'sensor_id': sensor.id,
+                'sensor_name': sensor.name,
                 'latest_data': latest_data,
-                'sensor_name':sensor.name,
                 'hourly_temperature': hourly_temperature,
                 'hourly_humidity': hourly_humidity,
-                'hours': hours
+                'hours': hours,
             })
         else:
             sensor_data.append({
                 'sensor_id': sensor.id,
+                'sensor_name': sensor.name,
                 'latest_data': None,
-
                 'hourly_temperature': [],
                 'hourly_humidity': [],
                 'hours': [],
             })
 
-    return render(request, 'agrosmart/tiemporeal.html', {'sensor_data': sensor_data})
+    # ---------- SENSORES DE SUELO (NUEVO) ----------
+    sensor_data_soil = []
+    for sensor in sensors_suelo:
+        latest_data = HumidityTemperaturaSoil.objects.filter(
+            sensor=sensor
+        ).order_by('-timestamp').first()
 
+        sensor_data_soil.append({
+            'sensor_id': sensor.id,
+            'sensor_name': sensor.name,
+            'latest_data': latest_data,
+        })
 
+    no_sensors_message = None
+    if not sensors_aire.exists() and not sensors_suelo.exists():
+        no_sensors_message = "No tienes sensores registrados."
 
-
+    return render(request, 'agrosmart/tiemporeal.html', {
+        'sensor_data': sensor_data,
+        'sensor_data_soil': sensor_data_soil,
+        'no_sensors_message': no_sensors_message,
+    })
 
 @login_required
 def combined_data_view_soil(request):
