@@ -1121,6 +1121,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
 from django.core.cache import cache
+from .utils import notificar_usuario
 
 @csrf_exempt
 def receive_data(request):
@@ -1152,6 +1153,16 @@ def receive_data(request):
             fecha_registro=fecha_registro
         )
 
+        # === NUEVO: notificar SIEMPRE que llega un dato (solo para prueba) ===
+                # receive_data (sensor de aire)
+        notificar_usuario(
+            usuario=sensor.user,
+            titulo=f'📡 {sensor.name} — Nuevos datos',
+            mensaje=f'Temperatura: {temperature}°C · Humedad: {humidity}%',
+            tipo_sensor='aire',
+            sensor_aire=sensor,
+        )
+
         # ---- Estado del dispositivo: SOLO EN CACHÉ (no BD) ----
         device_status = {
             'sensor_id': sensor.id,
@@ -1168,18 +1179,14 @@ def receive_data(request):
             'signal_quality': request.POST.get('signal_quality'),
             'timestamp': fecha_registro,
         }
-        # Timeout de 15 min: si el sensor deja de reportar, el dato "caduca" solo
         cache.set(f'device_status_aire_{sensor.id}', device_status, timeout=900)
 
         return JsonResponse({'status': 'success', 'message': 'Datos recibidos correctamente'})
 
     return JsonResponse({'status': 'error', 'message': 'Método no permitido'}, status=405)
 
+
 def device_status_api(request, tipo, sensor_id):
-    """
-    tipo: 'aire' o 'suelo'
-    Devuelve el último estado cacheado del dispositivo. No toca la BD.
-    """
     if tipo not in ('aire', 'suelo'):
         return JsonResponse({'status': 'error', 'message': 'tipo inválido'}, status=400)
 
@@ -1187,14 +1194,32 @@ def device_status_api(request, tipo, sensor_id):
     if data is None:
         return JsonResponse({'status': 'no_data'})
     return JsonResponse({'status': 'ok', 'data': data})
+
+# agrosmart/views.py
+from django.views.generic import TemplateView
+
+class FirebaseSWView(TemplateView):
+    template_name = "firebase-messaging-sw.js"
+    content_type = "application/javascript"
+import json
+from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
+from django.views.decorators.csrf import csrf_exempt
+
+@login_required
+def save_fcm_token(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        token = data.get('token')
+        if token and request.user.fcm_token != token:
+            request.user.fcm_token = token
+            request.user.save(update_fields=['fcm_token'])
+        return JsonResponse({'status': 'success'})
+    return JsonResponse({'status': 'error'}, status=405)
     
 #DATOS SENSOR SUELO
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
-
-from django.core.cache import cache
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
 
 @csrf_exempt
 def receive_data_soil(request):
@@ -1232,6 +1257,16 @@ def receive_data_soil(request):
             fecha_registro=fecha_registro
         )
 
+        # === NUEVO: notificar SIEMPRE que llega un dato (solo para prueba) ===
+                # receive_data_soil (sensor de suelo)
+        notificar_usuario(
+            usuario=sensor.user,
+            titulo=f'📡 {sensor.name} — Nuevos datos',
+            mensaje=f'Temperatura: {temperature}°C · Humedad suelo: {humiditysoil}%',
+            tipo_sensor='suelo',
+            sensor_suelo=sensor,
+        )
+
         # Estado actual del dispositivo SOLO EN CACHE
         device_status = {
             'sensor_id': sensor.id,
@@ -1247,33 +1282,22 @@ def receive_data_soil(request):
             'timestamp': fecha_registro,
         }
 
-        # Expira automáticamente después de 15 minutos
-        # Verificar qué se está guardando
-        print(f"GUARDANDO CACHE: device_status_suelo_{sensor.id}")
-        print(device_status)
-
         cache.set(
-            f'device_status_suelo_{sensor.id}',  # ✅ coincide con tipo="suelo" en la URL
+            f'device_status_suelo_{sensor.id}',
             device_status,
             timeout=900
         )
-
-        # Verificar si quedó guardado
-        print("LEYENDO CACHE:")
-        print(cache.get(f'device_status_suelo_{sensor.id}'))
 
         return JsonResponse({
             'status': 'success',
             'message': 'Datos de humedad del suelo recibidos correctamente'
         })
 
-
     return JsonResponse(
         {'status': 'error', 'message': 'Método no permitido'},
         status=405
     )
-
-
+    
 from .serializers import TemperatureHumidityLocationSerializer
 class TemperatureHumidityAPIView(APIView):
     def post(self, request, format=None):
@@ -1906,3 +1930,37 @@ def cosechas_list(request):
     cosechas = Cosecha.objects.filter(user=request.user)  # Filtra por usuario actual
     return render(request, 'agrosmart/cosecha/gestion_cosecha.html', {'cosechas': cosechas})
 
+
+
+# agrosmartiotweb/views.py
+from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
+from django.shortcuts import render, redirect, get_object_or_404
+from .models import Notificacion
+
+@login_required
+def lista_notificaciones(request):
+    notificaciones_list = request.user.notificaciones.all().order_by('-fecha_creacion')
+    paginator = Paginator(notificaciones_list, 30)
+    page_number = request.GET.get('page', 1)
+    notificaciones = paginator.get_page(page_number)
+    return render(request, 'agrosmart/lista_notificaciones.html', {'notificaciones': notificaciones})
+
+
+@login_required
+def detalle_notificacion(request, pk):
+    notif = get_object_or_404(Notificacion, pk=pk, usuario=request.user)
+    notif.leida = True
+    notif.save()
+
+    if notif.sensor_suelo:
+        return redirect('combined_data_view_soil')
+    if notif.sensor_aire:
+        return redirect('combined_data_view')
+    return redirect('lista_notificaciones')
+
+
+@login_required
+def marcar_todas_leidas(request):
+    request.user.notificaciones.filter(leida=False).update(leida=True)
+    return redirect('lista_notificaciones')

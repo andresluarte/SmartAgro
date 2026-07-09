@@ -1,0 +1,204 @@
+<!-- templates/agrosmart/lista_notificaciones.html -->
+{% extends 'agrosmart/base.html' %}
+{% block contenido %}
+<style>
+    .notif-page {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 32px 16px 60px;
+        font-family: 'Open Sans', sans-serif;
+    }
+
+    .notif-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid #E3E7DE;
+    }
+
+    .notif-header h3 {
+        font-family: 'Balsamiq Sans', sans-serif;
+        color: #1F5E38;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .notif-header .btn-marcar {
+        background: transparent;
+        border: 1px solid #2F7D4F;
+        color: #2F7D4F;
+        border-radius: 20px;
+        padding: 6px 16px;
+        font-size: 0.85rem;
+        transition: all 0.15s ease;
+    }
+    .notif-header .btn-marcar:hover {
+        background: #2F7D4F;
+        color: #fff;
+    }
+
+    .notif-item {
+        display: flex;
+        gap: 14px;
+        padding: 14px 16px;
+        margin-bottom: 10px;
+        border-radius: 12px;
+        background: #fff;
+        border: 1px solid #E3E7DE;
+        border-left: 4px solid transparent;
+        text-decoration: none;
+        color: #33402F;
+        transition: box-shadow 0.15s ease, transform 0.15s ease;
+    }
+    .notif-item:hover {
+        box-shadow: 0 4px 14px rgba(47, 125, 79, 0.12);
+        transform: translateY(-1px);
+        color: #33402F;
+    }
+    .notif-item.no-leida {
+        border-left-color: #2F7D4F;
+        background: rgba(47, 125, 79, 0.04);
+    }
+
+    .notif-icono {
+        flex-shrink: 0;
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.05rem;
+        color: #fff;
+    }
+    .notif-icono.aire { background: #4A90A4; }
+    .notif-icono.suelo { background: #8D6E4F; }
+    .notif-icono.general { background: #2F7D4F; }
+
+    .notif-cuerpo { flex: 1; min-width: 0; }
+    .notif-mensaje {
+        font-size: 0.92rem;
+        line-height: 1.4;
+    }
+    .notif-fecha {
+        font-size: 0.75rem;
+        color: #8B9686;
+        margin-top: 4px;
+        display: block;
+    }
+    .notif-punto {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #2F7D4F;
+        flex-shrink: 0;
+        margin-top: 6px;
+    }
+
+    .notif-vacio {
+        text-align: center;
+        padding: 60px 20px;
+        color: #8B9686;
+    }
+    .notif-vacio i {
+        font-size: 2.4rem;
+        color: #C7D0BE;
+        margin-bottom: 12px;
+        display: block;
+    }
+
+    .notif-paginacion {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 6px;
+        margin-top: 28px;
+    }
+    .notif-paginacion a, .notif-paginacion span {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 34px;
+        height: 34px;
+        border-radius: 8px;
+        text-decoration: none;
+        color: #33402F;
+        font-size: 0.85rem;
+        border: 1px solid #E3E7DE;
+        transition: all 0.15s ease;
+    }
+    .notif-paginacion a:hover {
+        background: rgba(47, 125, 79, 0.08);
+        border-color: #2F7D4F;
+    }
+    .notif-paginacion .activa {
+        background: #2F7D4F;
+        color: #fff;
+        border-color: #2F7D4F;
+    }
+    .notif-paginacion .deshabilitada {
+        opacity: 0.35;
+        pointer-events: none;
+    }
+</style>
+
+<div class="notif-page">
+    <div class="notif-header">
+        <h3><i class="fa-solid fa-bell"></i> Notificaciones</h3>
+        {% if notificaciones %}
+        <a href="{% url 'marcar_todas_leidas' %}" class="btn-marcar">
+            Marcar todas como leídas
+        </a>
+        {% endif %}
+    </div>
+
+    {% for notif in notificaciones %}
+    <a href="{% url 'detalle_notificacion' notif.pk %}" class="notif-item {% if not notif.leida %}no-leida{% endif %}">
+        <div class="notif-icono {% if notif.tipo_sensor == 'aire' %}aire{% elif notif.tipo_sensor == 'suelo' %}suelo{% else %}general{% endif %}">
+            {% if notif.tipo_sensor == 'aire' %}
+                <i class="fa-solid fa-wind"></i>
+            {% elif notif.tipo_sensor == 'suelo' %}
+                <i class="fa-solid fa-seedling"></i>
+            {% else %}
+                <i class="fa-solid fa-satellite-dish"></i>
+            {% endif %}
+        </div>
+        <div class="notif-cuerpo">
+            <div class="notif-mensaje">{{ notif.mensaje }}</div>
+            <span class="notif-fecha">{{ notif.fecha_creacion|date:"d/m/Y H:i" }}</span>
+        </div>
+        {% if not notif.leida %}<div class="notif-punto"></div>{% endif %}
+    </a>
+    {% empty %}
+    <div class="notif-vacio">
+        <i class="fa-solid fa-bell-slash"></i>
+        Aún no tienes notificaciones.<br>
+        Aquí verás los avisos de tus sensores cuando lleguen datos nuevos.
+    </div>
+    {% endfor %}
+
+    {% if notificaciones.has_other_pages %}
+    <div class="notif-paginacion">
+        <a href="?page={% if notificaciones.has_previous %}{{ notificaciones.previous_page_number }}{% else %}1{% endif %}"
+           class="{% if not notificaciones.has_previous %}deshabilitada{% endif %}">
+            <i class="fa-solid fa-chevron-left"></i>
+        </a>
+
+        {% for page_num in notificaciones.paginator.page_range %}
+            {% if page_num == notificaciones.number %}
+                <span class="activa">{{ page_num }}</span>
+            {% else %}
+                <a href="?page={{ page_num }}">{{ page_num }}</a>
+            {% endif %}
+        {% endfor %}
+
+        <a href="?page={% if notificaciones.has_next %}{{ notificaciones.next_page_number }}{% else %}{{ notificaciones.paginator.num_pages }}{% endif %}"
+           class="{% if not notificaciones.has_next %}deshabilitada{% endif %}">
+            <i class="fa-solid fa-chevron-right"></i>
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -130,6 +130,13 @@ urlpatterns = [
     path('cosechas_list/', views.cosechas_list, name='cosechas_list'),  # Lista de cosechas
     path('crear_cosecha', views.crear_cosecha, name='crear_cosecha'),  # Crear nueva cosecha
     path('api/device-status/<str:tipo>/<int:sensor_id>/', views.device_status_api, name='device_status_api'),
+    
+    path('save-fcm-token/', views.save_fcm_token, name='save_fcm_token'),
+    
+    
+    path('notificaciones/', views.lista_notificaciones, name='lista_notificaciones'),
+    path('notificaciones/<int:pk>/', views.detalle_notificacion, name='detalle_notificacion'),
+    path('notificaciones/marcar-leidas/', views.marcar_todas_leidas, name='marcar_todas_leidas'),
 
 
 

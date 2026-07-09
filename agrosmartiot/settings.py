@@ -47,9 +47,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'agrosmartiotweb', 'agrosmartiot',
+     'agrosmartiot',
     'django.contrib.humanize', 'crispy_forms', "django_filters", "rest_framework", "import_export", "mptt","channels","bootstrap4",
-    'crispy_bootstrap4', 
+    'crispy_bootstrap4','agrosmartiotweb.apps.AgrosmartConfig',  # Asegúrate de que esta línea esté presente
 ]
 
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap4"
@@ -82,7 +82,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                
+                'agrosmartiotweb.context_processors.notificaciones_context',
+                'agrosmartiotweb.context_processors.vapid_key',   # <-- nuevo
                 'agrosmartiotweb.context_processors.empresa_info',
 
                 
@@ -180,6 +181,12 @@ CSRF_TRUSTED_ORIGINS = ['https://smartagro-iot-fce1cd62dbea.herokuapp.com','http
 
 import ssl
 import os
+# settings.py
+import os
+
+WEBPUSH_SETTINGS = {
+    'VAPID_PUBLIC_KEY': os.environ.get('VAPID_PUBLIC_KEY'),
+}
 
 REDIS_URL = os.environ.get("REDIS_TLS_URL") or os.environ.get("REDIS_URL")
 
