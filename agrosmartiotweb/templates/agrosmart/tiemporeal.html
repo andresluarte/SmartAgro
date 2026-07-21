@@ -588,12 +588,11 @@
                                 <div class="location-section">
                                     <div class="location-grid">
                                         <div class="location-item">
-                                            <span class="location-label">📍 Lat</span>
-                                            <span class="location-value" id="latitudeEl-{{ data.sensor_id }}">{{ data.latest_data.latitude }}</span>
+                                            <span class="location-label">📍 Ubicación Sensor </span>
+                              
                                         </div>
                                         <div class="location-item">
-                                            <span class="location-label">📍 Lon</span>
-                                            <span class="location-value" id="longitudEl-{{ data.sensor_id }}">{{ data.latest_data.longitude }}</span>
+                          
                                         </div>
                                     </div>
                                     <a id="mapLink-{{ data.sensor_id }}"
@@ -608,17 +607,7 @@
                     </div>
 
                     <!-- ===== COLUMNA 3: Gráfico ===== -->
-                    <div class="card-body-right">
-                        <div class="chart-container">
-                            <div class="chart-title">📈 Comparativa</div>
-                            <div class="chart-canvas">
-                                <canvas id="sensor-aire-chart-{{ data.sensor_id }}"></canvas>
-                            </div>
-                        </div>
-                        <div class="timestamp" id="timestamp-{{ data.sensor_id }}">
-                            🕐 {{ data.latest_data.timestamp }}
-                        </div>
-                    </div>
+
                 </div>
             </div>
             {% endfor %}
@@ -712,48 +701,10 @@
                     </div>
 
                     <!-- ===== COLUMNA 2: Estado del Dispositivo ===== -->
-                    <div class="card-body-middle">
-                        <div class="section-block device-status-section">
-                            <div class="section-title">🔧 Estado del Dispositivo</div>
-                            <div class="metrics-stack">
-                                <div class="metric-card">
-                                    <div class="battery-icon" id="soil-battery-icon-{{ data.sensor_id }}">🔋</div>
-                                    <div class="metric-info">
-                                        <div class="metric-label">Batería</div>
-                                        <div class="metric-value" id="soil-battery-{{ data.sensor_id }}">--%</div>
-                                        <span class="metric-status status-optimal" id="soil-battery-status-{{ data.sensor_id }}">Sin datos</span>
-                                    </div>
-                                </div>
-
-                                <div class="metric-card">
-                                    <div class="signal-bars signal-none" id="soil-signal-bars-{{ data.sensor_id }}">
-                                        <span class="bar"></span>
-                                        <span class="bar"></span>
-                                        <span class="bar"></span>
-                                        <span class="bar"></span>
-                                    </div>
-                                    <div class="metric-info">
-                                        <div class="metric-label">Señal</div>
-                                        <span class="network-type-badge network-unknown" id="soil-network-type-{{ data.sensor_id }}">Sin datos</span>
-                                        <div class="carrier-name" id="soil-carrier-{{ data.sensor_id }}">Operador desc.</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    
 
                     <!-- ===== COLUMNA 3: Gráfico ===== -->
-                    <div class="card-body-right">
-                        <div class="chart-container">
-                            <div class="chart-title">📈 Comparativa</div>
-                            <div class="chart-canvas">
-                                <canvas id="sensor-suelo-chart-{{ data.sensor_id }}"></canvas>
-                            </div>
-                        </div>
-                        <div class="timestamp" id="soil-timestamp-{{ data.sensor_id }}">
-                            🕐 {{ data.latest_data.timestamp }}
-                        </div>
-                    </div>
+
                 </div>
             </div>
             {% endfor %}

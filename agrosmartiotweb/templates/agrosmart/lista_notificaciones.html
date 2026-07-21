@@ -5,7 +5,7 @@
     .notif-page {
         max-width: 720px;
         margin: 0 auto;
-        padding: 32px 16px 60px;
+        padding: 24px 16px 60px;
         font-family: 'Open Sans', sans-serif;
     }
 
@@ -13,16 +13,33 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 24px;
+        gap: 12px;
+        margin-bottom: 20px;
         padding-bottom: 16px;
         border-bottom: 1px solid #E3E7DE;
+        flex-wrap: wrap;
     }
 
     .notif-header h3 {
-        font-family: 'Balsamiq Sans', sans-serif;
-        color: #1F5E38;
+    font-family: 'Montserrat', 'Segoe UI', sans-serif;
+    color: #1F5E38;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: clamp(1.1rem, 4vw, 1.4rem);
+}
+
+    .notif-badge {
+        background: #2F7D4F;
+        color: #fff;
+        font-size: 0.7rem;
         font-weight: 700;
-        margin: 0;
+        padding: 2px 8px;
+        border-radius: 999px;
+        line-height: 1.4;
     }
 
     .notif-header .btn-marcar {
@@ -30,8 +47,9 @@
         border: 1px solid #2F7D4F;
         color: #2F7D4F;
         border-radius: 20px;
-        padding: 6px 16px;
+        padding: 7px 16px;
         font-size: 0.85rem;
+        white-space: nowrap;
         transition: all 0.15s ease;
     }
     .notif-header .btn-marcar:hover {
@@ -42,35 +60,38 @@
     .notif-item {
         display: flex;
         gap: 14px;
+        align-items: flex-start;
         padding: 14px 16px;
         margin-bottom: 10px;
-        border-radius: 12px;
+        border-radius: 14px;
         background: #fff;
         border: 1px solid #E3E7DE;
         border-left: 4px solid transparent;
         text-decoration: none;
         color: #33402F;
-        transition: box-shadow 0.15s ease, transform 0.15s ease;
+        box-shadow: 0 1px 3px rgba(31, 94, 56, 0.06);
+        transition: box-shadow 0.15s ease, transform 0.15s ease, border-color 0.15s ease;
     }
     .notif-item:hover {
-        box-shadow: 0 4px 14px rgba(47, 125, 79, 0.12);
-        transform: translateY(-1px);
+        box-shadow: 0 6px 18px rgba(47, 125, 79, 0.15);
+        transform: translateY(-2px);
         color: #33402F;
+        border-color: #C7D0BE;
     }
     .notif-item.no-leida {
         border-left-color: #2F7D4F;
-        background: rgba(47, 125, 79, 0.04);
+        background: rgba(47, 125, 79, 0.045);
     }
 
     .notif-icono {
         flex-shrink: 0;
-        width: 40px;
-        height: 40px;
+        width: 38px;
+        height: 38px;
         border-radius: 10px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.05rem;
+        font-size: 1rem;
         color: #fff;
     }
     .notif-icono.aire { background: #4A90A4; }
@@ -80,14 +101,22 @@
     .notif-cuerpo { flex: 1; min-width: 0; }
     .notif-mensaje {
         font-size: 0.92rem;
-        line-height: 1.4;
+        line-height: 1.45;
+        word-break: break-word;
+    }
+    .notif-item.no-leida .notif-mensaje {
+        font-weight: 600;
+        color: #1F5E38;
     }
     .notif-fecha {
         font-size: 0.75rem;
         color: #8B9686;
-        margin-top: 4px;
-        display: block;
+        margin-top: 5px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
     }
+
     .notif-punto {
         width: 8px;
         height: 8px;
@@ -101,6 +130,9 @@
         text-align: center;
         padding: 60px 20px;
         color: #8B9686;
+        background: #fff;
+        border: 1px dashed #E3E7DE;
+        border-radius: 14px;
     }
     .notif-vacio i {
         font-size: 2.4rem;
@@ -115,6 +147,8 @@
         align-items: center;
         gap: 6px;
         margin-top: 28px;
+        overflow-x: auto;
+        padding-bottom: 4px;
     }
     .notif-paginacion a, .notif-paginacion span {
         display: inline-flex;
@@ -127,6 +161,7 @@
         color: #33402F;
         font-size: 0.85rem;
         border: 1px solid #E3E7DE;
+        flex-shrink: 0;
         transition: all 0.15s ease;
     }
     .notif-paginacion a:hover {
@@ -142,11 +177,53 @@
         opacity: 0.35;
         pointer-events: none;
     }
+
+    /* ---- Responsivo ---- */
+    @media (max-width: 576px) {
+        .notif-page {
+            padding: 16px 10px 50px;
+        }
+        .notif-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .notif-header .btn-marcar {
+            width: 100%;
+            text-align: center;
+        }
+        .notif-item {
+            padding: 12px;
+            gap: 10px;
+            border-radius: 12px;
+        }
+        .notif-icono {
+            width: 32px;
+            height: 32px;
+            font-size: 0.85rem;
+            border-radius: 8px;
+        }
+        .notif-mensaje {
+            font-size: 0.87rem;
+        }
+        .notif-fecha {
+            font-size: 0.7rem;
+        }
+        .notif-punto {
+            width: 7px;
+            height: 7px;
+            margin-top: 4px;
+        }
+    }
 </style>
 
 <div class="notif-page">
     <div class="notif-header">
-        <h3><i class="fa-solid fa-bell"></i> Notificaciones</h3>
+        <h3>
+            <i class="fa-solid fa-bell"></i> Notificaciones
+            {% if notificaciones.paginator.count %}
+                <span class="notif-badge">{{ notificaciones.paginator.count }}</span>
+            {% endif %}
+        </h3>
         {% if notificaciones %}
         <a href="{% url 'marcar_todas_leidas' %}" class="btn-marcar">
             Marcar todas como leídas
@@ -167,7 +244,10 @@
         </div>
         <div class="notif-cuerpo">
             <div class="notif-mensaje">{{ notif.mensaje }}</div>
-            <span class="notif-fecha">{{ notif.fecha_creacion|date:"d/m/Y H:i" }}</span>
+            <span class="notif-fecha">
+                <i class="fa-regular fa-clock"></i>
+                {{ notif.fecha_creacion|date:"d/m/Y H:i" }}
+            </span>
         </div>
         {% if not notif.leida %}<div class="notif-punto"></div>{% endif %}
     </a>

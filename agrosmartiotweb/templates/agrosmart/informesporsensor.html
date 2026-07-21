@@ -1,53 +1,194 @@
 {% extends 'agrosmart/base.html' %}
-
 {% block contenido %}
 
-<div class="container py-5">
-    <h3 class="text-center fw-bold mb-5" style="color:#2c3e50;">
-        📊 Informes por Sensor
-    </h3>
+<!-- Plotly se carga UNA sola vez -->
+<script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
 
-    <div class="row g-4">
-        {% for chart in charts %}
-        <div class="col-lg-6 col-md-12">
-            <div class="card shadow-lg border-0 rounded-4 h-100">
-                <div class="card-header text-white fw-bold"
-                     style="background: linear-gradient(135deg,#34495e,#2c3e50);">
-                    Gráfico {{ forloop.counter }}
-                </div>
-                <div class="card-body">
-                    <div class="chart-container">
-                        {{ chart|safe }}
-                    </div>
-                </div>
-            </div>
-        </div>
-        {% endfor %}
-    </div>
-</div>
-
-<!-- Estilos personalizados -->
 <style>
-    .chart-container {
-        width: 100%;
-        max-width: 1000px;
+    .informes-page {
+        max-width: 980px;
         margin: 0 auto;
-        height: 450px;
+        padding: 24px 16px 60px;
+        font-family: 'Open Sans', sans-serif;
     }
 
-    @media (max-width: 768px) {
-        .chart-container {
-            height: 350px;
-        }
+    .informes-header {
+        margin-bottom: 20px;
+    }
+    .informes-header h3 {
+        font-family: 'Montserrat', 'Segoe UI', sans-serif;
+        color: #1F5E38;
+        font-weight: 700;
+        margin: 0 0 4px;
+        font-size: clamp(1.2rem, 4vw, 1.6rem);
+    }
+    .informes-header p {
+        color: #8B9686;
+        font-size: 0.9rem;
+        margin: 0;
     }
 
-    .card {
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    .informes-tabs {
+        display: flex;
+        gap: 8px;
+        margin: 20px 0 24px;
+        border-bottom: 1px solid #E3E7DE;
+        overflow-x: auto;
     }
-    .card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+    .informes-tab {
+        background: transparent;
+        border: none;
+        padding: 10px 6px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #8B9686;
+        cursor: pointer;
+        border-bottom: 2px solid transparent;
+        white-space: nowrap;
+        transition: all 0.15s ease;
+    }
+    .informes-tab:hover { color: #2F7D4F; }
+    .informes-tab.activa {
+        color: #2F7D4F;
+        border-bottom-color: #2F7D4F;
+    }
+
+    .informe-card {
+        background: #fff;
+        border: 1px solid #E3E7DE;
+        border-radius: 14px;
+        margin-bottom: 20px;
+        overflow: hidden;
+        box-shadow: 0 1px 3px rgba(31, 94, 56, 0.06);
+        transition: box-shadow 0.15s ease;
+    }
+    .informe-card:hover {
+        box-shadow: 0 6px 18px rgba(47, 125, 79, 0.12);
+    }
+
+    .informe-card-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 18px;
+        border-bottom: 1px solid #E3E7DE;
+    }
+    .informe-icono {
+        flex-shrink: 0;
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-size: 0.95rem;
+    }
+    .informe-icono.aire { background: #4A90A4; }
+    .informe-icono.suelo { background: #8D6E4F; }
+
+    .informe-titulo {
+        font-weight: 700;
+        color: #33402F;
+        font-size: 0.98rem;
+    }
+    .informe-subtitulo {
+        font-size: 0.78rem;
+        color: #8B9686;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+    }
+
+    .informe-card-body {
+        padding: 12px 10px 4px;
+    }
+
+    .informes-vacio {
+        text-align: center;
+        padding: 60px 20px;
+        color: #8B9686;
+        background: #fff;
+        border: 1px dashed #E3E7DE;
+        border-radius: 14px;
+    }
+    .informes-vacio i {
+        font-size: 2.4rem;
+        color: #C7D0BE;
+        margin-bottom: 12px;
+        display: block;
+    }
+
+    @media (max-width: 576px) {
+        .informes-page { padding: 16px 10px 50px; }
+        .informe-card-header { padding: 12px 14px; }
+        .informe-icono { width: 30px; height: 30px; font-size: 0.85rem; }
     }
 </style>
+
+<div class="informes-page">
+    <div class="informes-header">
+        <h3><i class="fa-solid fa-chart-line"></i> Informes por Sensor</h3>
+        <p>Promedios por hora de temperatura y humedad registrados por tus sensores.</p>
+    </div>
+
+    {% if charts %}
+    <div class="informes-tabs">
+        <button class="informes-tab activa" data-filtro="todos">Todos</button>
+        <button class="informes-tab" data-filtro="aire"><i class="fa-solid fa-wind"></i> Aire</button>
+        <button class="informes-tab" data-filtro="suelo"><i class="fa-solid fa-seedling"></i> Suelo</button>
+    </div>
+
+    {% for chart in charts %}
+    <div class="informe-card" data-tipo="{{ chart.tipo }}">
+        <div class="informe-card-header">
+            <div class="informe-icono {{ chart.tipo }}">
+                {% if chart.tipo == 'aire' %}
+                    <i class="fa-solid fa-wind"></i>
+                {% else %}
+                    <i class="fa-solid fa-seedling"></i>
+                {% endif %}
+            </div>
+            <div>
+                <div class="informe-titulo">{{ chart.nombre }}</div>
+                <div class="informe-subtitulo">Sensor de {{ chart.tipo }}</div>
+            </div>
+        </div>
+        <div class="informe-card-body">
+            {{ chart.html|safe }}
+        </div>
+    </div>
+    {% endfor %}
+
+    {% else %}
+    <div class="informes-vacio">
+        <i class="fa-solid fa-chart-simple"></i>
+        Aún no tienes datos suficientes para generar informes.<br>
+        Cuando tus sensores registren información, verás los gráficos aquí.
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    document.querySelectorAll('.informes-tab').forEach(function (tab) {
+        tab.addEventListener('click', function () {
+            document.querySelectorAll('.informes-tab').forEach(t => t.classList.remove('activa'));
+            tab.classList.add('activa');
+
+            const filtro = tab.dataset.filtro;
+            document.querySelectorAll('.informe-card').forEach(function (card) {
+                if (filtro === 'todos' || card.dataset.tipo === filtro) {
+                    card.style.display = '';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            // Forzar a Plotly a recalcular tamaño de los gráficos visibles
+            document.querySelectorAll('.informe-card[style=""] .js-plotly-plot, .informe-card:not([style]) .js-plotly-plot').forEach(function (gd) {
+                if (window.Plotly) Plotly.Plots.resize(gd);
+            });
+        });
+    });
+</script>
 
 {% endblock %}

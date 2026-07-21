@@ -1575,165 +1575,104 @@ from datetime import timedelta
 from django.utils import timezone
 
 def informesporsensor(request):
-    # Obtener sensores asociados al usuario autenticado
     user_sensors_air = SensorAire.objects.filter(user=request.user)
     user_sensors_soil = SensorSuelo.objects.filter(user=request.user)
 
-    # Crear una lista para almacenar los gráficos
     charts = []
 
-    # Datos para los sensores de aire
+    # --- Sensores de aire ---
     for sensor in user_sensors_air:
         temp_humidity_data = (
             TemperatureHumidityLocation.objects
-            .filter(sensor=sensor)  # Filtrar solo los datos de este sensor
+            .filter(sensor=sensor)
             .annotate(hour=TruncHour('timestamp'))
             .values('hour')
-            .annotate(
-                avg_temp=Avg('temperature'),
-                avg_humidity=Avg('humidity')
-            )
+            .annotate(avg_temp=Avg('temperature'), avg_humidity=Avg('humidity'))
             .order_by('hour')
         )
-        
-        # Preparar los datos para el gráfico
+
         hours = [entry['hour'].strftime('%Y-%m-%d %H:%M:%S') for entry in temp_humidity_data]
         avg_temps = [entry['avg_temp'] for entry in temp_humidity_data]
         avg_humidities = [entry['avg_humidity'] for entry in temp_humidity_data]
 
-        # Crear gráfico interactivo con Plotly
         fig = go.Figure()
-
         fig.add_trace(go.Scatter(
-            x=hours,
-            y=avg_temps,
-            mode='lines+markers',
-            name='Temperatura Promedio',
-            line=dict(color='red', width=2),
-            marker=dict(size=8, color='red')
+            x=hours, y=avg_temps, mode='lines+markers', name='Temperatura Promedio',
+            line=dict(color='#E74C3C', width=2), marker=dict(size=6, color='#E74C3C')
+        ))
+        fig.add_trace(go.Scatter(
+            x=hours, y=avg_humidities, mode='lines+markers', name='Humedad Promedio',
+            line=dict(color='#4A90A4', width=2), marker=dict(size=6, color='#4A90A4')
         ))
 
-        fig.add_trace(go.Scatter(
-            x=hours,
-            y=avg_humidities,
-            mode='lines+markers',
-            name='Humedad Promedio',
-            line=dict(color='blue', width=2),
-            marker=dict(size=8, color='blue')
-        ))
-
-        # Personalización del gráfico
         fig.update_layout(
-            title=f'Sensor de Aire: {sensor.name}',
-            xaxis_title='Hora',
-            yaxis_title='Valor',
-            template='plotly',  # Fondo blanco
+            xaxis_title='Hora', yaxis_title='Valor',
+            template='plotly_white',
             autosize=True,
-            margin=dict(l=40, r=40, t=40, b=150),  # Ajustar márgenes para evitar que los títulos de los ejes se sobrepongan
+            height=380,
+            margin=dict(l=40, r=20, t=20, b=90),
             showlegend=True,
-            hovermode='closest',  # Mejor visualización de los puntos en el gráfico
-            plot_bgcolor='white',  # Fondo blanco para el gráfico
-            paper_bgcolor='white',  # Fondo blanco para el área fuera del gráfico
-            font=dict(color='black'),  # Color de fuente negro para los textos
-            xaxis=dict(
-                tickangle=45,  # Rotar las etiquetas del eje X para que no se sobrepongan
-                ticks='outside',  # Ticks fuera para que no se sobrepongan con los textos
-            ),
-            yaxis=dict(
-                ticks='outside',  # Ticks fuera para el eje Y
-            ),
-            legend=dict(
-                orientation='h',  # Colocar la leyenda horizontal
-                yanchor='top',  # Fijar la leyenda arriba
-                y=-0.2,  # Mover la leyenda fuera del gráfico, debajo
-                xanchor='center',
-                x=0.5  # Centrar la leyenda debajo del gráfico
-            ),
+            hovermode='x unified',
+            font=dict(color='#33402F', family='Open Sans, sans-serif'),
+            xaxis=dict(tickangle=45, ticks='outside'),
+            yaxis=dict(ticks='outside'),
+            legend=dict(orientation='h', yanchor='top', y=-0.35, xanchor='center', x=0.5),
         )
 
+        graph_html = fig.to_html(
+            full_html=False,
+            include_plotlyjs=False,
+            config={'responsive': True, 'displaylogo': False}
+        )
+        charts.append({'nombre': sensor.name, 'tipo': 'aire', 'html': graph_html})
 
-
-        # Convertir la figura a HTML y agregarla a la lista de gráficos
-        graph_html = fig.to_html(full_html=False)
-        charts.append(graph_html)
-
-    # Datos para los sensores de suelo
+    # --- Sensores de suelo ---
     for sensor in user_sensors_soil:
         soil_data = (
             HumidityTemperaturaSoil.objects
             .filter(sensor=sensor)
             .annotate(hour=TruncHour('timestamp'))
             .values('hour')
-            .annotate(
-                avg_humidity_soil=Avg('humiditysoil'),
-                avg_temp=Avg('temperature')
-            )
+            .annotate(avg_humidity_soil=Avg('humiditysoil'), avg_temp=Avg('temperature'))
             .order_by('hour')
         )
-        
-        # Preparar los datos para el gráfico
+
         hours = [entry['hour'].strftime('%Y-%m-%d %H:%M:%S') for entry in soil_data]
         avg_humidity_soil = [entry['avg_humidity_soil'] for entry in soil_data]
         avg_temp_soil = [entry['avg_temp'] for entry in soil_data]
 
-        # Crear gráfico interactivo con Plotly
         fig = go.Figure()
-
         fig.add_trace(go.Scatter(
-            x=hours,
-            y=avg_temp_soil,
-            mode='lines+markers',
-            name='Temperatura Promedio Suelo',
-            line=dict(color='green', width=2),
-            marker=dict(size=8, color='green')
+            x=hours, y=avg_temp_soil, mode='lines+markers', name='Temperatura Promedio Suelo',
+            line=dict(color='#2F7D4F', width=2), marker=dict(size=6, color='#2F7D4F')
+        ))
+        fig.add_trace(go.Scatter(
+            x=hours, y=avg_humidity_soil, mode='lines+markers', name='Humedad Promedio Suelo',
+            line=dict(color='#8D6E4F', width=2), marker=dict(size=6, color='#8D6E4F')
         ))
 
-        fig.add_trace(go.Scatter(
-            x=hours,
-            y=avg_humidity_soil,
-            mode='lines+markers',
-            name='Humedad Promedio Suelo',
-            line=dict(color='orange', width=2),
-            marker=dict(size=8, color='orange')
-        ))
-
-        # Personalización del gráfico
         fig.update_layout(
-            title=f'Sensor de Suelo: {sensor.name}',
-            xaxis_title='Hora',
-            yaxis_title='Valor',
-            template='plotly',  # Fondo blanco
+            xaxis_title='Hora', yaxis_title='Valor',
+            template='plotly_white',
             autosize=True,
-            margin=dict(l=40, r=40, t=40, b=150),  # Ajustar márgenes para evitar que los títulos de los ejes se sobrepongan
+            height=380,
+            margin=dict(l=40, r=20, t=20, b=90),
             showlegend=True,
-            hovermode='closest',  # Mejor visualización de los puntos en el gráfico
-            plot_bgcolor='white',  # Fondo blanco para el gráfico
-            paper_bgcolor='white',  # Fondo blanco para el área fuera del gráfico
-            font=dict(color='black'),  # Color de fuente negro para los textos
-            xaxis=dict(
-                tickangle=45,  # Rotar las etiquetas del eje X para que no se sobrepongan
-                ticks='outside',  # Ticks fuera para que no se sobrepongan con los textos
-            ),
-            yaxis=dict(
-                ticks='outside',  # Ticks fuera para el eje Y
-            ),
-            legend=dict(
-                orientation='h',  # Colocar la leyenda horizontal
-                yanchor='top',  # Fijar la leyenda arriba
-                y=-0.2,  # Mover la leyenda fuera del gráfico, debajo
-                xanchor='center',
-                x=0.5  # Centrar la leyenda debajo del gráfico
-            ),
+            hovermode='x unified',
+            font=dict(color='#33402F', family='Open Sans, sans-serif'),
+            xaxis=dict(tickangle=45, ticks='outside'),
+            yaxis=dict(ticks='outside'),
+            legend=dict(orientation='h', yanchor='top', y=-0.35, xanchor='center', x=0.5),
         )
 
-        # Convertir la figura a HTML y agregarla a la lista de gráficos
-        graph_html = fig.to_html(full_html=False)
-        charts.append(graph_html)
+        graph_html = fig.to_html(
+            full_html=False,
+            include_plotlyjs=False,
+            config={'responsive': True, 'displaylogo': False}
+        )
+        charts.append({'nombre': sensor.name, 'tipo': 'suelo', 'html': graph_html})
 
-    context = {
-        'charts': charts
-    }
-
+    context = {'charts': charts}
     return render(request, 'agrosmart/informesporsensor.html', context)
 
 from django.shortcuts import render, redirect
