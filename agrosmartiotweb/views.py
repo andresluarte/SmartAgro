@@ -1155,13 +1155,16 @@ def receive_data(request):
 
         # === NUEVO: notificar SIEMPRE que llega un dato (solo para prueba) ===
                 # receive_data (sensor de aire)
-        notificar_usuario(
-            usuario=sensor.user,
-            titulo=f'📡 {sensor.name} — Nuevos datos',
-            mensaje=f'Temperatura: {temperature}°C · Humedad: {humidity}%',
-            tipo_sensor='aire',
-            sensor_aire=sensor,
-        )
+        try:
+            notificar_usuario(
+                usuario=sensor.user,
+                titulo=f'📡 {sensor.name} — Nuevos datos',
+                mensaje=f'Temperatura: {temperature}°C · Humedad: {humidity}%',
+                tipo_sensor='aire',
+                sensor_aire=sensor,
+            )
+        except Exception as e:
+            print(f"⚠️ Error enviando notificación (aire): {e}")
 
         # ---- Estado del dispositivo: SOLO EN CACHÉ (no BD) ----
         device_status = {
@@ -1259,13 +1262,17 @@ def receive_data_soil(request):
 
         # === NUEVO: notificar SIEMPRE que llega un dato (solo para prueba) ===
                 # receive_data_soil (sensor de suelo)
-        notificar_usuario(
-            usuario=sensor.user,
-            titulo=f'📡 {sensor.name} — Nuevos datos',
-            mensaje=f'Temperatura: {temperature}°C · Humedad suelo: {humiditysoil}%',
-            tipo_sensor='suelo',
-            sensor_suelo=sensor,
-        )
+        try:
+            notificar_usuario(
+                usuario=sensor.user,
+                titulo=f'📡 {sensor.name} — Nuevos datos',
+                mensaje=f'Temperatura: {temperature}°C · Humedad suelo: {humiditysoil}%',
+                tipo_sensor='suelo',
+                sensor_suelo=sensor,
+            )
+        except Exception as e:
+            print(f"⚠️ Error enviando notificación: {e}")
+    # No relanzar — que el flujo de guardado de datos continúe igual
 
         # Estado actual del dispositivo SOLO EN CACHE
         device_status = {
