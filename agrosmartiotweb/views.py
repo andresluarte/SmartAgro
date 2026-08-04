@@ -5,7 +5,7 @@ from .forms import ContactoForm,ProcesoForm,ProcesoModificarForm,TrabajadorForm,
 from django.contrib import messages
 from .serializers import ProcesoSerializer
 from rest_framework.generics import ListAPIView
-from django.http import JsonResponse,HttpResponse
+from django.http import Http404, JsonResponse,HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.decorators import user_passes_test
@@ -1110,9 +1110,35 @@ def lista_empresas(request):
 
     return render(request, 'agrosmart/empresa/lista_empresas.html', {'empresas': empresas})
 
-
+from django.http import Http404
 
 #DATOS DE SENSOR 
+@login_required(login_url="my_login")
+def asignar_sector_sensor(request, tipo, sensor_id):
+    # Determinar el modelo según el tipo de sensor, asegurando que sea del usuario logueado
+    if tipo == 'aire':
+        sensor = get_object_or_404(SensorAire, id=sensor_id, user=request.user)
+    elif tipo == 'suelo':
+        sensor = get_object_or_404(SensorSuelo, id=sensor_id, user=request.user)
+    else:
+        raise Http404("Tipo de sensor no válido")
+
+    if request.method == 'POST':
+        sector_id = request.POST.get('sector')
+
+        if sector_id:
+            # Si tu modelo Sector tiene FK a user, filtra también por user=request.user
+            sector = get_object_or_404(Sector, id=sector_id, user=request.user)
+            sensor.sector = sector
+        else:
+            sensor.sector = None  # Permite dejar el sensor sin sector
+
+        sensor.save()
+        messages.success(request, f"Sector asignado correctamente al sensor '{sensor.name}'.")
+    else:
+        messages.error(request, "Método no permitido.")
+
+    return redirect('tiemporeal') 
 
 from datetime import datetime, timedelta
 from .models import TemperatureHumidityLocation
@@ -1352,6 +1378,7 @@ def combined_data_view(request):
 
     sensors_aire = SensorAire.objects.filter(user=user)
     sensors_suelo = SensorSuelo.objects.filter(user=user)
+    sectores = Sector.objects.filter(user=request.user)
 
     # ---------- SENSORES DE AIRE (igual que antes) ----------
     sensor_data = []
@@ -1376,6 +1403,8 @@ def combined_data_view(request):
             sensor_data.append({
                 'sensor_id': sensor.id,
                 'sensor_name': sensor.name,
+                'sector_id': sensor.sector_id,
+                'sector_nombre': sensor.sector.nombre if sensor.sector else None,
                 'latest_data': latest_data,
                 'hourly_temperature': hourly_temperature,
                 'hourly_humidity': hourly_humidity,
@@ -1385,6 +1414,8 @@ def combined_data_view(request):
             sensor_data.append({
                 'sensor_id': sensor.id,
                 'sensor_name': sensor.name,
+                'sector_id': sensor.sector_id,          # <-- agregado
+                'sector_nombre': sensor.sector.nombre if sensor.sector else None,
                 'latest_data': None,
                 'hourly_temperature': [],
                 'hourly_humidity': [],
@@ -1401,6 +1432,8 @@ def combined_data_view(request):
         sensor_data_soil.append({
             'sensor_id': sensor.id,
             'sensor_name': sensor.name,
+            'sector_id': sensor.sector_id,              # <-- agregado
+            'sector_nombre': sensor.sector.nombre if sensor.sector else None,   
             'latest_data': latest_data,
         })
 
@@ -1412,8 +1445,9 @@ def combined_data_view(request):
         'sensor_data': sensor_data,
         'sensor_data_soil': sensor_data_soil,
         'no_sensors_message': no_sensors_message,
+        'sectores': sectores,
     })
-
+    
 @login_required
 def combined_data_view_soil(request):
     # Obtener el usuario actual
@@ -1892,6 +1926,7 @@ def lista_notificaciones(request):
     notificaciones = paginator.get_page(page_number)
     return render(request, 'agrosmart/lista_notificaciones.html', {'notificaciones': notificaciones})
 
+from django.contrib import messages
 
 @login_required
 def detalle_notificacion(request, pk):
@@ -1900,8 +1935,10 @@ def detalle_notificacion(request, pk):
     notif.save()
 
     if notif.sensor_suelo:
+        messages.info(request, notif.sensor_suelo.name)
         return redirect('combined_data_view_soil')
     if notif.sensor_aire:
+        messages.info(request, notif.sensor_aire.name)
         return redirect('combined_data_view')
     return redirect('lista_notificaciones')
 

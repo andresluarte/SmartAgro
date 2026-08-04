@@ -122,7 +122,8 @@ urlpatterns = [
     
     path('tiemporeal/', views.combined_data_view, name='tiemporeal'),
     path('informes/', views.informes, name = "informes"),
-        path('informesporsensor/', views.informesporsensor, name = "informesporsensor"),
+    path('informesporsensor/', views.informesporsensor, name = "informesporsensor"),
+    path('asignar-sector/<str:tipo>/<int:sensor_id>/', views.asignar_sector_sensor, name='asignar_sector_sensor'),
 
 
     path('cuadernodecampo/', views.cuadernodecampo, name='cuadernodecampo'),

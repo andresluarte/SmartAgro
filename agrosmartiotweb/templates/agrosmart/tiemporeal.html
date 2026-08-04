@@ -203,6 +203,8 @@
         padding: 1rem 1.15rem;
         box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
         animation: fadeIn 0.4s ease-in;
+        display: flex;
+        flex-direction: column;
     }
 
     .sensor-header {
@@ -420,6 +422,75 @@
     .loading-spinner i { animation: spin 1s linear infinite; }
     @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
+    /* ===== Bloque "Asignar Sector" (fila completa al pie de la tarjeta) ===== */
+    .sector-assign-section {
+        margin-top: 0.9rem;
+        padding-top: 0.8rem;
+        border-top: 1px dashed #cbd5e1;
+        display: flex;
+        align-items: center;
+        gap: 0.7rem;
+        flex-wrap: wrap;
+    }
+
+    .sector-assign-label {
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #475569;
+        white-space: nowrap;
+    }
+
+    .sector-assign-form {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex: 1;
+        flex-wrap: wrap;
+        min-width: 240px;
+    }
+
+    .sector-assign-form .form-select {
+        flex: 1;
+        min-width: 160px;
+        padding: 0.45rem 0.65rem;
+        border-radius: 8px;
+        border: 1px solid #cbd5e1;
+        font-size: 0.78rem;
+        background: #f8fafc;
+        color: #1e293b;
+        cursor: pointer;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .sector-assign-form .form-select:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+    }
+
+    .sector-assign-form .sector-save-btn {
+        white-space: nowrap;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+
+    .soil-card .sector-assign-form .form-select:focus {
+        border-color: #d97706;
+        box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.15);
+    }
+
+    .soil-card .sector-assign-form .sector-save-btn {
+        background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+    }
+
+    .soil-card .sector-assign-form .sector-save-btn:hover {
+        box-shadow: 0 4px 10px rgba(217, 119, 6, 0.4);
+    }
+
     /* Responsive general (móvil) */
     @media (max-width: 768px) {
         .air-sensor-dashboard { padding: 1rem 0.5rem 1.5rem; }
@@ -431,6 +502,8 @@
         .weather-main { gap: 0.6rem; }
         .weather-details { gap: 0.35rem; }
         .location-grid { flex-direction: column; gap: 0.3rem; }
+        .sector-assign-section { flex-direction: column; align-items: stretch; }
+        .sector-assign-form { min-width: 0; }
     }
 </style>
 
@@ -484,7 +557,7 @@
                                     <div class="metric-info">
                                         <div class="metric-label">Temperatura</div>
                                         <div class="metric-value" id="temperature-{{ data.sensor_id }}">{{ data.latest_data.temperature }}°C</div>
-                                        <span class="metric-status 
+                                        <span class="metric-status
                                             {% if data.latest_data.temperature >= 18 and data.latest_data.temperature <= 26 %}
                                                 status-optimal
                                             {% elif data.latest_data.temperature >= 15 and data.latest_data.temperature < 18 or data.latest_data.temperature > 26 and data.latest_data.temperature <= 30 %}
@@ -508,7 +581,7 @@
                                     <div class="metric-info">
                                         <div class="metric-label">Humedad</div>
                                         <div class="metric-value" id="humidity-{{ data.sensor_id }}">{{ data.latest_data.humidity }}%</div>
-                                        <span class="metric-status 
+                                        <span class="metric-status
                                             {% if data.latest_data.humidity >= 40 and data.latest_data.humidity <= 60 %}
                                                 status-optimal
                                             {% elif data.latest_data.humidity >= 30 and data.latest_data.humidity < 40 or data.latest_data.humidity > 60 and data.latest_data.humidity <= 70 %}
@@ -542,7 +615,7 @@
                                     <div class="metric-info">
                                         <div class="metric-label">Batería</div>
                                         <div class="metric-value" id="battery-{{ data.sensor_id }}">{{ data.latest_data.battery }}%</div>
-                                        <span class="metric-status 
+                                        <span class="metric-status
                                             {% if data.latest_data.battery >= 60 %}
                                                 status-optimal
                                             {% elif data.latest_data.battery >= 20 %}
@@ -562,7 +635,7 @@
                                 </div>
 
                                 <div class="metric-card">
-                                    <div class="signal-bars 
+                                    <div class="signal-bars
                                         {% if data.latest_data.signal_strength >= 75 %}signal-strong
                                         {% elif data.latest_data.signal_strength >= 40 %}signal-medium
                                         {% elif data.latest_data.signal_strength > 0 %}signal-weak
@@ -588,11 +661,7 @@
                                 <div class="location-section">
                                     <div class="location-grid">
                                         <div class="location-item">
-                                            <span class="location-label">📍 Ubicación Sensor </span>
-                              
-                                        </div>
-                                        <div class="location-item">
-                          
+                                            <span class="location-label">📍 Ubicación Sensor</span>
                                         </div>
                                     </div>
                                     <a id="mapLink-{{ data.sensor_id }}"
@@ -608,6 +677,23 @@
 
                     <!-- ===== COLUMNA 3: Gráfico ===== -->
 
+                </div>
+
+                <!-- ===== Asignar Sector (fila completa al pie de la tarjeta) ===== -->
+                <div class="sector-assign-section">
+                    <span class="sector-assign-label">🗂️ Sector</span>
+                    <form class="sector-assign-form" method="POST" action="{% url 'asignar_sector_sensor' 'aire' data.sensor_id %}">
+                        {% csrf_token %}
+                        <select name="sector" class="form-select">
+                            <option value="">-- Sin sector --</option>
+                            {% for sector in sectores %}
+                                <option value="{{ sector.id }}" {% if data.sector_id == sector.id %}selected{% endif %}>
+                                    {{ sector.nombre }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <button type="submit" class="map-button sector-save-btn">💾 Guardar</button>
+                    </form>
                 </div>
             </div>
             {% endfor %}
@@ -701,10 +787,26 @@
                     </div>
 
                     <!-- ===== COLUMNA 2: Estado del Dispositivo ===== -->
-                    
 
                     <!-- ===== COLUMNA 3: Gráfico ===== -->
 
+                </div>
+
+                <!-- ===== Asignar Sector (fila completa al pie de la tarjeta) ===== -->
+                <div class="sector-assign-section">
+                    <span class="sector-assign-label">🗂️ Sector</span>
+                    <form class="sector-assign-form" method="POST" action="{% url 'asignar_sector_sensor' 'suelo' data.sensor_id %}">
+                        {% csrf_token %}
+                        <select name="sector" class="form-select">
+                            <option value="">-- Sin sector --</option>
+                            {% for sector in sectores %}
+                                <option value="{{ sector.id }}" {% if data.sector_id == sector.id %}selected{% endif %}>
+                                    {{ sector.nombre }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <button type="submit" class="map-button sector-save-btn">💾 Guardar</button>
+                    </form>
                 </div>
             </div>
             {% endfor %}
@@ -725,123 +827,125 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     {% for data in sensor_data %}
-    const ctx{{ data.sensor_id }} = document.getElementById('sensor-aire-chart-{{ data.sensor_id }}').getContext('2d');
-
-    window["chart_aire_{{ data.sensor_id }}"] = new Chart(ctx{{ data.sensor_id }}, {
-        type: 'bar',
-        data: {
-            labels: ['Temp (°C)', 'Humedad (%)', 'Batería (%)', 'Señal (%)'],
-            datasets: [{
-                label: 'Valores Actuales',
-                data: [
-                    Number({{ data.latest_data.temperature|default:0 }}),
-                    Number({{ data.latest_data.humidity|default:0 }}),
-                    Number({{ data.latest_data.battery|default:0 }}),
-                    Number({{ data.latest_data.signal_strength|default:0 }})
-                ],
-                backgroundColor: [
-                    'rgba(239, 68, 68, 0.8)',
-                    'rgba(59, 130, 246, 0.8)',
-                    'rgba(16, 185, 129, 0.8)',
-                    'rgba(168, 85, 247, 0.8)'
-                ],
-                borderColor: [
-                    'rgba(239, 68, 68, 1)',
-                    'rgba(59, 130, 246, 1)',
-                    'rgba(16, 185, 129, 1)',
-                    'rgba(168, 85, 247, 1)'
-                ],
-                borderWidth: 2,
-                borderRadius: 6
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    max: 100,
-                    ticks: { font: { size: 10, weight: '600' }, color: '#64748b' },
-                    grid: { color: 'rgba(203, 213, 225, 0.3)' }
-                },
-                x: {
-                    ticks: { font: { size: 10, weight: '600' }, color: '#64748b' },
-                    grid: { display: false }
-                }
+    const ctx{{ data.sensor_id }} = document.getElementById('sensor-aire-chart-{{ data.sensor_id }}');
+    if (ctx{{ data.sensor_id }}) {
+        window["chart_aire_{{ data.sensor_id }}"] = new Chart(ctx{{ data.sensor_id }}.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: ['Temp (°C)', 'Humedad (%)', 'Batería (%)', 'Señal (%)'],
+                datasets: [{
+                    label: 'Valores Actuales',
+                    data: [
+                        Number({{ data.latest_data.temperature|default:0 }}),
+                        Number({{ data.latest_data.humidity|default:0 }}),
+                        Number({{ data.latest_data.battery|default:0 }}),
+                        Number({{ data.latest_data.signal_strength|default:0 }})
+                    ],
+                    backgroundColor: [
+                        'rgba(239, 68, 68, 0.8)',
+                        'rgba(59, 130, 246, 0.8)',
+                        'rgba(16, 185, 129, 0.8)',
+                        'rgba(168, 85, 247, 0.8)'
+                    ],
+                    borderColor: [
+                        'rgba(239, 68, 68, 1)',
+                        'rgba(59, 130, 246, 1)',
+                        'rgba(16, 185, 129, 1)',
+                        'rgba(168, 85, 247, 1)'
+                    ],
+                    borderWidth: 2,
+                    borderRadius: 6
+                }]
             },
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    backgroundColor: 'rgba(15, 23, 42, 0.9)',
-                    padding: 8,
-                    titleFont: { size: 11, weight: 'bold' },
-                    bodyFont: { size: 10 },
-                    cornerRadius: 6
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: { font: { size: 10, weight: '600' }, color: '#64748b' },
+                        grid: { color: 'rgba(203, 213, 225, 0.3)' }
+                    },
+                    x: {
+                        ticks: { font: { size: 10, weight: '600' }, color: '#64748b' },
+                        grid: { display: false }
+                    }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                        padding: 8,
+                        titleFont: { size: 11, weight: 'bold' },
+                        bodyFont: { size: 10 },
+                        cornerRadius: 6
+                    }
                 }
             }
-        }
-    });
+        });
+    }
     {% endfor %}
 
     {% for data in sensor_data_soil %}
-    const ctxSuelo{{ data.sensor_id }} = document.getElementById('sensor-suelo-chart-{{ data.sensor_id }}').getContext('2d');
-
-    window["chart_suelo_{{ data.sensor_id }}"] = new Chart(ctxSuelo{{ data.sensor_id }}, {
-        type: 'bar',
-        data: {
-            labels: ['Temp (°C)', 'Hum. Suelo (%)', 'Batería (%)', 'Señal (%)'],
-            datasets: [{
-                label: 'Valores Actuales',
-                data: [
-                    Number({{ data.latest_data.temperature|default:0 }}),
-                    Number({{ data.latest_data.humiditysoil|default:0 }}),
-                    0,
-                    0
-                ],
-                backgroundColor: [
-                    'rgba(245, 158, 11, 0.8)',
-                    'rgba(59, 130, 246, 0.8)',
-                    'rgba(16, 185, 129, 0.8)',
-                    'rgba(168, 85, 247, 0.8)'
-                ],
-                borderColor: [
-                    'rgba(245, 158, 11, 1)',
-                    'rgba(59, 130, 246, 1)',
-                    'rgba(16, 185, 129, 1)',
-                    'rgba(168, 85, 247, 1)'
-                ],
-                borderWidth: 2,
-                borderRadius: 6
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    max: 100,
-                    ticks: { font: { size: 10, weight: '600' }, color: '#64748b' },
-                    grid: { color: 'rgba(203, 213, 225, 0.3)' }
-                },
-                x: {
-                    ticks: { font: { size: 10, weight: '600' }, color: '#64748b' },
-                    grid: { display: false }
-                }
+    const ctxSuelo{{ data.sensor_id }} = document.getElementById('sensor-suelo-chart-{{ data.sensor_id }}');
+    if (ctxSuelo{{ data.sensor_id }}) {
+        window["chart_suelo_{{ data.sensor_id }}"] = new Chart(ctxSuelo{{ data.sensor_id }}.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: ['Temp (°C)', 'Hum. Suelo (%)', 'Batería (%)', 'Señal (%)'],
+                datasets: [{
+                    label: 'Valores Actuales',
+                    data: [
+                        Number({{ data.latest_data.temperature|default:0 }}),
+                        Number({{ data.latest_data.humiditysoil|default:0 }}),
+                        0,
+                        0
+                    ],
+                    backgroundColor: [
+                        'rgba(245, 158, 11, 0.8)',
+                        'rgba(59, 130, 246, 0.8)',
+                        'rgba(16, 185, 129, 0.8)',
+                        'rgba(168, 85, 247, 0.8)'
+                    ],
+                    borderColor: [
+                        'rgba(245, 158, 11, 1)',
+                        'rgba(59, 130, 246, 1)',
+                        'rgba(16, 185, 129, 1)',
+                        'rgba(168, 85, 247, 1)'
+                    ],
+                    borderWidth: 2,
+                    borderRadius: 6
+                }]
             },
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    backgroundColor: 'rgba(15, 23, 42, 0.9)',
-                    padding: 8,
-                    titleFont: { size: 11, weight: 'bold' },
-                    bodyFont: { size: 10 },
-                    cornerRadius: 6
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: { font: { size: 10, weight: '600' }, color: '#64748b' },
+                        grid: { color: 'rgba(203, 213, 225, 0.3)' }
+                    },
+                    x: {
+                        ticks: { font: { size: 10, weight: '600' }, color: '#64748b' },
+                        grid: { display: false }
+                    }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                        padding: 8,
+                        titleFont: { size: 11, weight: 'bold' },
+                        bodyFont: { size: 10 },
+                        cornerRadius: 6
+                    }
                 }
             }
-        }
-    });
+        });
+    }
     {% endfor %}
 });
 </script>
@@ -900,8 +1004,6 @@ document.addEventListener('DOMContentLoaded', function () {
             const batteryEl = document.getElementById(`battery-${sensorId}`);
             const batteryIconEl = document.getElementById(`battery-icon-${sensorId}`);
             const carrierEl = document.getElementById(`carrier-${sensorId}`);
-            const latitudeEl = document.getElementById(`latitudeEl-${sensorId}`);
-            const longitudeEl = document.getElementById(`longitudEl-${sensorId}`);
             const timestampEl = document.getElementById(`timestamp-${sensorId}`);
             const mapLinkEl = document.getElementById(`mapLink-${sensorId}`);
 
@@ -912,8 +1014,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 batteryIconEl.innerText = Number(data.battery) >= 60 ? '🔋' : '🪫';
             }
             if (carrierEl && data.operator) carrierEl.innerText = data.operator;
-            if (latitudeEl && data.latitude) latitudeEl.innerText = data.latitude;
-            if (longitudeEl && data.longitude) longitudeEl.innerText = data.longitude;
             if (timestampEl && data.timestamp) timestampEl.innerText = `🕐 ${data.timestamp}`;
             if (mapLinkEl && data.latitude && data.longitude) {
                 mapLinkEl.href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(data.latitude)},${encodeURIComponent(data.longitude)}`;

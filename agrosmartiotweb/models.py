@@ -545,6 +545,7 @@ class SensorAire(models.Model):
     name = models.CharField(max_length=100, unique=True)  # Nombre único para cada sensor
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     api_key = models.CharField(max_length=64, blank=True, null=True, unique=True)  # API Key única
+    sector = models.ForeignKey(Sector, on_delete=models.CASCADE, null=True, blank=True)  # Relación con Sector
     
 
     def save(self, *args, **kwargs):
@@ -574,6 +575,7 @@ class SensorSuelo(models.Model):
     name = models.CharField(max_length=100, unique=True)  # Nombre único para cada sensor
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     api_key = models.CharField(max_length=64, blank=True, null=True, unique=True)  # API Key única
+    sector = models.ForeignKey(Sector, on_delete=models.CASCADE, null=True, blank=True)  # Relación con Sector
 
     def save(self, *args, **kwargs):
         # Generar una API Key única si no existe
@@ -782,3 +784,18 @@ class Notificacion(models.Model):
 
     def __str__(self):
         return f'{self.usuario} - {self.mensaje[:30]}'
+    
+    
+    
+class ChatConversacion(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='conversaciones')
+    titulo = models.CharField(max_length=100, blank=True, null=True)
+    creada_en = models.DateTimeField(auto_now_add=True)
+    actualizada_en = models.DateTimeField(auto_now=True)
+
+class ChatMensaje(models.Model):
+    ROL_CHOICES = [('user', 'Usuario'), ('assistant', 'Asistente'), ('tool', 'Tool')]
+    conversacion = models.ForeignKey(ChatConversacion, on_delete=models.CASCADE, related_name='mensajes')
+    rol = models.CharField(max_length=10, choices=ROL_CHOICES)
+    contenido = models.TextField()
+    creado_en = models.DateTimeField(auto_now_add=True)

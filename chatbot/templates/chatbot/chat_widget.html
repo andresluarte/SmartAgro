@@ -1,0 +1,468 @@
+{% load static %}
+
+<div id="chatbot-widget">
+    <button id="chatbot-toggle" aria-label="Abrir chat">
+        <span id="chatbot-icon-open">💬</span>
+        <span id="chatbot-icon-close" style="display:none;">✕</span>
+    </button>
+
+    <div id="chatbot-ventana">
+        <div class="chatbot-header">
+            <div>
+                <strong>Asistente SmartAgro</strong>
+                <div class="chatbot-subtitulo">Pregúntame sobre tu fundo</div>
+            </div>
+            <div class="chatbot-header-acciones">
+                <button id="chatbot-nueva" title="Nueva conversación">↻</button>
+                <button id="chatbot-cerrar" title="Cerrar" aria-label="Cerrar chat">✕</button>
+            </div>
+        </div>
+
+        <div id="chatbot-mensajes"></div>
+
+        <div class="chatbot-input-area">
+            <input type="text" id="chatbot-input" placeholder="Escribe tu pregunta..." autocomplete="off">
+            <button id="chatbot-enviar" aria-label="Enviar">➤</button>
+        </div>
+    </div>
+</div>
+
+<style>
+#chatbot-widget {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 9999;
+    font-family: inherit;
+}
+
+#chatbot-toggle {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: #2e7d32;
+    color: white;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.15s;
+}
+#chatbot-toggle:hover {
+    transform: scale(1.05);
+}
+
+#chatbot-ventana {
+    display: none;
+    position: fixed;
+    bottom: 90px;
+    right: 20px;
+    width: 380px;
+    height: 560px;
+    max-height: 75vh;
+    background: white;
+    border-radius: 14px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+    flex-direction: column;
+    overflow: hidden;
+}
+#chatbot-ventana.abierta {
+    display: flex;
+}
+
+.chatbot-header {
+    background: #2e7d32;
+    color: white;
+    padding: 14px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-shrink: 0;
+}
+.chatbot-subtitulo {
+    font-size: 12px;
+    opacity: 0.85;
+    margin-top: 2px;
+}
+.chatbot-header-acciones {
+    display: flex;
+    gap: 8px;
+}
+.chatbot-header-acciones button {
+    background: rgba(255,255,255,0.15);
+    border: none;
+    color: white;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+}
+.chatbot-header-acciones button:hover {
+    background: rgba(255,255,255,0.3);
+}
+
+#chatbot-mensajes {
+    flex: 1;
+    overflow-y: auto;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: #f7f7f7;
+}
+
+/* ---- Burbuja base: igual al diseño original.
+   Sin 'width' explícito: dentro de un contenedor flex-column con
+   align-self != stretch, el navegador ya ajusta el ancho al contenido
+   automáticamente. Esto es lo que se rompió al forzar width:fit-content. ---- */
+.chatbot-msg {
+    max-width: 85%;
+    padding: 9px 13px;
+    border-radius: 12px;
+    line-height: 1.45;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+.chatbot-msg.user {
+    align-self: flex-end;
+    background: #2e7d32;
+    color: white;
+    border-bottom-right-radius: 3px;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.chatbot-msg.assistant {
+    align-self: flex-start;
+    background: white;
+    border: 1px solid #ddd;
+    border-bottom-left-radius: 3px;
+}
+
+.chatbot-msg.escribiendo {
+    align-self: flex-start;
+    background: white;
+    border: 1px solid #ddd;
+    color: #888;
+    font-style: italic;
+}
+.chatbot-msg.error {
+    align-self: flex-start;
+    background: #fdecea;
+    color: #c62828;
+    border: 1px solid #f5c6cb;
+}
+
+/* ---- Markdown SOLO dentro de burbujas assistant ---- */
+.chatbot-msg.assistant p {
+    margin: 0 0 6px 0;
+}
+.chatbot-msg.assistant p:last-child {
+    margin-bottom: 0;
+}
+.chatbot-msg.assistant strong {
+    color: #1b5e20;
+}
+.chatbot-msg.assistant ul,
+.chatbot-msg.assistant ol {
+    margin: 4px 0 6px 0;
+    padding-left: 20px;
+}
+.chatbot-msg.assistant li {
+    margin-bottom: 2px;
+}
+.chatbot-msg.assistant h1,
+.chatbot-msg.assistant h2,
+.chatbot-msg.assistant h3 {
+    font-size: 14px;
+    margin: 4px 0 6px 0;
+    color: #1b5e20;
+}
+
+/* Tablas: si son más anchas que la burbuja, hacen scroll horizontal
+   PROPIO en vez de forzar el tamaño de toda la burbuja/mensaje. */
+.chatbot-msg.assistant .tabla-scroll {
+    overflow-x: auto;
+    max-width: 100%;
+    margin: 6px 0;
+}
+.chatbot-msg.assistant table {
+    border-collapse: collapse;
+    font-size: 12px;
+    white-space: nowrap;
+}
+.chatbot-msg.assistant th,
+.chatbot-msg.assistant td {
+    border: 1px solid #ddd;
+    padding: 4px 7px;
+    text-align: left;
+}
+.chatbot-msg.assistant th {
+    background: #e8f5e9;
+    color: #1b5e20;
+}
+.chatbot-msg.assistant code {
+    background: #f0f0f0;
+    padding: 1px 4px;
+    border-radius: 4px;
+    font-size: 12.5px;
+}
+
+.chatbot-input-area {
+    display: flex;
+    padding: 10px;
+    gap: 8px;
+    border-top: 1px solid #ddd;
+    background: white;
+    flex-shrink: 0;
+}
+.chatbot-input-area input {
+    flex: 1;
+    padding: 9px 13px;
+    border: 1px solid #ccc;
+    border-radius: 20px;
+    font-size: 14px;
+}
+.chatbot-input-area input:focus {
+    outline: none;
+    border-color: #2e7d32;
+}
+.chatbot-input-area button {
+    background: #2e7d32;
+    color: white;
+    border: none;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 15px;
+    flex-shrink: 0;
+}
+.chatbot-input-area button:disabled {
+    background: #aaa;
+    cursor: not-allowed;
+}
+
+.chatbot-btn-confirmar,
+.chatbot-btn-cancelar {
+    font-size: 13px;
+}
+.chatbot-btn-confirmar:hover {
+    background: #256428 !important;
+}
+.chatbot-btn-cancelar:hover {
+    background: #ddd !important;
+}
+
+/* Responsivo: pantalla completa en móviles, con X visible para cerrar */
+@media (max-width: 480px) {
+    #chatbot-ventana {
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100%;
+        height: 100%;
+        max-height: 100vh;
+        border-radius: 0;
+    }
+    #chatbot-toggle.oculto {
+        display: none;
+    }
+}
+</style>
+
+<!-- marked.js: convierte el markdown de la respuesta en HTML -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+<!-- DOMPurify: limpia el HTML antes de insertarlo, por seguridad -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.5/purify.min.js"></script>
+
+<script>
+(function () {
+    let conversacionId = null;
+    let iniciado = false;
+
+    const widget = document.getElementById('chatbot-widget');
+    const toggleBtn = document.getElementById('chatbot-toggle');
+    const iconOpen = document.getElementById('chatbot-icon-open');
+    const iconClose = document.getElementById('chatbot-icon-close');
+    const ventana = document.getElementById('chatbot-ventana');
+    const cerrarBtn = document.getElementById('chatbot-cerrar');
+    const nuevaBtn = document.getElementById('chatbot-nueva');
+    const mensajesDiv = document.getElementById('chatbot-mensajes');
+    const input = document.getElementById('chatbot-input');
+    const enviarBtn = document.getElementById('chatbot-enviar');
+
+    function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+    }
+
+    // Envuelve cada <table> generada por marked en un div.tabla-scroll,
+    // así el desborde horizontal queda contenido dentro de la burbuja
+    // en vez de estirar toda la burbuja o el chat.
+    function envolverTablas(html) {
+        const contenedor = document.createElement('div');
+        contenedor.innerHTML = html;
+        contenedor.querySelectorAll('table').forEach((tabla) => {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'tabla-scroll';
+            tabla.parentNode.insertBefore(wrapper, tabla);
+            wrapper.appendChild(tabla);
+        });
+        return contenedor.innerHTML;
+    }
+
+    // tipo 'user' -> texto plano, burbuja verde a la derecha (diseño original intacto).
+    // tipo 'assistant' -> markdown renderizado a HTML, burbuja blanca a la izquierda.
+    // tipo 'escribiendo' / 'error' -> texto plano.
+    function agregarMensaje(texto, tipo) {
+        const div = document.createElement('div');
+        div.className = `chatbot-msg ${tipo}`;
+
+        if (tipo === 'assistant' && window.marked && window.DOMPurify) {
+            const html = marked.parse(texto);
+            const htmlConTablasEnvueltas = envolverTablas(html);
+            div.innerHTML = DOMPurify.sanitize(htmlConTablasEnvueltas, { ADD_TAGS: ['div'], ADD_ATTR: ['class'] });
+        } else {
+            div.textContent = texto;
+        }
+
+        mensajesDiv.appendChild(div);
+        mensajesDiv.scrollTop = mensajesDiv.scrollHeight;
+        return div;
+    }
+
+    function abrirChat() {
+        ventana.classList.add('abierta');
+        iconOpen.style.display = 'none';
+        iconClose.style.display = 'inline';
+        if (window.innerWidth <= 480) toggleBtn.classList.add('oculto');
+        if (!iniciado) {
+            agregarMensaje('¡Hola! Soy tu asistente de SmartAgro. Pregúntame sobre sensores, sectores, clima o jornadas.', 'assistant');
+            iniciado = true;
+        }
+        input.focus();
+    }
+
+    function cerrarChat() {
+        ventana.classList.remove('abierta');
+        iconOpen.style.display = 'inline';
+        iconClose.style.display = 'none';
+        toggleBtn.classList.remove('oculto');
+    }
+
+    toggleBtn.addEventListener('click', () => {
+        ventana.classList.contains('abierta') ? cerrarChat() : abrirChat();
+    });
+    cerrarBtn.addEventListener('click', cerrarChat);
+
+    nuevaBtn.addEventListener('click', () => {
+        conversacionId = null;
+        mensajesDiv.innerHTML = '';
+        agregarMensaje('Nueva conversación iniciada. ¿En qué te ayudo?', 'assistant');
+    });
+
+    // ---- Propuesta de acción (ej: crear jornada) con botones Confirmar/Cancelar ----
+    function mostrarBotonConfirmacion(propuesta) {
+        const div = document.createElement('div');
+        div.className = 'chatbot-msg assistant';
+
+        const resumenHtml = (window.marked && window.DOMPurify)
+            ? DOMPurify.sanitize(marked.parseInline(propuesta.resumen))
+            : propuesta.resumen;
+
+        div.innerHTML = `
+            <div style="margin-bottom:8px;"><strong>📋</strong> ${resumenHtml}</div>
+            <div style="font-size:12px;color:#666;margin-bottom:8px;">👆 Haz clic en un botón para confirmar o cancelar</div>
+            <button class="chatbot-btn-confirmar" style="background:#2e7d32;color:white;border:none;padding:6px 14px;border-radius:16px;cursor:pointer;margin-right:6px;">✓ Confirmar y crear</button>
+            <button class="chatbot-btn-cancelar" style="background:#eee;color:#333;border:none;padding:6px 14px;border-radius:16px;cursor:pointer;">Cancelar</button>
+        `;
+        mensajesDiv.appendChild(div);
+        mensajesDiv.scrollTop = mensajesDiv.scrollHeight;
+
+        div.querySelector('.chatbot-btn-confirmar').addEventListener('click', async () => {
+            div.innerHTML = '<em>Creando...</em>';
+            try {
+                const response = await fetch('/chat/confirmar-accion/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken'),
+                    },
+                    body: JSON.stringify({ accion: propuesta.accion, detalle: propuesta.detalle }),
+                });
+                const resultado = await response.json();
+                div.remove();
+                agregarMensaje(
+                    resultado.mensaje || (resultado.exito ? '✅ Jornada creada.' : '❌ No se pudo crear.'),
+                    resultado.exito ? 'assistant' : 'error'
+                );
+            } catch (err) {
+                div.remove();
+                agregarMensaje('Error al confirmar la acción.', 'error');
+            }
+        });
+
+        div.querySelector('.chatbot-btn-cancelar').addEventListener('click', () => {
+            div.remove();
+            agregarMensaje('Acción cancelada.', 'assistant');
+        });
+    }
+
+    async function enviarMensaje() {
+        const texto = input.value.trim();
+        if (!texto) return;
+
+        agregarMensaje(texto, 'user');
+        input.value = '';
+        enviarBtn.disabled = true;
+        input.disabled = true;
+
+        const indicador = agregarMensaje('Pensando...', 'escribiendo');
+
+        try {
+            const response = await fetch('/chat/mensaje/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken'),
+                },
+                body: JSON.stringify({ mensaje: texto, conversacion_id: conversacionId }),
+            });
+
+            const data = await response.json();
+            indicador.remove();
+
+            if (!response.ok) {
+                agregarMensaje(data.error || 'Ocurrió un error.', 'error');
+            } else {
+                conversacionId = data.conversacion_id;
+                agregarMensaje(data.respuesta, 'assistant');
+
+                if (data.accion_pendiente) {
+                    mostrarBotonConfirmacion(data.accion_pendiente);
+                }
+            }
+        } catch (err) {
+            indicador.remove();
+            agregarMensaje('Error de conexión. Intenta de nuevo.', 'error');
+        } finally {
+            enviarBtn.disabled = false;
+            input.disabled = false;
+            input.focus();
+        }
+    }
+
+    enviarBtn.addEventListener('click', enviarMensaje);
+    input.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') enviarMensaje();
+    });
+})();
+</script>

@@ -234,7 +234,7 @@
     {% for notif in notificaciones %}
     <a href="{% url 'detalle_notificacion' notif.pk %}" class="notif-item {% if not notif.leida %}no-leida{% endif %}">
         <div class="notif-icono {% if notif.tipo_sensor == 'aire' %}aire{% elif notif.tipo_sensor == 'suelo' %}suelo{% else %}general{% endif %}">
-            {% if notif.tipo_sensor == 'aire' %}
+            {% if notif.tipo_sensor == 'aire' %}    
                 <i class="fa-solid fa-wind"></i>
             {% elif notif.tipo_sensor == 'suelo' %}
                 <i class="fa-solid fa-seedling"></i>
@@ -243,6 +243,15 @@
             {% endif %}
         </div>
         <div class="notif-cuerpo">
+           
+                <div class="notif-sensor-nombre">
+                    {% if notif.sensor_suelo %}
+                        {{ notif.sensor_suelo.name }}
+                    {% elif notif.sensor_aire %}
+                        {{ notif.sensor_aire.name }}
+                    {% endif %}
+                </div>
+    
             <div class="notif-mensaje">{{ notif.mensaje }}</div>
             <span class="notif-fecha">
                 <i class="fa-regular fa-clock"></i>

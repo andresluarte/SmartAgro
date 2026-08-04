@@ -37,8 +37,13 @@ MESSAGE_STORAGE = "django.contrib.messages.storage.cookie.CookieStorage"
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 
-# Application definition
+import decouple
 
+from decouple import config
+
+ANTHROPIC_API_KEY = config('ANTHROPIC_API_KEY')
+# Application definition
+OPENWEATHER_API_KEY = config('OPENWEATHER_API_KEY')
 INSTALLED_APPS = [
     'daphne',
     'django.contrib.admin',
@@ -47,7 +52,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-     'agrosmartiot',
+     'agrosmartiot','chatbot',   # ← agregar aquí
     'django.contrib.humanize', 'crispy_forms', "django_filters", "rest_framework", "import_export", "mptt","channels","bootstrap4",
     'crispy_bootstrap4','agrosmartiotweb.apps.AgrosmartConfig',  # Asegúrate de que esta línea esté presente
 ]

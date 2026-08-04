@@ -1,0 +1,195 @@
+{% extends 'agrosmart/base.html' %}
+{% load static %}
+
+{% block contenido %}
+<div class="chat-container">
+    <div class="chat-header">
+        <h3>🌱 Asistente SmartAgro</h3>
+        <button id="btn-nueva-conversacion">+ Nueva conversación</button>
+    </div>
+
+    <div id="chat-mensajes" class="chat-mensajes"></div>
+
+    <div class="chat-input-area">
+        <input type="text" id="chat-input" placeholder="Pregúntame sobre tus sectores, sensores, cosechas..." autocomplete="off">
+        <button id="btn-enviar">Enviar</button>
+    </div>
+</div>
+
+<style>
+.chat-container {
+    max-width: 700px;
+    margin: 20px auto;
+    display: flex;
+    flex-direction: column;
+    height: 80vh;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    overflow: hidden;
+}
+.chat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    background: #2e7d32;
+    color: white;
+}
+.chat-header button {
+    background: rgba(255,255,255,0.2);
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+}
+.chat-mensajes {
+    flex: 1;
+    overflow-y: auto;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: #f7f7f7;
+}
+.mensaje {
+    max-width: 75%;
+    padding: 10px 14px;
+    border-radius: 12px;
+    line-height: 1.4;
+    white-space: pre-wrap;
+}
+.mensaje.user {
+    align-self: flex-end;
+    background: #2e7d32;
+    color: white;
+    border-bottom-right-radius: 2px;
+}
+.mensaje.assistant {
+    align-self: flex-start;
+    background: white;
+    border: 1px solid #ddd;
+    border-bottom-left-radius: 2px;
+}
+.mensaje.escribiendo {
+    align-self: flex-start;
+    background: white;
+    border: 1px solid #ddd;
+    color: #888;
+    font-style: italic;
+}
+.mensaje.error {
+    align-self: flex-start;
+    background: #fdecea;
+    color: #c62828;
+    border: 1px solid #f5c6cb;
+}
+.chat-input-area {
+    display: flex;
+    padding: 12px;
+    gap: 8px;
+    border-top: 1px solid #ddd;
+    background: white;
+}
+.chat-input-area input {
+    flex: 1;
+    padding: 10px 14px;
+    border: 1px solid #ccc;
+    border-radius: 20px;
+    font-size: 14px;
+}
+.chat-input-area button {
+    background: #2e7d32;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 20px;
+    cursor: pointer;
+}
+.chat-input-area button:disabled {
+    background: #aaa;
+    cursor: not-allowed;
+}
+</style>
+
+<script>
+let conversacionId = null;
+
+const chatMensajes = document.getElementById('chat-mensajes');
+const chatInput = document.getElementById('chat-input');
+const btnEnviar = document.getElementById('btn-enviar');
+const btnNueva = document.getElementById('btn-nueva-conversacion');
+
+function agregarMensaje(texto, tipo) {
+    const div = document.createElement('div');
+    div.className = `mensaje ${tipo}`;
+    div.textContent = texto;
+    chatMensajes.appendChild(div);
+    chatMensajes.scrollTop = chatMensajes.scrollHeight;
+    return div;
+}
+
+function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+}
+
+async function enviarMensaje() {
+    const texto = chatInput.value.trim();
+    if (!texto) return;
+
+    agregarMensaje(texto, 'user');
+    chatInput.value = '';
+    btnEnviar.disabled = true;
+    chatInput.disabled = true;
+
+    const indicador = agregarMensaje('Pensando...', 'escribiendo');
+
+    try {
+        const response = await fetch('/chat/mensaje/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken'),
+            },
+            body: JSON.stringify({
+                mensaje: texto,
+                conversacion_id: conversacionId,
+            }),
+        });
+
+        const data = await response.json();
+        indicador.remove();
+
+        if (!response.ok) {
+            agregarMensaje(data.error || 'Ocurrió un error.', 'error');
+        } else {
+            conversacionId = data.conversacion_id;
+            agregarMensaje(data.respuesta, 'assistant');
+        }
+    } catch (err) {
+        indicador.remove();
+        agregarMensaje('Error de conexión. Intenta de nuevo.', 'error');
+    } finally {
+        btnEnviar.disabled = false;
+        chatInput.disabled = false;
+        chatInput.focus();
+    }
+}
+
+btnEnviar.addEventListener('click', enviarMensaje);
+chatInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') enviarMensaje();
+});
+btnNueva.addEventListener('click', () => {
+    conversacionId = null;
+    chatMensajes.innerHTML = '';
+    agregarMensaje('Nueva conversación iniciada. ¿En qué te ayudo?', 'assistant');
+});
+
+// Mensaje de bienvenida inicial
+agregarMensaje('¡Hola! Soy tu asistente de SmartAgro. Pregúntame sobre sensores, sectores, procesos o cosechas.', 'assistant');
+</script>
+{% endblock %}
