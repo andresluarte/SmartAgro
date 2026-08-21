@@ -13,7 +13,8 @@
                 <div class="chatbot-subtitulo">Pregúntame sobre tu fundo</div>
             </div>
             <div class="chatbot-header-acciones">
-                <button id="chatbot-nueva" title="Nueva conversación">↻</button>
+                <button id="chatbot-expandir" title="Expandir" aria-label="Expandir chat">⤢</button>
+                <button id="chatbot-nueva" title="Nueva conversación" aria-label="Nueva conversación">↻</button>
                 <button id="chatbot-cerrar" title="Cerrar" aria-label="Cerrar chat">✕</button>
             </div>
         </div>
@@ -54,7 +55,11 @@
 #chatbot-toggle:hover {
     transform: scale(1.05);
 }
+#chatbot-toggle.oculto {
+    display: none;
+}
 
+/* ---- Ventana del chat: tamaño flotante por defecto ---- */
 #chatbot-ventana {
     display: none;
     position: fixed;
@@ -68,9 +73,23 @@
     box-shadow: 0 8px 30px rgba(0,0,0,0.25);
     flex-direction: column;
     overflow: hidden;
+    transition: width 0.2s ease, height 0.2s ease, border-radius 0.2s ease,
+                top 0.2s ease, left 0.2s ease, bottom 0.2s ease, right 0.2s ease;
 }
 #chatbot-ventana.abierta {
     display: flex;
+}
+
+/* ---- Modo expandido: pantalla completa (escritorio y móvil) ---- */
+#chatbot-ventana.expandida {
+    top: 20px;
+    left: 20px;
+    right: 20px;
+    bottom: 20px;
+    width: auto;
+    height: auto;
+    max-height: none;
+    border-radius: 14px;
 }
 
 .chatbot-header {
@@ -89,7 +108,7 @@
 }
 .chatbot-header-acciones {
     display: flex;
-    gap: 8px;
+    gap: 6px;
 }
 .chatbot-header-acciones button {
     background: rgba(255,255,255,0.15);
@@ -100,6 +119,9 @@
     border-radius: 6px;
     cursor: pointer;
     font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 .chatbot-header-acciones button:hover {
     background: rgba(255,255,255,0.3);
@@ -115,10 +137,20 @@
     background: #f7f7f7;
 }
 
-/* ---- Burbuja base: igual al diseño original.
-   Sin 'width' explícito: dentro de un contenedor flex-column con
-   align-self != stretch, el navegador ya ajusta el ancho al contenido
-   automáticamente. Esto es lo que se rompió al forzar width:fit-content. ---- */
+/* En modo expandido, limitamos el ancho de lectura para que no se
+   estire de borde a borde en pantallas grandes (mejor legibilidad) */
+#chatbot-ventana.expandida #chatbot-mensajes {
+    align-items: center;
+}
+#chatbot-ventana.expandida .chatbot-msg {
+    max-width: 700px;
+}
+#chatbot-ventana.expandida .chatbot-input-area {
+    max-width: 740px;
+    margin: 0 auto;
+    width: 100%;
+}
+
 .chatbot-msg {
     max-width: 85%;
     padding: 9px 13px;
@@ -126,6 +158,7 @@
     line-height: 1.45;
     font-size: 14px;
     box-sizing: border-box;
+    align-self: flex-start;
 }
 
 .chatbot-msg.user {
@@ -135,6 +168,21 @@
     border-bottom-right-radius: 3px;
     white-space: pre-wrap;
     word-break: break-word;
+}
+#chatbot-ventana.expandida .chatbot-msg.user {
+    align-self: flex-end;
+    margin-right: calc(50% - 350px);
+}
+#chatbot-ventana.expandida .chatbot-msg:not(.user) {
+    align-self: flex-start;
+    margin-left: calc(50% - 350px);
+}
+@media (max-width: 760px) {
+    #chatbot-ventana.expandida .chatbot-msg.user,
+    #chatbot-ventana.expandida .chatbot-msg:not(.user) {
+        margin-left: 0;
+        margin-right: 0;
+    }
 }
 
 .chatbot-msg.assistant {
@@ -183,9 +231,6 @@
     margin: 4px 0 6px 0;
     color: #1b5e20;
 }
-
-/* Tablas: si son más anchas que la burbuja, hacen scroll horizontal
-   PROPIO en vez de forzar el tamaño de toda la burbuja/mensaje. */
 .chatbot-msg.assistant .tabla-scroll {
     overflow-x: auto;
     max-width: 100%;
@@ -227,6 +272,7 @@
     border: 1px solid #ccc;
     border-radius: 20px;
     font-size: 14px;
+    min-width: 0;
 }
 .chatbot-input-area input:focus {
     outline: none;
@@ -259,9 +305,15 @@
     background: #ddd !important;
 }
 
-/* Responsivo: pantalla completa en móviles, con X visible para cerrar */
+/* ---- Responsivo: pantalla completa en móviles siempre,
+   con safe-area para notch/barra inferior de iOS/Android ---- */
 @media (max-width: 480px) {
-    #chatbot-ventana {
+    #chatbot-widget {
+        bottom: max(16px, env(safe-area-inset-bottom));
+        right: 16px;
+    }
+    #chatbot-ventana,
+    #chatbot-ventana.expandida {
         top: 0;
         left: 0;
         right: 0;
@@ -271,8 +323,31 @@
         max-height: 100vh;
         border-radius: 0;
     }
-    #chatbot-toggle.oculto {
+    #chatbot-ventana .chatbot-header {
+        padding-top: max(14px, env(safe-area-inset-top));
+    }
+    #chatbot-ventana .chatbot-input-area {
+        padding-bottom: max(10px, env(safe-area-inset-bottom));
+    }
+    /* En móvil no mostramos el botón de expandir: ya está a pantalla completa */
+    #chatbot-expandir {
         display: none;
+    }
+    #chatbot-ventana.expandida .chatbot-msg.user,
+    #chatbot-ventana.expandida .chatbot-msg:not(.user) {
+        margin-left: 0;
+        margin-right: 0;
+    }
+    #chatbot-ventana.expandida .chatbot-msg {
+        max-width: 90%;
+    }
+}
+
+/* Tablets: la ventana flotante un poco más grande */
+@media (min-width: 481px) and (max-width: 768px) {
+    #chatbot-ventana {
+        width: 340px;
+        height: 500px;
     }
 }
 </style>
@@ -286,6 +361,7 @@
 (function () {
     let conversacionId = null;
     let iniciado = false;
+    let expandida = false;
 
     const widget = document.getElementById('chatbot-widget');
     const toggleBtn = document.getElementById('chatbot-toggle');
@@ -294,6 +370,7 @@
     const ventana = document.getElementById('chatbot-ventana');
     const cerrarBtn = document.getElementById('chatbot-cerrar');
     const nuevaBtn = document.getElementById('chatbot-nueva');
+    const expandirBtn = document.getElementById('chatbot-expandir');
     const mensajesDiv = document.getElementById('chatbot-mensajes');
     const input = document.getElementById('chatbot-input');
     const enviarBtn = document.getElementById('chatbot-enviar');
@@ -304,9 +381,6 @@
         if (parts.length === 2) return parts.pop().split(';').shift();
     }
 
-    // Envuelve cada <table> generada por marked en un div.tabla-scroll,
-    // así el desborde horizontal queda contenido dentro de la burbuja
-    // en vez de estirar toda la burbuja o el chat.
     function envolverTablas(html) {
         const contenedor = document.createElement('div');
         contenedor.innerHTML = html;
@@ -319,9 +393,6 @@
         return contenedor.innerHTML;
     }
 
-    // tipo 'user' -> texto plano, burbuja verde a la derecha (diseño original intacto).
-    // tipo 'assistant' -> markdown renderizado a HTML, burbuja blanca a la izquierda.
-    // tipo 'escribiendo' / 'error' -> texto plano.
     function agregarMensaje(texto, tipo) {
         const div = document.createElement('div');
         div.className = `chatbot-msg ${tipo}`;
@@ -358,10 +429,19 @@
         toggleBtn.classList.remove('oculto');
     }
 
+    function alternarExpandir() {
+        expandida = !expandida;
+        ventana.classList.toggle('expandida', expandida);
+        expandirBtn.textContent = expandida ? '⤡' : '⤢';
+        expandirBtn.title = expandida ? 'Contraer' : 'Expandir';
+        mensajesDiv.scrollTop = mensajesDiv.scrollHeight;
+    }
+
     toggleBtn.addEventListener('click', () => {
         ventana.classList.contains('abierta') ? cerrarChat() : abrirChat();
     });
     cerrarBtn.addEventListener('click', cerrarChat);
+    expandirBtn.addEventListener('click', alternarExpandir);
 
     nuevaBtn.addEventListener('click', () => {
         conversacionId = null;
@@ -369,7 +449,6 @@
         agregarMensaje('Nueva conversación iniciada. ¿En qué te ayudo?', 'assistant');
     });
 
-    // ---- Propuesta de acción (ej: crear jornada) con botones Confirmar/Cancelar ----
     function mostrarBotonConfirmacion(propuesta) {
         const div = document.createElement('div');
         div.className = 'chatbot-msg assistant';

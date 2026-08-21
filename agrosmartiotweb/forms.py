@@ -528,6 +528,11 @@ class CreateUserForm(UserCreationForm):
         widgets = {
             'user_type': forms.HiddenInput()  # Campo oculto
         }
+    
+    def clean_username(self):
+        # Se ejecuta durante la validación, antes del save()
+        username = self.cleaned_data.get('username')
+        return username.lower().strip() if username else username
 
     def save(self, commit=True):
         # Guardamos el formulario pero asignamos el tipo de usuario

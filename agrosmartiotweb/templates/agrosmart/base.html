@@ -18,22 +18,24 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.10.2/umd/popper.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
-    
+
 
 
     <!-- Incluir la librería de JavaScript de Bootstrap -->
-    
-   
+
+
     <link rel="shortcut icon" type="image/x-icon" href="{% static 'app/img/logopequeño.jpg' %}">
-    <script src="{% static 'app/js/slideshow.js' %}"></script>
-    <script src="{% static 'app/js/sidenav.js' %}"></script>
-    
+
+
     <link rel="stylesheet" href="{% static 'app/css/bootstrap.min.css' %}">
     <link rel="stylesheet" href="{% static 'app/css/estilos2.css' %}">
     <link rel="stylesheet" href="{% static 'app/css/estilos.css' %}">
+    <!-- Nuevo: estilos del sidenav mejorado. Debe ir DESPUÉS de estilos.css
+         para que sus reglas .sidenav tengan prioridad -->
+   
      {% if user.is_authenticated %}
     <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
-   
+
     <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-messaging-compat.js"></script>
 
     <script>
@@ -107,8 +109,8 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
     <style>
-        
-        
+
+
 
         .bx-controls {
             display: none; /* Oculta los controles si no los necesitas */
@@ -119,10 +121,9 @@
         }
 
 
-        
+
     </style>
 
-   
 
 
 
@@ -144,48 +145,79 @@
             <img src="{% static 'app/img/logosmartagro2.jpg' %}" >
 
         </div>
-        
 
 
-        
+
         <!-- Botón hamburguesa -->
         <div id="menuButton" class="menu-button" onclick="openNav()">
-            <div class="bar1"></div>
-            <div class="bar2"></div>
-            <div class="bar3"></div>
+            <i class="fa-solid fa-bars"></i>
         </div>
 
 
-       
 
 
         <!-- Carga de FontAwesome -->
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-        <div id="mySidenav" class="sidenav" style="width: 0; background-color: white; color: black;">
-            <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
-            
+        <!-- Overlay oscuro detrás del sidenav -->
+
+    <div id="mySidenav" class="sidenav">
+
+        <div class="sidenav-topbar">
+
             {% if user.is_authenticated %}
 
-            <!-- Usuario -->
-            <a href="{% url 'lista_notificaciones' %}" class="sidenav-notif-btn" title="Notificaciones">
-                <i class="fa-solid fa-bell"></i>
-                {% if notificaciones_no_leidas > 0 %}
-                <span class="sidenav-notif-badge">{{ notificaciones_no_leidas }}</span>
-                {% endif %}
-            </a>
-            <a href="{% url 'mi_perfil' %}" class="bold-link">
-                <i class="fa-solid fa-user"></i> {{ user.username }}
+                <a href="{% url 'lista_notificaciones' %}"
+                class="icon-btn"
+                title="Notificaciones">
+
+                    <i class="fa-solid fa-bell"></i>
+
+                    {% if notificaciones_no_leidas > 0 %}
+                        <span class="sidenav-notif-badge">
+                            {{ notificaciones_no_leidas }}
+                        </span>
+                    {% endif %}
+
+                </a>
+
+                <a href="javascript:void(0)"
+                class="icon-btn closebtn"
+                onclick="closeNav()">
+                    &times;
+                </a>
+
+            {% endif %}
+
+        </div>
+                
+
+            {% if user.is_authenticated %}
+
+            <!-- Encabezado de usuario -->
+            <a href="{% url 'mi_perfil' %}" class="sidenav-header">
+                <div class="avatar">
+                    <i class="fa-solid fa-user"></i>
+                </div>
+                <div class="user-meta">
+                    <span class="name">{{ user.username }}</span>
+                    <span class="role">{{ user.user_type }}</span>
+                </div>
             </a>
 
             <!-- Inicio -->
-            <a href="{% url 'home' %}"><i class="fa-solid fa-house"></i></a>
+            <a href="{% url 'home' %}"><i class="fa-solid fa-house"></i> Inicio</a>
 
             <!-- Sensores -->
-            <span onclick="toggleSubMenu('sensoresSubMenu')">
-                <a href="#"><i class="fa-solid fa-microchip"></i></a>
-            </span>
-            <div id="sensoresSubMenu" class="submenu" style="display: none;">
+            <div class="sidenav-section-label">Sensores</div>
+            <div class="sidenav-toggle" onclick="toggleSubMenu('sensoresSubMenu', this)">
+                <span style="display:flex; align-items:center; gap:14px; padding:11px 20px; color:var(--sidenav-text); font-weight:500;">
+                    <i class="fa-solid fa-microchip" style="width:20px; text-align:center; color:var(--sidenav-text-muted);"></i>
+                    Monitoreo
+                </span>
+                <i class="fa-solid fa-chevron-down chevron" style="margin-right:20px;"></i>
+            </div>
+            <div id="sensoresSubMenu" class="submenu">
                 <a href="{% url 'tiemporeal' %}"><i class="fa-solid fa-temperature-half"></i> Aire</a>
                 <a href="{% url 'tiemporealsoil' %}"><i class="fa-solid fa-seedling"></i> Suelo</a>
                 <a href="{% url 'informes' %}"><i class="fa-solid fa-chart-line"></i> Informes</a>
@@ -193,10 +225,15 @@
             </div>
 
             <!-- Gestión -->
-            <span onclick="toggleSubMenu('gestionSubMenu')">
-                <a href="#"><i class="fa-solid fa-briefcase"></i></a>
-            </span>
-            <div id="gestionSubMenu" class="submenu" style="display: none;">
+            <div class="sidenav-section-label">Gestión</div>
+            <div class="sidenav-toggle" onclick="toggleSubMenu('gestionSubMenu', this)">
+                <span style="display:flex; align-items:center; gap:14px; padding:11px 20px; color:var(--sidenav-text); font-weight:500;">
+                    <i class="fa-solid fa-briefcase" style="width:20px; text-align:center; color:var(--sidenav-text-muted);"></i>
+                    Operaciones
+                </span>
+                <i class="fa-solid fa-chevron-down chevron" style="margin-right:20px;"></i>
+            </div>
+            <div id="gestionSubMenu" class="submenu">
                 <a href="{% url 'gestiondetareas' %}"><i class="fa-solid fa-tractor"></i> Insumos</a>
                 <a href="{% url 'gestion_jornadas' %}"><i class="fa-solid fa-calendar-check"></i> Jornadas</a>
                 <a href="{% url 'gestion_finanzas' %}"><i class="fa-solid fa-dollar-sign"></i> Finanzas</a>
@@ -218,10 +255,15 @@
             </div>
 
             <!-- Empresa -->
-            <span onclick="toggleSubMenu('EmpresaSubMenu')">
-                <a href="#"><i class="fa-solid fa-building"></i></a>
-            </span>
-            <div id="EmpresaSubMenu" class="submenu" style="display: none;">
+            <div class="sidenav-section-label">Empresa</div>
+            <div class="sidenav-toggle" onclick="toggleSubMenu('EmpresaSubMenu', this)">
+                <span style="display:flex; align-items:center; gap:14px; padding:11px 20px; color:var(--sidenav-text); font-weight:500;">
+                    <i class="fa-solid fa-building" style="width:20px; text-align:center; color:var(--sidenav-text-muted);"></i>
+                    Administración
+                </span>
+                <i class="fa-solid fa-chevron-down chevron" style="margin-right:20px;"></i>
+            </div>
+            <div id="EmpresaSubMenu" class="submenu">
                 {% if request.user.user_type == 'admin' %}
                 <a href="{% url 'agregar_empresa' %}"><i class="fa-solid fa-circle-plus"></i> Registrar Empresa</a>
                 <a href="{% url 'lista_empresas' %}"><i class="fa-solid fa-list"></i> Empresas</a>
@@ -230,22 +272,20 @@
                 {% endif %}
             </div>
 
-            <!-- Cerrar Sesión -->
-            <a href="{% url 'user_logout' %}"><i class="fa-solid fa-right-from-bracket"></i></a>
-
-            <!-- Logo de Empresa -->
-            {% if empresa %}
-                {% if empresa.logo %}
+            <!-- Pie: logo empresa + cerrar sesión -->
+            <div class="sidenav-footer">
+                {% if empresa %}
+                    {% if empresa.logo %}
                     <div class="logo-small" style="background-image: url('{{ empresa.logo.url }}');"></div>
+                    {% endif %}
+                    <span class="empresa-nombre">{{ empresa.nombre }}</span>
                 {% endif %}
-                <a class="bold-link">{{ empresa.nombre }}</a>
-            {% endif %}
+            </div>
+            <a href="{% url 'user_logout' %}" class="logout-link"><i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión</a>
 
-            {{user.user_type}}
-            
             {% else %}
-            <a href="{% url 'login' %}"><i class="fa-solid fa-user-lock"></i></a>
-            <a href="{% url 'ayuda' %}"><i class="fa-solid fa-circle-info"></i></a>
+            <a href="{% url 'login' %}"><i class="fa-solid fa-user-lock"></i> Iniciar sesión</a>
+            <a href="{% url 'ayuda' %}"><i class="fa-solid fa-circle-info"></i> Ayuda</a>
             {% endif %}
         </div>
 
@@ -298,8 +338,8 @@
                 display: inline-block;
                 transition: transform 0.3s, box-shadow 0.3s;
                 border-radius: 8px;
-            " 
-            onmouseover="this.style.transform='scale(1.1)'; this.style.boxShadow='0 4px 15px rgba(0,0,0,0.3)';" 
+            "
+            onmouseover="this.style.transform='scale(1.1)'; this.style.boxShadow='0 4px 15px rgba(0,0,0,0.3)';"
             onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none';">
         </div>
     </div>
@@ -314,38 +354,54 @@
 
 
     <script>
-      
-
-
-        function toggleSubMenu(subMenuId) {
-            var subMenu = document.getElementById(subMenuId);
-            if (subMenu.style.display === "block") {
-                subMenu.style.display = "none";
-            } else {
-                subMenu.style.display = "block";
-            }
-        }
 
         const sidenav = document.getElementById("mySidenav");
+        const overlay = document.getElementById("sidenavOverlay");
         const menuBtn = document.getElementById("menuButton");
 
         function openNav() {
-            sidenav.style.width = "250px";
-            if (menuBtn) menuBtn.style.display = "none"; // ocultar botón hamburguesa
+            sidenav.classList.add("open");
+            overlay.classList.add("active");
+            if (menuBtn) menuBtn.classList.add("active"); // anima barras -> X
         }
 
         function closeNav() {
-            sidenav.style.width = "0";
-            if (menuBtn) menuBtn.style.display = "block"; // volver a mostrar botón
+            sidenav.classList.remove("open");
+            overlay.classList.remove("active");
+            if (menuBtn) menuBtn.classList.remove("active");
         }
 
         // (Opcional) Toggle robusto por si lo necesitas en otros sitios:
         function toggleNav() {
-            const w = window.getComputedStyle(sidenav).width;
-            if (w !== "0px") {
+            if (sidenav.classList.contains("open")) {
                 closeNav();
             } else {
                 openNav();
+            }
+        }
+
+        // toggleEl es el <div class="sidenav-toggle"> clickeado, para animar su flecha
+        // Modo acordeón: al abrir un submenú, cierra los demás para que el
+        // menú no quede tan largo y no haga falta hacer scroll ni zoom.
+        const submenuIds = ["sensoresSubMenu", "gestionSubMenu", "EmpresaSubMenu"];
+
+        function toggleSubMenu(subMenuId, toggleEl) {
+            const subMenu = document.getElementById(subMenuId);
+            const isOpening = !subMenu.classList.contains("expanded");
+
+            // Cierra todos los submenús
+            submenuIds.forEach((id) => {
+                const el = document.getElementById(id);
+                if (el) el.classList.remove("expanded");
+            });
+            document.querySelectorAll(".sidenav-toggle").forEach((t) => {
+                t.classList.remove("expanded");
+            });
+
+            // Abre el que se clickeó (si estaba cerrado)
+            if (isOpening) {
+                subMenu.classList.add("expanded");
+                if (toggleEl) toggleEl.classList.add("expanded");
             }
         }
 
@@ -361,7 +417,7 @@
         });
     </script>
 
-    
+
 </body>
 
 </html>

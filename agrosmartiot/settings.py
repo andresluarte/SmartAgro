@@ -126,7 +126,9 @@ DATABASES = {
 
 # settings.py
 AUTHENTICATION_BACKENDS = [
+    'agrosmartiotweb.authentication.CaseInsensitiveModelBackend',
     'django.contrib.auth.backends.ModelBackend',
+
 ]
 
 # Password validation
@@ -176,15 +178,18 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 
 ALLOWED_HOSTS = [
     'smartagro-iot-v1-b4536d10714e.herokuapp.com',
-    '.herokuapp.com', '127.0.0.1', 'localhost'
+    '.herokuapp.com',
+    'smartagroiot.com',
+    'www.smartagroiot.com',
+    '127.0.0.1',
+    'localhost',
 ]
 
-#django_heroku.settings(locals())
 CSRF_TRUSTED_ORIGINS = [
     'https://smartagro-iot-v1-b4536d10714e.herokuapp.com',
-    'https://*.herokuapp.com'
+    'https://smartagroiot.com',
+    'https://www.smartagroiot.com',
 ]
-
 #import os
 
 import ssl

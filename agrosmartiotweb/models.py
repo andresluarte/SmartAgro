@@ -489,13 +489,8 @@ class CustomUser(AbstractUser):
     user_type = models.CharField(max_length=15, choices=USER_TYPE_CHOICES, default='superuser')
     created_by = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='created_users')
     empresa = models.ForeignKey('EmpresaOFundo', on_delete=models.SET_NULL, null=True, blank=True, related_name='empresas')
-    # En tu modelo de Usuario (settings.AUTH_USER_MODEL)
     fcm_token = models.TextField(null=True, blank=True)
 
-    def __str__(self):
-        return self.username
-
-    # Define un related_name para evitar conflictos con el modelo User por defecto
     groups = models.ManyToManyField(
         Group,
         related_name='customuser_set',
@@ -510,6 +505,11 @@ class CustomUser(AbstractUser):
         help_text='Specific permissions for this user.',
         verbose_name='user permissions'
     )
+
+    def save(self, *args, **kwargs):
+        if self.username:
+            self.username = self.username.lower().strip()
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.username
