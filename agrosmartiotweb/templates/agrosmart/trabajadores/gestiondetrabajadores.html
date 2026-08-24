@@ -198,7 +198,7 @@
                 {% if t.foto %}
                   <img src="{{ t.foto.url }}" alt="Foto de {{ t.nombre }}" class="foto-trabajador">
                 {% else %}
-                  <span class="badge bg-secondary px-3 py-2">Sin foto</span>
+                  <span class="badge bg-success text-dark px-3 py-2">Sin foto</span>
                 {% endif %}
               </td>
               <td class="text-start" data-label="Nombre">
@@ -216,7 +216,7 @@
                 {% if t.fecha_termino_contrato %}
                   {{ t.fecha_termino_contrato|date:"d/m/Y" }}
                 {% else %}
-                  <span class="badge bg-secondary px-3 py-2">Sin Fecha Término</span>
+                  <span class="badge bg-success text-dark px-3 py-2">Sin Fecha Término</span>
                 {% endif %}
               </td>
               <td class="text-end" data-label="Compras/Insumos">{{ t.cantidad_tareas }}</td>
