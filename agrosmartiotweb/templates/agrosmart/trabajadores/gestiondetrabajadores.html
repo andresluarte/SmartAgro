@@ -3,258 +3,281 @@
 {% block contenido %}
 {% load static %}
 {% load agrosmartiotweb %}
-{% block js %}
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+{% load humanize %}
+
+<!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
   function eliminarTrabajador(id) {
     Swal.fire({
-      "title": "¿Estas Seguro?",
-      "text": "Esta acción no se puede deshacer",
-      "icon": "question",
-      "showCancelButton": true,
-      "cancelButtonText": "No, Cancelar",
-      "confirmButtonText": "Si, Eliminar",
-      "reverseButtons": true,
-      "confirmButtonColor": "dc3545",
-
-
-
-
-
-
-
-
-
-
-    })
-      .then(function (result) {
-        if (result.isConfirmed) {
-          window.location.href = "/eliminarTrabajador/" + id + "/"
-        }
-      })
+      title: "¿Estas Seguro?",
+      text: "Esta acción no se puede deshacer",
+      icon: "question",
+      showCancelButton: true,
+      cancelButtonText: "No, Cancelar",
+      confirmButtonText: "Si, Eliminar",
+      reverseButtons: true,
+      confirmButtonColor: "#dc3545",
+    }).then(function (result) {
+      if (result.isConfirmed) {
+        window.location.href = "/eliminarTrabajador/" + id + "/";
+      }
+    });
   }
-  
 </script>
 
-{% endblock js %}
-{% load humanize %}
-
-
-<!-- Incluir los estilos de Bootstrap -->
 <style>
   @media (max-width: 768px) {
-    .table-responsive thead {
-        display: none; /* Ocultar los encabezados de la tabla */
+    .container {
+      padding-left: 10px;
+      padding-right: 10px;
     }
 
-    .table-responsive tbody tr {
-        display: block;
-        margin-bottom: 15px;
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        padding: 10px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    .table-responsive {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
     }
 
-    .table-responsive tbody td {
-        display: flex;
-        justify-content: space-between;
-        padding: 8px 0;
+    .table {
+      min-width: 900px;
+      font-size: 0.85em;
     }
 
-    .table-responsive tbody td:before {
-        content: attr(data-label); /* Mostrar el encabezado como etiqueta */
-        font-weight: bold;
-        color: #555;
-        margin-right: 10px;
-        text-transform: uppercase;
-        font-size: 0.8em;
+    .table th,
+    .table td {
+      padding: 0.4rem;
+      font-size: 0.8em;
+      white-space: nowrap;
     }
-    
-}
 
+    .table thead th {
+      position: sticky;
+      top: 0;
+      background-color: #f8f9fa !important;
+      z-index: 10;
+    }
+
+    .btn-sm {
+      font-size: 0.75em;
+      padding: 0.25rem 0.5rem;
+    }
+
+    .d-flex.gap-2 {
+      gap: 0.25rem !important;
+    }
+
+    .btn-group .btn {
+      font-size: 0.9em;
+      padding: 0.5rem 0.75rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .container {
+      padding-left: 5px;
+      padding-right: 5px;
+    }
+
+    .d-flex.justify-content-between.align-items-center {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 1rem;
+    }
+
+    .btn-group {
+      width: 100%;
+    }
+
+    .btn-group .btn {
+      width: 100%;
+    }
+
+    .badge {
+      font-size: 0.7em;
+      padding: 0.25em 0.5em;
+    }
+  }
+
+  .foto-trabajador {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 2px solid #e9ecef;
+  }
+
+  .fullscreen {
+    min-height: 100dvh;
+  }
 </style>
 
+<div class="container py-4" style="background-color: #f1f8f0; border-radius: 12px; padding: 2rem;">
 
-<div class="tabajadores">
-
-
-&nbsp
-  <div class="card">
-    <div class="card-body">
-      
-      <h3> Gestión de Trabajadores </h3>
-      <hr>
-      <td>
-        
-      <div class="btn-group justify-content-end">
-        <button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-          Opciones
-        </button>
-        <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
-
-          <a href="{% url 'agregartrabajador' %}" class="btn btn-secondary">Agregar Trabajador</a>
-
-
-          
-          <a type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#searchModal" href="#">FILTRAR</a>
-          
-          <a class="dropdown-item" href="{% url 'exportar_a_excel_trabajador' %}?{{ request.GET.urlencode }}">Exportar a
-            Excel</a>
-
-          
-          <a href="{% url 'gestiondetareas' %}" class="btn btn-secondary">Ir a Insumos/Maquinarias</a>
-          <a href="{% url 'gestion_jornadas' %}" class="btn btn-secondary">Ir a Jornadas</a>
-
-          <a class="dropdown-item" href="{% url 'gestiondetrabajadores' %}">Limpiar Filtro</a>
-
-          </ul>
-        </div>
-
-
-
-
-
-
-
-        <div class="modal fade" id="searchModal" tabindex="-1" role="dialog" aria-labelledby="searchModalLabel"
-          aria-hidden="true">
-          <div class="modal-dialog" role="document">
-            <div class="modal-content">
-              <div class="modal-header">
-                <h5 class="modal-title" id="searchModalLabel">Filtrar Trabajadores</h5>
-                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
-                  <span aria-hidden="true">&times;</span>
-                </button>
-              </div>
-              <div class="modal-body">
-                <form method="get">
-                  {{filtered_trabajador.form.as_p}}
-              </div>
-              <br>
-              <div class="form-row">
-                <div class="form-group col-md-6">
-                  &nbsp; &nbsp;  &nbsp;  
-                  <button type="submit" class="btn btn-success">Filtrar</button>
-                </div>
-
-
-              </div>
-              </form>
-            </div>
-          </div>
-        </div>
+  <!-- Título y encabezado -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="fw-bold text-primary">
+      👷 Gestión de Trabajadores
+    </h3>
+    <div class="btn-group">
+      <button type="button" class="btn btn-success dropdown-toggle shadow-sm" data-bs-toggle="dropdown">
+        Opciones
+      </button>
+      <div class="dropdown-menu">
+        <a class="dropdown-item" href="{% url 'agregartrabajador' %}">
+          <i class="fas fa-plus-circle text-success me-2"></i> Agregar Trabajador
+        </a>
+        <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#searchModal">
+          <i class="fas fa-filter text-warning me-2"></i> Filtrar
+        </a>
+        <a class="dropdown-item" href="{% url 'exportar_a_excel_trabajador' %}?{{ request.GET.urlencode }}">
+          <i class="fas fa-file-excel text-success me-2"></i> Exportar a Excel
+        </a>
+        <div class="dropdown-divider"></div>
+        <a class="dropdown-item" href="{% url 'gestiondetareas' %}">
+          <i class="fas fa-tools text-info me-2"></i> Ir a Insumos/Maquinarias
+        </a>
+        <a class="dropdown-item" href="{% url 'gestion_jornadas' %}">
+          <i class="fas fa-clock text-info me-2"></i> Ir a Jornadas
+        </a>
+        <div class="dropdown-divider"></div>
+        <a class="dropdown-item" href="{% url 'gestiondetrabajadores' %}">
+          <i class="fas fa-eraser text-danger me-2"></i> Limpiar Filtro
+        </a>
       </div>
-        
-        <br>
-        &nbsp;
-        
-        
-      
-      
-      
-      </td>
-      <table class="table table-striped table-hover table-responsive" style="overflow-x: auto;">
-        <thead>
-          <tr>
-            <th>foto </th>
-            <th>NOMBRE </th>
-            <th>COBRO PROMEDIO</th>
-            <th>TRABAJO A REALIZAR</th>
-            <th>RUT</th>
-            <th>Tipo Contrato</th>
-            <th>Fecha Ingreso</th>
-            <th>Fecha Termino </th>
-
-            <th>CANTIDAD Compras Insumos/Maquinarias</th>
-            <th>CANTIDAD JORNADAS</th>
-            
-            <th>Creado Por</th>
-            <th>Opciones</th>
-            
-
-          </tr>
-        </thead>
-        <tbody>
-          {% for t in trabajador_page_obj %}
-          <tr>
-            <td>
-              {% if t.foto %}
-                  <img src="{{ t.foto.url }}" alt="Foto de {{ t.nombre }}" style="width: 100px; height: auto;">
-              {% else %}
-                  Sin foto
-              {% endif %}
-          </td>
-          
-          <td data-label="Nombre">
-            <i class="fas fa-user-check" style="color: #28a745; margin-right: 5px;"></i>
-            <strong style="color: #28a745;">{{ t.nombre }}</strong>
-        </td>
-            <td data-label="Cobro x hr" >${{ t.cobro|floatformat:"-2" }}</td>
-            <td data-label="Trabajo" >{{ t.trabajo_a_realizar }}</td>
-            <td data-label="Rut">{{ t.rut }}</td>
-            <td data-label="Tipo Contrato">{{ t.tipo_contraro }}</td>
-            <td data-label="Fecha Ingreso"> {{ t.fecha_ingreso }}</td>
-            <td data-label="Fecha fin Contrato">
-              {% if t.fecha_termino_contrato %}
-                  {{ t.fecha_termino_contrato }}
-              {% else %}
-                  Sin Fecha Termino
-              {% endif %}
-          </td>
-            
-            
-
-            <td data-label="Compras/Insumos">  {{ t.cantidad_tareas }}</td>
-            <td data-label="Jorndadas">{{ t.cantidad_jornada }}</td>
-            
-
-            
-            
-            
-            <td data-label="Creado por">{{ t.created_by }}</td>
-            <td>
-              <a href="{% url 'modificartrabajadores' t.id %}" class="btn btn-warning">Modificar</a>
-            </td>
-            <td>
-              <td>
-              <a href="#" onclick="eliminarTrabajador({{ t.id }})" class="btn btn-danger">Eliminar </a>
-              </td>
-            </td>
-            
-            
-            
-            
-            
-
-
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
     </div>
   </div>
-  <div class="d-flex justify-content-center" class="pagination ">
-    <span class="step-links">
-      {% if trabajador_page_obj.has_previous %}
-      <a href="{% my_url 1 'page' request.GET.urlencode %}">&laquo; Primera Página</a>
-      <a href="{% my_url trabajador_page_obj.previous_page_number 'page' request.GET.urlencode %}">Anterior</a>
-      {% endif %}
 
-      <span class="current">
-        Página {{ trabajador_page_obj.number }} de {{ trabajador_page_obj.paginator.num_pages }}.
-      </span>
-
-      {% if trabajador_page_obj.has_next %}
-      <a href="{% my_url trabajador_page_obj.next_page_number 'page' request.GET.urlencode %}">Siguiente</a>
-      <a href="{% my_url trabajador_page_obj.paginator.num_pages 'page' request.GET.urlencode %}">Última Página
-      </a>
-      {% endif %}
-    </span>
+  <!-- Modal de Filtros -->
+  <div class="modal fade" id="searchModal" tabindex="-1" aria-labelledby="searchModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content shadow-lg rounded-3">
+        <div class="modal-header bg-success text-white">
+          <h5 class="modal-title" id="searchModalLabel"><i class="fas fa-filter me-2"></i> Filtrar Trabajadores</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <form method="get">
+          <div class="modal-body">
+            {{ filtered_trabajador.form.as_p }}
+          </div>
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-success">
+              <i class="fas fa-search me-1"></i> Aplicar Filtro
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
 
+  <!-- Tabla de Trabajadores -->
+  <div class="card shadow-sm border-0 rounded-4">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-striped table-hover align-middle">
+          <thead class="table-light text-center">
+            <tr>
+              <th><i class="fas fa-image me-2"></i>Foto</th>
+              <th class="text-start"><i class="fas fa-user me-2"></i>Nombre</th>
+              <th class="text-end"><i class="fas fa-dollar-sign me-2"></i>Cobro Promedio</th>
+              <th class="text-start"><i class="fas fa-briefcase me-2"></i>Trabajo a Realizar</th>
+              <th><i class="fas fa-id-card me-2"></i>Rut</th>
+              <th><i class="fas fa-file-signature me-2"></i>Tipo Contrato</th>
+              <th><i class="fas fa-calendar-plus me-2"></i>Fecha Ingreso</th>
+              <th><i class="fas fa-calendar-times me-2"></i>Fecha Término</th>
+              <th class="text-end"><i class="fas fa-tools me-2"></i>Compras Insumos/Maq.</th>
+              <th class="text-end"><i class="fas fa-clock me-2"></i>Jornadas</th>
+              <th class="text-start"><i class="fas fa-user-tie me-2"></i>Creado Por</th>
+              <th class="text-center"><i class="fas fa-cogs me-2"></i>Opciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for t in trabajador_page_obj %}
+            <tr>
+              <td class="text-center" data-label="Foto">
+                {% if t.foto %}
+                  <img src="{{ t.foto.url }}" alt="Foto de {{ t.nombre }}" class="foto-trabajador">
+                {% else %}
+                  <span class="badge bg-secondary px-3 py-2">Sin foto</span>
+                {% endif %}
+              </td>
+              <td class="text-start" data-label="Nombre">
+                <i class="fas fa-user-check text-success me-1"></i>
+                <strong class="text-primary">{{ t.nombre }}</strong>
+              </td>
+              <td class="text-end" data-label="Cobro x hr">${{ t.cobro|floatformat:"-2" }}</td>
+              <td class="text-start" data-label="Trabajo">{{ t.trabajo_a_realizar }}</td>
+              <td class="text-center" data-label="Rut">{{ t.rut }}</td>
+              <td class="text-center" data-label="Tipo Contrato">
+                <span class="badge bg-info text-dark px-3 py-2">{{ t.tipo_contraro }}</span>
+              </td>
+              <td class="text-center" data-label="Fecha Ingreso">{{ t.fecha_ingreso|date:"d/m/Y" }}</td>
+              <td class="text-center" data-label="Fecha Término">
+                {% if t.fecha_termino_contrato %}
+                  {{ t.fecha_termino_contrato|date:"d/m/Y" }}
+                {% else %}
+                  <span class="badge bg-secondary px-3 py-2">Sin Fecha Término</span>
+                {% endif %}
+              </td>
+              <td class="text-end" data-label="Compras/Insumos">{{ t.cantidad_tareas }}</td>
+              <td class="text-end" data-label="Jornadas">{{ t.cantidad_jornada }}</td>
+              <td class="text-start" data-label="Creado por">{{ t.created_by }}</td>
+              <td class="text-center" data-label="Opciones">
+                <div class="d-flex justify-content-center gap-2">
+                  <a href="{% url 'modificartrabajadores' t.id %}" class="btn btn-warning btn-sm d-flex align-items-center" title="Modificar">
+                    <i class="fas fa-edit me-1"></i> <span class="d-none d-md-inline">Modificar</span>
+                  </a>
+                  <a href="#" onclick="eliminarTrabajador({{ t.id }})" class="btn btn-danger btn-sm d-flex align-items-center" title="Eliminar">
+                    <i class="fas fa-trash me-1"></i> <span class="d-none d-md-inline">Eliminar</span>
+                  </a>
+                </div>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="12" class="text-center py-4">
+                <i class="fas fa-exclamation-circle text-muted me-2"></i>
+                No se encontraron registros.
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 
+  <!-- Paginación -->
+  <div class="d-flex justify-content-center mt-4">
+    <nav>
+      <ul class="pagination pagination-rounded">
+        {% if trabajador_page_obj.has_previous %}
+        <li class="page-item">
+          <a class="page-link" href="{% my_url 1 'page' request.GET.urlencode %}">&laquo; Primera</a>
+        </li>
+        <li class="page-item">
+          <a class="page-link" href="{% my_url trabajador_page_obj.previous_page_number 'page' request.GET.urlencode %}">Anterior</a>
+        </li>
+        {% endif %}
+
+        <li class="page-item disabled">
+          <span class="page-link">
+            Página {{ trabajador_page_obj.number }} de {{ trabajador_page_obj.paginator.num_pages }}
+          </span>
+        </li>
+
+        {% if trabajador_page_obj.has_next %}
+        <li class="page-item">
+          <a class="page-link" href="{% my_url trabajador_page_obj.next_page_number 'page' request.GET.urlencode %}">Siguiente</a>
+        </li>
+        <li class="page-item">
+          <a class="page-link" href="{% my_url trabajador_page_obj.paginator.num_pages 'page' request.GET.urlencode %}">Última &raquo;</a>
+        </li>
+        {% endif %}
+      </ul>
+    </nav>
+  </div>
 
 </div>
+
 {% endblock %}
