@@ -1,181 +1,299 @@
 {% extends 'agrosmart/base.html' %}
 {% block contenido %}
+{% load static %}
 
 <!-- Plotly se carga UNA sola vez -->
 <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
 
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+
 <style>
-    .informes-page {
-        max-width: 980px;
-        margin: 0 auto;
-        padding: 24px 16px 60px;
-        font-family: 'Open Sans', sans-serif;
-    }
+  /* =========================================================
+     Mismo patrón visual que informes.html:
+     - Header con gradiente verde bosque + brand-mark ámbar
+     - Space Grotesk (títulos) / Inter (texto) / JetBrains Mono (mono)
+     - Tarjetas blancas con card-title + swatch de color
+     ========================================================= */
+  #informes-sensor {
+    --agro-forest: #163429;
+    --agro-forest-2: #1E4636;
+    --agro-moss: #2F5D45;
+    --agro-amber: #D9A441;
+    --agro-sky: #3E8FA6;
+    --agro-clay: #9C6B42;
+    --agro-bg: #F4F6F1;
+    --agro-card: #FFFFFF;
+    --agro-ink: #16211B;
+    --agro-ink-soft: #52605A;
+    --agro-line: #DFE5DA;
+    --radius: 14px;
+    font-family: 'Inter', system-ui, sans-serif;
+    color: var(--agro-ink);
+    background: var(--agro-bg);
+    padding: 0 0 3rem 0;
+  }
 
-    .informes-header {
-        margin-bottom: 20px;
-    }
-    .informes-header h3 {
-        font-family: 'Montserrat', 'Segoe UI', sans-serif;
-        color: #1F5E38;
-        font-weight: 700;
-        margin: 0 0 4px;
-        font-size: clamp(1.2rem, 4vw, 1.6rem);
-    }
-    .informes-header p {
-        color: #8B9686;
-        font-size: 0.9rem;
-        margin: 0;
-    }
+  #informes-sensor * { box-sizing: border-box; }
+  #informes-sensor .mono { font-family: 'JetBrains Mono', monospace; }
+  #informes-sensor .dash-container { max-width: 1280px; margin: 0 auto; padding: 0 1.25rem; }
 
-    .informes-tabs {
-        display: flex;
-        gap: 8px;
-        margin: 20px 0 24px;
-        border-bottom: 1px solid #E3E7DE;
-        overflow-x: auto;
-    }
-    .informes-tab {
-        background: transparent;
-        border: none;
-        padding: 10px 6px;
-        font-size: 0.9rem;
-        font-weight: 600;
-        color: #8B9686;
-        cursor: pointer;
-        border-bottom: 2px solid transparent;
-        white-space: nowrap;
-        transition: all 0.15s ease;
-    }
-    .informes-tab:hover { color: #2F7D4F; }
-    .informes-tab.activa {
-        color: #2F7D4F;
-        border-bottom-color: #2F7D4F;
-    }
+  /* ---------- Header / status band (idéntico a informes.html) ---------- */
+  #informes-sensor .station-header {
+    background: linear-gradient(135deg, var(--agro-forest) 0%, var(--agro-forest-2) 100%);
+    color: #EFF4EE;
+    padding: 1.75rem 1.5rem 1.5rem;
+    border-radius: 0 0 22px 22px;
+    margin-bottom: 1.75rem;
+    position: relative;
+    overflow: hidden;
+  }
+  #informes-sensor .station-header::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image:
+      radial-gradient(circle at 85% 20%, rgba(217,164,65,0.16) 0%, transparent 45%),
+      radial-gradient(circle at 10% 90%, rgba(62,143,166,0.14) 0%, transparent 40%);
+    pointer-events: none;
+  }
+  #informes-sensor .station-top {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: space-between;
+    align-items: flex-start;
+    position: relative;
+    z-index: 1;
+  }
+  #informes-sensor .brand { display: flex; align-items: center; gap: 0.7rem; }
+  #informes-sensor .brand-mark {
+    width: 42px; height: 42px;
+    border-radius: 11px;
+    background: rgba(217,164,65,0.16);
+    border: 1px solid rgba(217,164,65,0.4);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.3rem;
+    flex-shrink: 0;
+  }
+  #informes-sensor .brand-text h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600;
+    font-size: 1.4rem;
+    margin: 0;
+    letter-spacing: -0.01em;
+    color: #fff;
+  }
+  #informes-sensor .brand-text p {
+    margin: 0.15rem 0 0;
+    font-size: 0.82rem;
+    color: #B9C7BE;
+  }
+  #informes-sensor .station-chips { display: flex; flex-wrap: wrap; gap: 0.55rem; position: relative; z-index: 1; }
+  #informes-sensor .chip {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.12);
+    padding: 0.42rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    color: #DCE6DE;
+    white-space: nowrap;
+  }
+  #informes-sensor .chip strong {
+    font-family: 'JetBrains Mono', monospace;
+    color: #fff;
+    font-weight: 600;
+  }
+  #informes-sensor .live-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #6FCF97;
+    box-shadow: 0 0 0 rgba(111,207,151,0.5);
+    animation: pulse-dot 2.2s infinite;
+    flex-shrink: 0;
+  }
+  @keyframes pulse-dot {
+    0% { box-shadow: 0 0 0 0 rgba(111,207,151,0.55); }
+    70% { box-shadow: 0 0 0 7px rgba(111,207,151,0); }
+    100% { box-shadow: 0 0 0 0 rgba(111,207,151,0); }
+  }
 
-    .informe-card {
-        background: #fff;
-        border: 1px solid #E3E7DE;
-        border-radius: 14px;
-        margin-bottom: 20px;
-        overflow: hidden;
-        box-shadow: 0 1px 3px rgba(31, 94, 56, 0.06);
-        transition: box-shadow 0.15s ease;
-    }
-    .informe-card:hover {
-        box-shadow: 0 6px 18px rgba(47, 125, 79, 0.12);
-    }
+  /* ---------- Tabs (misma paleta que filter-bar / preset-btn de informes.html) ---------- */
+  #informes-sensor .informes-tabs {
+    display: flex;
+    gap: 8px;
+    margin: 0 0 1.25rem;
+    border-bottom: 1px solid var(--agro-line);
+    overflow-x: auto;
+  }
+  #informes-sensor .informes-tab {
+    background: transparent;
+    border: none;
+    padding: 10px 6px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--agro-ink-soft);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+    transition: all 0.15s ease;
+  }
+  #informes-sensor .informes-tab:hover { color: var(--agro-moss); }
+  #informes-sensor .informes-tab.activa {
+    color: var(--agro-moss);
+    border-bottom-color: var(--agro-moss);
+    font-weight: 600;
+  }
 
-    .informe-card-header {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 14px 18px;
-        border-bottom: 1px solid #E3E7DE;
-    }
-    .informe-icono {
-        flex-shrink: 0;
-        width: 36px;
-        height: 36px;
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #fff;
-        font-size: 0.95rem;
-    }
-    .informe-icono.aire { background: #4A90A4; }
-    .informe-icono.suelo { background: #8D6E4F; }
+  /* ---------- Tarjetas (idéntico a .card / .card-head / .card-title de informes.html) ---------- */
+  #informes-sensor .charts-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
 
-    .informe-titulo {
-        font-weight: 700;
-        color: #33402F;
-        font-size: 0.98rem;
-    }
-    .informe-subtitulo {
-        font-size: 0.78rem;
-        color: #8B9686;
-        text-transform: uppercase;
-        letter-spacing: 0.4px;
-    }
+  #informes-sensor .card {
+    background: var(--agro-card);
+    border: 1px solid var(--agro-line);
+    border-radius: var(--radius);
+    box-shadow: 0 1px 3px rgba(22,52,41,0.05);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  #informes-sensor .card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.95rem 1.1rem 0.8rem;
+    border-bottom: 1px solid var(--agro-line);
+  }
+  #informes-sensor .card-title {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--agro-ink);
+  }
+  #informes-sensor .card-title .card-subtitle {
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 0.72rem;
+    color: var(--agro-ink-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  #informes-sensor .swatch { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+  #informes-sensor .swatch.aire { background: var(--agro-sky); }
+  #informes-sensor .swatch.suelo { background: var(--agro-clay); }
 
-    .informe-card-body {
-        padding: 12px 10px 4px;
-    }
+  #informes-sensor .card-body { padding: 1rem 1.1rem 1.15rem; position: relative; }
 
-    .informes-vacio {
-        text-align: center;
-        padding: 60px 20px;
-        color: #8B9686;
-        background: #fff;
-        border: 1px dashed #E3E7DE;
-        border-radius: 14px;
-    }
-    .informes-vacio i {
-        font-size: 2.4rem;
-        color: #C7D0BE;
-        margin-bottom: 12px;
-        display: block;
-    }
+  /* ---------- Estado vacío ---------- */
+  #informes-sensor .empty-page-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--agro-ink-soft);
+    background: var(--agro-card);
+    border: 1px solid var(--agro-line);
+    border-radius: var(--radius);
+    box-shadow: 0 1px 3px rgba(22,52,41,0.05);
+  }
+  #informes-sensor .empty-page-state i {
+    font-size: 2.4rem;
+    color: var(--agro-line);
+    margin-bottom: 12px;
+    display: block;
+  }
 
-    @media (max-width: 576px) {
-        .informes-page { padding: 16px 10px 50px; }
-        .informe-card-header { padding: 12px 14px; }
-        .informe-icono { width: 30px; height: 30px; font-size: 0.85rem; }
-    }
+  /* ---------- Responsive ---------- */
+  @media (max-width: 560px) {
+    #informes-sensor .station-top { flex-direction: column; }
+    #informes-sensor .card-head { padding: 0.8rem 0.9rem; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    #informes-sensor .live-dot { animation: none; }
+  }
 </style>
 
-<div class="informes-page">
-    <div class="informes-header">
-        <h3><i class="fa-solid fa-chart-line"></i> Informes por Sensor</h3>
-        <p>Promedios por hora de temperatura y humedad registrados por tus sensores.</p>
+<div id="informes-sensor">
+
+  <!-- ================= Header (idéntico patrón a informes.html) ================= -->
+  <header class="station-header">
+    <div class="dash-container">
+      <div class="station-top">
+        <div class="brand">
+          <div class="brand-mark"><i class="fa-solid fa-chart-line"></i></div>
+          <div class="brand-text">
+            <h1>Informes por Sensor</h1>
+
+          </div>
+        </div>
+
+        {% if charts %}
+        <div class="station-chips">
+          <div class="chip"><span class="live-dot"></span> <strong>{{ charts|length }}</strong> sensores con datos</div>
+        </div>
+        {% endif %}
+      </div>
     </div>
+  </header>
+
+  <div class="dash-container">
 
     {% if charts %}
-    <div class="informes-tabs">
-        <button class="informes-tab activa" data-filtro="todos">Todos</button>
-        <button class="informes-tab" data-filtro="aire"><i class="fa-solid fa-wind"></i> Aire</button>
-        <button class="informes-tab" data-filtro="suelo"><i class="fa-solid fa-seedling"></i> Suelo</button>
+    <!-- ================= Tabs ================= -->
+    <div class="informes-tabs" id="tiposTabs">
+      <button class="informes-tab activa" data-filtro="todos">Todos</button>
+      <button class="informes-tab" data-filtro="aire"><i class="fa-solid fa-wind"></i> Aire</button>
+      <button class="informes-tab" data-filtro="suelo"><i class="fa-solid fa-seedling"></i> Suelo</button>
     </div>
 
-    {% for chart in charts %}
-    <div class="informe-card" data-tipo="{{ chart.tipo }}">
-        <div class="informe-card-header">
-            <div class="informe-icono {{ chart.tipo }}">
-                {% if chart.tipo == 'aire' %}
-                    <i class="fa-solid fa-wind"></i>
-                {% else %}
-                    <i class="fa-solid fa-seedling"></i>
-                {% endif %}
-            </div>
-            <div>
-                <div class="informe-titulo">{{ chart.nombre }}</div>
-                <div class="informe-subtitulo">Sensor de {{ chart.tipo }}</div>
-            </div>
+    <!-- ================= Gráficos por sensor ================= -->
+    <div class="charts-stack">
+      {% for chart in charts %}
+      <div class="card" data-tipo="{{ chart.tipo }}">
+        <div class="card-head">
+          <div class="card-title">
+            <span class="swatch {{ chart.tipo }}"></span>
+            {{ chart.nombre }}
+            <span class="card-subtitle">Sensor de {{ chart.tipo }}</span>
+          </div>
         </div>
-        <div class="informe-card-body">
-            {{ chart.html|safe }}
+        <div class="card-body">
+          {{ chart.html|safe }}
         </div>
+      </div>
+      {% endfor %}
     </div>
-    {% endfor %}
 
     {% else %}
-    <div class="informes-vacio">
+    <div class="empty-page-state">
         <i class="fa-solid fa-chart-simple"></i>
         Aún no tienes datos suficientes para generar informes.<br>
         Cuando tus sensores registren información, verás los gráficos aquí.
     </div>
     {% endif %}
+
+  </div>
 </div>
 
 <script>
-    document.querySelectorAll('.informes-tab').forEach(function (tab) {
+    document.querySelectorAll('#informes-sensor .informes-tab').forEach(function (tab) {
         tab.addEventListener('click', function () {
-            document.querySelectorAll('.informes-tab').forEach(t => t.classList.remove('activa'));
+            document.querySelectorAll('#informes-sensor .informes-tab').forEach(t => t.classList.remove('activa'));
             tab.classList.add('activa');
 
             const filtro = tab.dataset.filtro;
-            document.querySelectorAll('.informe-card').forEach(function (card) {
+            document.querySelectorAll('#informes-sensor .charts-stack .card').forEach(function (card) {
                 if (filtro === 'todos' || card.dataset.tipo === filtro) {
                     card.style.display = '';
                 } else {
@@ -184,7 +302,7 @@
             });
 
             // Forzar a Plotly a recalcular tamaño de los gráficos visibles
-            document.querySelectorAll('.informe-card[style=""] .js-plotly-plot, .informe-card:not([style]) .js-plotly-plot').forEach(function (gd) {
+            document.querySelectorAll('#informes-sensor .card[style=""] .js-plotly-plot, #informes-sensor .card:not([style]) .js-plotly-plot').forEach(function (gd) {
                 if (window.Plotly) Plotly.Plots.resize(gd);
             });
         });

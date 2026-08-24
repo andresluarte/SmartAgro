@@ -2,6 +2,17 @@
 {% load crispy_forms_tags %}
 {% block contenido %}
 <style>
+    /* Reset de box model: sin esto, elementos con padding (como
+       .location-section, .metric-card, .section-block) suman su padding
+       POR FUERA del ancho del contenedor y se desbordan visualmente de
+       la tarjeta padre (ver bug del box "Ubicación Sensor"). */
+    .air-sensor-dashboard,
+    .air-sensor-dashboard *,
+    .air-sensor-dashboard *::before,
+    .air-sensor-dashboard *::after {
+        box-sizing: border-box;
+    }
+
     .air-sensor-dashboard {
         padding: 1.25rem 0.5rem 2rem;
         background: #f8f9fa;
@@ -76,7 +87,7 @@
     /* ===== Grid principal: tarjetas por fila (aprovecha ancho completo) ===== */
     .sensor-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(560px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(460px, 1fr));
         gap: 1.1rem;
         max-width: 1800px;
         margin: 0 auto;
@@ -244,25 +255,22 @@
 
     @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 
-    /* ===== Cuerpo de la tarjeta AIRE: 3 columnas (datos | dispositivo | gráfico) ===== */
+    /* ===== Cuerpo de la tarjeta: 2 columnas (datos | dispositivo) =====
+       NOTA: antes se reservaba una 3ra columna para un gráfico que ya
+       no existe en el HTML; eso dejaba ~35% de espacio vacío a la
+       derecha de cada tarjeta. Ahora el cuerpo usa sólo 2 columnas
+       reales y se reparte el ancho completo de la tarjeta. */
     .card-body {
         display: grid;
-        grid-template-columns: 0.95fr 1fr 1.15fr;
+        grid-template-columns: 1fr 1fr;
         gap: 0.85rem;
         align-items: stretch;
     }
 
-    .card-body-left, .card-body-middle, .card-body-right { min-width: 0; }
-    .card-body-right { display: flex; flex-direction: column; }
+    .card-body-left, .card-body-middle { min-width: 0; }
 
-    @media (max-width: 1250px) {
-        .card-body { grid-template-columns: 1fr 1fr; }
-        .card-body-right { grid-column: span 2; }
-    }
-
-    @media (max-width: 700px) {
+    @media (max-width: 620px) {
         .card-body { grid-template-columns: 1fr; }
-        .card-body-right { grid-column: span 1; }
     }
 
     /* Métricas apiladas dentro de cada columna (no en grid 2x2, para columnas angostas) */
@@ -305,6 +313,10 @@
 
     .metric-value { font-size: 1.15rem; font-weight: 700; color: #1e293b; line-height: 1.1; }
 
+    /* Valor vacío / sin dato: en vez de dejar "34%" a medias o "%" solo,
+       se muestra en gris itálica para que sea evidente que falta el dato */
+    .metric-value.no-value { color: #94a3b8; font-weight: 600; font-style: italic; font-size: 0.85rem; }
+
     .metric-status {
         display: inline-block;
         margin-top: 0.25rem;
@@ -317,6 +329,7 @@
     .status-optimal { background: #d1fae5; color: #065f46; }
     .status-warning { background: #fef3c7; color: #92400e; }
     .status-critical { background: #fee2e2; color: #991b1b; }
+    .status-unknown { background: #f1f5f9; color: #94a3b8; }
 
     /* Señal dentro de metric-card horizontal */
     .signal-bars {
@@ -352,7 +365,7 @@
     .network-3g { background: #dbeafe; color: #1e40af; }
     .network-4g { background: #d1fae5; color: #065f46; }
     .network-5g { background: #ede9fe; color: #5b21b6; }
-    .network-unknown { background: #f1f5f9; color: #94a3b8; }
+    .network-unknown, .network-sin_datos { background: #f1f5f9; color: #94a3b8; }
 
     .carrier-name { color: #64748b; font-size: 0.68rem; font-weight: 600; margin-top: 0.15rem; }
     .battery-icon { font-size: 1.4rem; line-height: 1; flex-shrink: 0; }
@@ -390,19 +403,6 @@
     }
 
     .map-button:hover { transform: translateY(-1px); box-shadow: 0 4px 10px rgba(59, 130, 246, 0.4); color: white; }
-
-    /* ===== Chart ===== */
-    .chart-container {
-        background: #f8fafc;
-        border-radius: 12px;
-        padding: 0.75rem 0.85rem;
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-    }
-
-    .chart-title { font-size: 0.8rem; font-weight: 600; color: #1e293b; margin-bottom: 0.4rem; display: flex; align-items: center; gap: 0.4rem; }
-    .chart-canvas { position: relative; width: 100%; height: 100%; min-height: 190px; flex: 1; }
 
     .timestamp {
         text-align: center;
@@ -463,6 +463,11 @@
         color: #1e293b;
         cursor: pointer;
         transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        /* Aparecía como un input de texto plano en algunos navegadores porque
+           faltaba forzar el "appearance" nativo de <select>. Se agrega una
+           flecha visible para que quede claro que es un desplegable. */
+        appearance: auto;
+        -webkit-appearance: menulist;
     }
 
     .sector-assign-form .form-select:focus {
@@ -556,6 +561,7 @@
                                     <div class="metric-icon">🌡️</div>
                                     <div class="metric-info">
                                         <div class="metric-label">Temperatura</div>
+                                        {% if data.latest_data.temperature != None %}
                                         <div class="metric-value" id="temperature-{{ data.sensor_id }}">{{ data.latest_data.temperature }}°C</div>
                                         <span class="metric-status
                                             {% if data.latest_data.temperature >= 18 and data.latest_data.temperature <= 26 %}
@@ -573,6 +579,10 @@
                                                 Alerta
                                             {% endif %}
                                         </span>
+                                        {% else %}
+                                        <div class="metric-value no-value" id="temperature-{{ data.sensor_id }}">Sin dato</div>
+                                        <span class="metric-status status-unknown" id="temp-status-{{ data.sensor_id }}">--</span>
+                                        {% endif %}
                                     </div>
                                 </div>
 
@@ -580,6 +590,7 @@
                                     <div class="metric-icon">💧</div>
                                     <div class="metric-info">
                                         <div class="metric-label">Humedad</div>
+                                        {% if data.latest_data.humidity != None %}
                                         <div class="metric-value" id="humidity-{{ data.sensor_id }}">{{ data.latest_data.humidity }}%</div>
                                         <span class="metric-status
                                             {% if data.latest_data.humidity >= 40 and data.latest_data.humidity <= 60 %}
@@ -597,6 +608,10 @@
                                                 Crítico
                                             {% endif %}
                                         </span>
+                                        {% else %}
+                                        <div class="metric-value no-value" id="humidity-{{ data.sensor_id }}">Sin dato</div>
+                                        <span class="metric-status status-unknown" id="humidity-status-{{ data.sensor_id }}">--</span>
+                                        {% endif %}
                                     </div>
                                 </div>
                             </div>
@@ -610,10 +625,11 @@
                             <div class="metrics-stack">
                                 <div class="metric-card">
                                     <div class="battery-icon" id="battery-icon-{{ data.sensor_id }}">
-                                        {% if data.latest_data.battery >= 60 %}🔋{% elif data.latest_data.battery >= 20 %}🪫{% else %}🪫{% endif %}
+                                        {% if data.latest_data.battery >= 60 %}🔋{% elif data.latest_data.battery >= 20 %}🪫{% elif data.latest_data.battery != None %}🪫{% else %}❔{% endif %}
                                     </div>
                                     <div class="metric-info">
                                         <div class="metric-label">Batería</div>
+                                        {% if data.latest_data.battery != None %}
                                         <div class="metric-value" id="battery-{{ data.sensor_id }}">{{ data.latest_data.battery }}%</div>
                                         <span class="metric-status
                                             {% if data.latest_data.battery >= 60 %}
@@ -631,6 +647,10 @@
                                                 Crítica
                                             {% endif %}
                                         </span>
+                                        {% else %}
+                                        <div class="metric-value no-value" id="battery-{{ data.sensor_id }}">Sin dato</div>
+                                        <span class="metric-status status-unknown" id="battery-status-{{ data.sensor_id }}">--</span>
+                                        {% endif %}
                                     </div>
                                 </div>
 
@@ -648,7 +668,7 @@
                                     </div>
                                     <div class="metric-info">
                                         <div class="metric-label">Señal</div>
-                                        <span class="network-type-badge network-{{ data.latest_data.network_type|default:"unknown"|lower }}" id="network-type-{{ data.sensor_id }}">
+                                        <span class="network-type-badge network-{{ data.latest_data.network_type|default:"sin_datos"|lower }}" id="network-type-{{ data.sensor_id }}">
                                             {{ data.latest_data.network_type|default:"Sin datos" }}
                                         </span>
                                         <div class="carrier-name" id="carrier-{{ data.sensor_id }}">
@@ -674,9 +694,6 @@
                             </div>
                         </div>
                     </div>
-
-                    <!-- ===== COLUMNA 3: Gráfico ===== -->
-
                 </div>
 
                 <!-- ===== Asignar Sector (fila completa al pie de la tarjeta) ===== -->
@@ -739,6 +756,7 @@
                                     <div class="metric-icon">🌡️</div>
                                     <div class="metric-info">
                                         <div class="metric-label">Temp. Suelo</div>
+                                        {% if data.latest_data.temperature != None %}
                                         <div class="metric-value" id="soil-temperature-{{ data.sensor_id }}">{{ data.latest_data.temperature }}°C</div>
                                         <span class="metric-status
                                             {% if data.latest_data.temperature >= 15 and data.latest_data.temperature <= 25 %}
@@ -756,6 +774,10 @@
                                                 Alerta
                                             {% endif %}
                                         </span>
+                                        {% else %}
+                                        <div class="metric-value no-value" id="soil-temperature-{{ data.sensor_id }}">Sin dato</div>
+                                        <span class="metric-status status-unknown" id="soil-temp-status-{{ data.sensor_id }}">--</span>
+                                        {% endif %}
                                     </div>
                                 </div>
 
@@ -763,6 +785,7 @@
                                     <div class="metric-icon">💧</div>
                                     <div class="metric-info">
                                         <div class="metric-label">Humedad Suelo</div>
+                                        {% if data.latest_data.humiditysoil != None %}
                                         <div class="metric-value" id="soil-humidity-{{ data.sensor_id }}">{{ data.latest_data.humiditysoil }}%</div>
                                         <span class="metric-status
                                             {% if data.latest_data.humiditysoil >= 30 and data.latest_data.humiditysoil <= 60 %}
@@ -780,16 +803,77 @@
                                                 Crítico
                                             {% endif %}
                                         </span>
+                                        {% else %}
+                                        <div class="metric-value no-value" id="soil-humidity-{{ data.sensor_id }}">Sin dato</div>
+                                        <span class="metric-status status-unknown" id="soil-humidity-status-{{ data.sensor_id }}">--</span>
+                                        {% endif %}
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- ===== COLUMNA 2: Estado del Dispositivo ===== -->
+                    <!-- ===== COLUMNA 2: Estado del Dispositivo (Batería + Señal, sin ubicación) ===== -->
+                    <div class="card-body-middle">
+                        <div class="section-block device-status-section">
+                            <div class="section-title">🔧 Estado del Dispositivo</div>
+                            <div class="metrics-stack">
+                                <div class="metric-card">
+                                    <div class="battery-icon" id="soil-battery-icon-{{ data.sensor_id }}">
+                                        {% if data.latest_data.battery >= 60 %}🔋{% elif data.latest_data.battery >= 20 %}🪫{% elif data.latest_data.battery != None %}🪫{% else %}❔{% endif %}
+                                    </div>
+                                    <div class="metric-info">
+                                        <div class="metric-label">Batería</div>
+                                        {% if data.latest_data.battery != None %}
+                                        <div class="metric-value" id="soil-battery-{{ data.sensor_id }}">{{ data.latest_data.battery }}%</div>
+                                        <span class="metric-status
+                                            {% if data.latest_data.battery >= 60 %}
+                                                status-optimal
+                                            {% elif data.latest_data.battery >= 20 %}
+                                                status-warning
+                                            {% else %}
+                                                status-critical
+                                            {% endif %}" id="soil-battery-status-{{ data.sensor_id }}">
+                                            {% if data.latest_data.battery >= 60 %}
+                                                Óptimo
+                                            {% elif data.latest_data.battery >= 20 %}
+                                                Baja
+                                            {% else %}
+                                                Crítica
+                                            {% endif %}
+                                        </span>
+                                        {% else %}
+                                        <div class="metric-value no-value" id="soil-battery-{{ data.sensor_id }}">Sin dato</div>
+                                        <span class="metric-status status-unknown" id="soil-battery-status-{{ data.sensor_id }}">--</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
 
-                    <!-- ===== COLUMNA 3: Gráfico ===== -->
-
+                                <div class="metric-card">
+                                    <div class="signal-bars
+                                        {% if data.latest_data.signal_strength >= 75 %}signal-strong
+                                        {% elif data.latest_data.signal_strength >= 40 %}signal-medium
+                                        {% elif data.latest_data.signal_strength > 0 %}signal-weak
+                                        {% else %}signal-none
+                                        {% endif %}" id="soil-signal-bars-{{ data.sensor_id }}">
+                                        <span class="bar {% if data.latest_data.signal_strength >= 1 %}active{% endif %}"></span>
+                                        <span class="bar {% if data.latest_data.signal_strength >= 25 %}active{% endif %}"></span>
+                                        <span class="bar {% if data.latest_data.signal_strength >= 50 %}active{% endif %}"></span>
+                                        <span class="bar {% if data.latest_data.signal_strength >= 75 %}active{% endif %}"></span>
+                                    </div>
+                                    <div class="metric-info">
+                                        <div class="metric-label">Señal</div>
+                                        <span class="network-type-badge network-{{ data.latest_data.network_type|default:"sin_datos"|lower }}" id="soil-network-type-{{ data.sensor_id }}">
+                                            {{ data.latest_data.network_type|default:"Sin datos" }}
+                                        </span>
+                                        <div class="carrier-name" id="soil-carrier-{{ data.sensor_id }}">
+                                            {{ data.latest_data.carrier|default:"Operador desc." }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- ===== Asignar Sector (fila completa al pie de la tarjeta) ===== -->
@@ -820,136 +904,6 @@
     </div>
 </div>
 
-<!-- Cargar Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<!-- Inicializar gráficos -->
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    {% for data in sensor_data %}
-    const ctx{{ data.sensor_id }} = document.getElementById('sensor-aire-chart-{{ data.sensor_id }}');
-    if (ctx{{ data.sensor_id }}) {
-        window["chart_aire_{{ data.sensor_id }}"] = new Chart(ctx{{ data.sensor_id }}.getContext('2d'), {
-            type: 'bar',
-            data: {
-                labels: ['Temp (°C)', 'Humedad (%)', 'Batería (%)', 'Señal (%)'],
-                datasets: [{
-                    label: 'Valores Actuales',
-                    data: [
-                        Number({{ data.latest_data.temperature|default:0 }}),
-                        Number({{ data.latest_data.humidity|default:0 }}),
-                        Number({{ data.latest_data.battery|default:0 }}),
-                        Number({{ data.latest_data.signal_strength|default:0 }})
-                    ],
-                    backgroundColor: [
-                        'rgba(239, 68, 68, 0.8)',
-                        'rgba(59, 130, 246, 0.8)',
-                        'rgba(16, 185, 129, 0.8)',
-                        'rgba(168, 85, 247, 0.8)'
-                    ],
-                    borderColor: [
-                        'rgba(239, 68, 68, 1)',
-                        'rgba(59, 130, 246, 1)',
-                        'rgba(16, 185, 129, 1)',
-                        'rgba(168, 85, 247, 1)'
-                    ],
-                    borderWidth: 2,
-                    borderRadius: 6
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        max: 100,
-                        ticks: { font: { size: 10, weight: '600' }, color: '#64748b' },
-                        grid: { color: 'rgba(203, 213, 225, 0.3)' }
-                    },
-                    x: {
-                        ticks: { font: { size: 10, weight: '600' }, color: '#64748b' },
-                        grid: { display: false }
-                    }
-                },
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        backgroundColor: 'rgba(15, 23, 42, 0.9)',
-                        padding: 8,
-                        titleFont: { size: 11, weight: 'bold' },
-                        bodyFont: { size: 10 },
-                        cornerRadius: 6
-                    }
-                }
-            }
-        });
-    }
-    {% endfor %}
-
-    {% for data in sensor_data_soil %}
-    const ctxSuelo{{ data.sensor_id }} = document.getElementById('sensor-suelo-chart-{{ data.sensor_id }}');
-    if (ctxSuelo{{ data.sensor_id }}) {
-        window["chart_suelo_{{ data.sensor_id }}"] = new Chart(ctxSuelo{{ data.sensor_id }}.getContext('2d'), {
-            type: 'bar',
-            data: {
-                labels: ['Temp (°C)', 'Hum. Suelo (%)', 'Batería (%)', 'Señal (%)'],
-                datasets: [{
-                    label: 'Valores Actuales',
-                    data: [
-                        Number({{ data.latest_data.temperature|default:0 }}),
-                        Number({{ data.latest_data.humiditysoil|default:0 }}),
-                        0,
-                        0
-                    ],
-                    backgroundColor: [
-                        'rgba(245, 158, 11, 0.8)',
-                        'rgba(59, 130, 246, 0.8)',
-                        'rgba(16, 185, 129, 0.8)',
-                        'rgba(168, 85, 247, 0.8)'
-                    ],
-                    borderColor: [
-                        'rgba(245, 158, 11, 1)',
-                        'rgba(59, 130, 246, 1)',
-                        'rgba(16, 185, 129, 1)',
-                        'rgba(168, 85, 247, 1)'
-                    ],
-                    borderWidth: 2,
-                    borderRadius: 6
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        max: 100,
-                        ticks: { font: { size: 10, weight: '600' }, color: '#64748b' },
-                        grid: { color: 'rgba(203, 213, 225, 0.3)' }
-                    },
-                    x: {
-                        ticks: { font: { size: 10, weight: '600' }, color: '#64748b' },
-                        grid: { display: false }
-                    }
-                },
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        backgroundColor: 'rgba(15, 23, 42, 0.9)',
-                        padding: 8,
-                        titleFont: { size: 11, weight: 'bold' },
-                        bodyFont: { size: 10 },
-                        cornerRadius: 6
-                    }
-                }
-            }
-        });
-    }
-    {% endfor %}
-});
-</script>
-
 <!-- Polling: Sensores de Aire y Suelo (mismo endpoint genérico /api/device-status/<tipo>/<id>/) -->
 <script>
     document.addEventListener('DOMContentLoaded', function () {
@@ -969,9 +923,16 @@ document.addEventListener('DOMContentLoaded', function () {
         function applyStatus(elId, statusResult) {
             const el = document.getElementById(elId);
             if (!el) return;
-            el.classList.remove('status-optimal', 'status-warning', 'status-critical');
+            el.classList.remove('status-optimal', 'status-warning', 'status-critical', 'status-unknown');
             el.classList.add(statusResult.cls);
             el.innerText = statusResult.label;
+        }
+
+        function setMetricValue(elId, text, hasValue) {
+            const el = document.getElementById(elId);
+            if (!el) return;
+            el.innerText = text;
+            el.classList.toggle('no-value', !hasValue);
         }
 
         function updateSignalBars(containerId, strength) {
@@ -990,7 +951,7 @@ document.addEventListener('DOMContentLoaded', function () {
         function updateNetworkBadge(elId, networkType) {
             const el = document.getElementById(elId);
             if (!el || !networkType) return;
-            el.classList.remove('network-2g', 'network-3g', 'network-4g', 'network-5g', 'network-unknown');
+            el.classList.remove('network-2g', 'network-3g', 'network-4g', 'network-5g', 'network-unknown', 'network-sin_datos');
             el.classList.add(`network-${String(networkType).toLowerCase()}`);
             el.innerText = networkType;
         }
@@ -999,19 +960,20 @@ document.addEventListener('DOMContentLoaded', function () {
         function aplicarDatosAire(data) {
             const sensorId = data.sensor_id;
 
-            const humidityEl = document.getElementById(`humidity-${sensorId}`);
-            const temperatureEl = document.getElementById(`temperature-${sensorId}`);
-            const batteryEl = document.getElementById(`battery-${sensorId}`);
             const batteryIconEl = document.getElementById(`battery-icon-${sensorId}`);
             const carrierEl = document.getElementById(`carrier-${sensorId}`);
             const timestampEl = document.getElementById(`timestamp-${sensorId}`);
             const mapLinkEl = document.getElementById(`mapLink-${sensorId}`);
 
-            if (humidityEl && data.humidity !== undefined) humidityEl.innerText = `${data.humidity}%`;
-            if (temperatureEl && data.temperature !== undefined) temperatureEl.innerText = `${data.temperature}°C`;
-            if (batteryEl && data.battery !== undefined) batteryEl.innerText = `${data.battery}%`;
-            if (batteryIconEl && data.battery !== undefined) {
-                batteryIconEl.innerText = Number(data.battery) >= 60 ? '🔋' : '🪫';
+            if (data.humidity !== undefined && data.humidity !== null) {
+                setMetricValue(`humidity-${sensorId}`, `${data.humidity}%`, true);
+            }
+            if (data.temperature !== undefined && data.temperature !== null) {
+                setMetricValue(`temperature-${sensorId}`, `${data.temperature}°C`, true);
+            }
+            if (data.battery !== undefined && data.battery !== null) {
+                setMetricValue(`battery-${sensorId}`, `${data.battery}%`, true);
+                if (batteryIconEl) batteryIconEl.innerText = Number(data.battery) >= 60 ? '🔋' : '🪫';
             }
             if (carrierEl && data.operator) carrierEl.innerText = data.operator;
             if (timestampEl && data.timestamp) timestampEl.innerText = `🕐 ${data.timestamp}`;
@@ -1019,7 +981,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 mapLinkEl.href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(data.latitude)},${encodeURIComponent(data.longitude)}`;
             }
 
-            if (data.temperature !== undefined) {
+            if (data.temperature !== undefined && data.temperature !== null) {
                 const tempStatus = statusFor(data.temperature, {
                     optimal: [18, 26], optimalLabel: 'Óptimo',
                     warning: [15, 30], warningLabel: 'Aceptable',
@@ -1028,7 +990,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 applyStatus(`temp-status-${sensorId}`, tempStatus);
             }
 
-            if (data.humidity !== undefined) {
+            if (data.humidity !== undefined && data.humidity !== null) {
                 const humStatus = statusFor(data.humidity, {
                     optimal: [40, 60], optimalLabel: 'Óptimo',
                     warning: [30, 70], warningLabel: 'Moderado',
@@ -1037,7 +999,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 applyStatus(`humidity-status-${sensorId}`, humStatus);
             }
 
-            if (data.battery !== undefined) {
+            if (data.battery !== undefined && data.battery !== null) {
                 const battStatus = statusFor(data.battery, {
                     optimal: [60, 100], optimalLabel: 'Óptimo',
                     warning: [20, 59], warningLabel: 'Baja',
@@ -1046,25 +1008,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 applyStatus(`battery-status-${sensorId}`, battStatus);
             }
 
-            let signalPct;
-            if (data.signal_rssi !== undefined) {
-                signalPct = Math.round((Number(data.signal_rssi) / 31) * 100);
+            if (data.signal_rssi !== undefined && data.signal_rssi !== null) {
+                const signalPct = Math.round((Number(data.signal_rssi) / 31) * 100);
                 updateSignalBars(`signal-bars-${sensorId}`, signalPct);
             }
 
             if (data.network_type) {
                 updateNetworkBadge(`network-type-${sensorId}`, data.network_type);
-            }
-
-            const chart = window["chart_aire_" + sensorId];
-            if (chart) {
-                chart.data.datasets[0].data = [
-                    Number(data.temperature ?? chart.data.datasets[0].data[0]),
-                    Number(data.humidity ?? chart.data.datasets[0].data[1]),
-                    Number(data.battery ?? chart.data.datasets[0].data[2]),
-                    Number(signalPct !== undefined ? signalPct : chart.data.datasets[0].data[3])
-                ];
-                chart.update();
             }
         }
 
@@ -1083,23 +1033,24 @@ document.addEventListener('DOMContentLoaded', function () {
         function aplicarDatosSuelo(data) {
             const sensorId = data.sensor_id;
 
-            const humidityEl = document.getElementById(`soil-humidity-${sensorId}`);
-            const temperatureEl = document.getElementById(`soil-temperature-${sensorId}`);
-            const batteryEl = document.getElementById(`soil-battery-${sensorId}`);
-            const batteryIconEl = document.getElementById(`soil-battery-icon-${sensorId}`);
             const carrierEl = document.getElementById(`soil-carrier-${sensorId}`);
             const timestampEl = document.getElementById(`soil-timestamp-${sensorId}`);
+            const batteryIconEl = document.getElementById(`soil-battery-icon-${sensorId}`);
 
-            if (humidityEl && data.humiditysoil !== undefined) humidityEl.innerText = `${data.humiditysoil}%`;
-            if (temperatureEl && data.temperature !== undefined) temperatureEl.innerText = `${data.temperature}°C`;
-            if (batteryEl && data.battery !== undefined) batteryEl.innerText = `${data.battery}%`;
-            if (batteryIconEl && data.battery !== undefined) {
-                batteryIconEl.innerText = Number(data.battery) >= 60 ? '🔋' : '🪫';
+            if (data.humiditysoil !== undefined && data.humiditysoil !== null) {
+                setMetricValue(`soil-humidity-${sensorId}`, `${data.humiditysoil}%`, true);
+            }
+            if (data.temperature !== undefined && data.temperature !== null) {
+                setMetricValue(`soil-temperature-${sensorId}`, `${data.temperature}°C`, true);
+            }
+            if (data.battery !== undefined && data.battery !== null) {
+                setMetricValue(`soil-battery-${sensorId}`, `${data.battery}%`, true);
+                if (batteryIconEl) batteryIconEl.innerText = Number(data.battery) >= 60 ? '🔋' : '🪫';
             }
             if (carrierEl && data.operator) carrierEl.innerText = data.operator;
             if (timestampEl && data.timestamp) timestampEl.innerText = `🕐 ${data.timestamp}`;
 
-            if (data.temperature !== undefined) {
+            if (data.temperature !== undefined && data.temperature !== null) {
                 const tempStatus = statusFor(data.temperature, {
                     optimal: [15, 25], optimalLabel: 'Óptimo',
                     warning: [10, 30], warningLabel: 'Aceptable',
@@ -1108,7 +1059,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 applyStatus(`soil-temp-status-${sensorId}`, tempStatus);
             }
 
-            if (data.humiditysoil !== undefined) {
+            if (data.humiditysoil !== undefined && data.humiditysoil !== null) {
                 const humStatus = statusFor(data.humiditysoil, {
                     optimal: [30, 60], optimalLabel: 'Óptimo',
                     warning: [20, 75], warningLabel: 'Moderado',
@@ -1117,7 +1068,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 applyStatus(`soil-humidity-status-${sensorId}`, humStatus);
             }
 
-            if (data.battery !== undefined) {
+            if (data.battery !== undefined && data.battery !== null) {
                 const battStatus = statusFor(data.battery, {
                     optimal: [60, 100], optimalLabel: 'Óptimo',
                     warning: [20, 59], warningLabel: 'Baja',
@@ -1126,25 +1077,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 applyStatus(`soil-battery-status-${sensorId}`, battStatus);
             }
 
-            let signalPct;
-            if (data.signal_rssi !== undefined) {
-                signalPct = Math.round((Number(data.signal_rssi) / 31) * 100);
+            if (data.signal_rssi !== undefined && data.signal_rssi !== null) {
+                const signalPct = Math.round((Number(data.signal_rssi) / 31) * 100);
                 updateSignalBars(`soil-signal-bars-${sensorId}`, signalPct);
             }
 
             if (data.network_type) {
                 updateNetworkBadge(`soil-network-type-${sensorId}`, data.network_type);
-            }
-
-            const chart = window["chart_suelo_" + sensorId];
-            if (chart) {
-                chart.data.datasets[0].data = [
-                    Number(data.temperature ?? chart.data.datasets[0].data[0]),
-                    Number(data.humiditysoil ?? chart.data.datasets[0].data[1]),
-                    Number(data.battery ?? chart.data.datasets[0].data[2]),
-                    Number(signalPct !== undefined ? signalPct : chart.data.datasets[0].data[3])
-                ];
-                chart.update();
             }
         }
 
