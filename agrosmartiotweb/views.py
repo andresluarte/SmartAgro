@@ -1964,6 +1964,26 @@ def cosechas_list(request):
     cosechas = Cosecha.objects.filter(user=request.user)  # Filtra por usuario actual
     return render(request, 'agrosmart/cosecha/gestion_cosecha.html', {'cosechas': cosechas})
 
+@login_required
+def modificar_cosecha(request, cosecha_id):
+    cosecha = get_object_or_404(Cosecha, pk=cosecha_id, user=request.user)  # Asegúrate de que el usuario sea el propietario
+    
+    if request.method == 'POST':
+        form = CosechaForm(request.POST, instance=cosecha, user=request.user)
+        if form.is_valid():
+            form.save()
+            return redirect('cosechas_list')  # Redirige a la lista de cosechas
+    else:
+        form = CosechaForm(instance=cosecha, user=request.user)
+
+    return render(request, 'agrosmart/cosecha/modificar_cosecha.html', {'form': form})
+
+@login_required
+def eliminar_cosecha(request, cosecha_id):
+    cosecha = get_object_or_404(Cosecha, pk=cosecha_id, user=request.user)  # Asegúrate de que el usuario sea el propietario
+    cosecha.delete()
+    return redirect('cosechas_list')  # Redirige a la lista de cosechas
+
 
 
 # agrosmartiotweb/views.py

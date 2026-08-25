@@ -67,32 +67,44 @@
 <h3>Lista de Colaboradores</h3>
 {% endif %}
 {% endif %}
-<div class="btn-group justify-content-end">
+<div class="btn-group">
     <button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-        Opciones
+        <i class="fa-solid fa-gear"></i> Opciones
     </button>
-    <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
-        <a href="{% url 'agregartrabajador' %}" class="btn btn-secondary">Agregar Trabajador</a>
-
+    <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
+        <li>
+            <a href="{% url 'agregartrabajador' %}" class="dropdown-item">
+                <i class="fa-solid fa-user-plus me-2 text-success"></i> Agregar Trabajador
+            </a>
+        </li>
 
         {% if request.user.user_type == 'superuser' %}
-        <a href="{% url 'register' %}" class="btn btn-secondary">Registrar Usuario</a>
+        <li>
+            <a href="{% url 'register' %}" class="dropdown-item">
+                <i class="fa-solid fa-user-shield me-2 text-success"></i> Registrar Usuario
+            </a>
+        </li>
         {% elif request.user.user_type == 'admin' %}
-        <a href="{% url 'register_colaborador' %}">Registrar Colaborador</a>
+        <li>
+            <a href="{% url 'register_colaborador' %}" class="dropdown-item">
+                <i class="fa-solid fa-user-plus me-2 text-success"></i> Registrar Colaborador
+            </a>
+        </li>
         {% endif %}
 
+        <li><hr class="dropdown-divider"></li>
 
-
-
-
-
-        <a href="{% url 'gestiondetareas' %}" class="btn btn-secondary">Ir a Tareas</a>
-        <a href="{% url 'gestion_jornadas' %}" class="btn btn-secondary">Ir a Jornadas</a>
-
-
-        </ul>
-    </div>
-
+        <li>
+            <a href="{% url 'gestiondetareas' %}" class="dropdown-item">
+                <i class="fa-solid fa-list-check me-2 text-success"></i> Ir a Tareas
+            </a>
+        </li>
+        <li>
+            <a href="{% url 'gestion_jornadas' %}" class="dropdown-item">
+                <i class="fa-solid fa-clock me-2 text-success"></i> Ir a Jornadas
+            </a>
+        </li>
+    </ul>
 </div>
 <div class="table-container">
     <table>

@@ -135,6 +135,9 @@ urlpatterns = [
 
     path('cosechas_list/', views.cosechas_list, name='cosechas_list'),  # Lista de cosechas
     path('crear_cosecha', views.crear_cosecha, name='crear_cosecha'),  # Crear nueva cosecha
+    path('modificar_cosecha/<int:cosecha_id>/', views.modificar_cosecha, name='modificar_cosecha'),  # Modificar cosecha
+    path('eliminar_cosecha/<int:cosecha_id>/', views.eliminar_cosecha, name='eliminar_cosecha'),  # Eliminar cosecha
+    
     path('api/device-status/<str:tipo>/<int:sensor_id>/', views.device_status_api, name='device_status_api'),
     
     path('save-fcm-token/', views.save_fcm_token, name='save_fcm_token'),

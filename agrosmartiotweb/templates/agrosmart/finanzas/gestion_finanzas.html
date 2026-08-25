@@ -363,55 +363,15 @@
     <div class="container">
         <!-- Estadísticas rápidas -->
         <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-icon primary">
-                    <i class="fas fa-users"></i>
-                </div>
-                <div class="stat-value">{{ finanzas|length }}</div>
-                <div class="stat-label">Trabajadores Activos</div>
-            </div>
+
        
         </div>
 
         <div class="card">
             <div class="card-body">
-                <!-- Tabla de trabajadores mejorada -->
-                <h3 class="section-title">
-                    <i class="fas fa-users"></i>
-                    Resumen por Trabajador
-                </h3>
+
                 
-                <div class="table-container">
-                    <div class="responsive-table">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th><i class="fas fa-user me-2"></i>Trabajador</th>
-                                    <th><i class="fas fa-clock me-2"></i>Total Jornadas Por Horas</th>
-                                    <th><i class="fas fa-handshake me-2"></i>Total Jornadas por Trato</th>
-                                    <th><i class="fas fa-calculator me-2"></i>Total Final</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for finanza in finanzas %}
-                                <tr>
-                                    <td><strong>{{ finanza.trabajador.nombre }}</strong></td>
-                                    <td><span class="currency">${{ finanza.total_gasto_jornadas|floatformat:0 }}</span></td>
-                                    <td><span class="currency">${{ finanza.total_gasto_jornadas_por_trato|floatformat:0 }}</span></td>
-                                    <td><strong class="currency">${{ finanza.total_gasto_final|floatformat:0 }}</strong></td>
-                                </tr>
-                                {% empty %}
-                                <tr>
-                                    <td colspan="4" class="empty-state">
-                                        <i class="fas fa-users"></i>
-                                        <div>No hay registros de trabajadores disponibles</div>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+
 
 
 

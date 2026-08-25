@@ -10,7 +10,7 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
-function eliminarProceso(id) {
+function eliminarCosecha(id) {
     Swal.fire({
         title: "¿Estás Seguro?",
         text: "Esta acción no se puede deshacer",
@@ -22,7 +22,7 @@ function eliminarProceso(id) {
         confirmButtonColor: "#dc3545",
     }).then(function(result) {
         if (result.isConfirmed) {
-            window.location.href = "/eliminartarea/" + id + "/";
+            window.location.href = "/eliminar_cosecha/" + id + "/";
         }
     });
 }
@@ -156,6 +156,7 @@ function eliminarProceso(id) {
             <th>Tipo de Producto</th>
             <th>Calidad</th>
             <th>Fecha Creación</th>
+            <th>Acciones</th>
         </tr>
     </thead>
     <tbody>
@@ -169,6 +170,17 @@ function eliminarProceso(id) {
             <td data-label="Tipo Producto">{{ cosecha.tipo_producto|default_if_none:"-" }}</td>
             <td data-label="Calidad">{{ cosecha.calidad|default_if_none:"-" }}</td>
             <td data-label="Fecha Creación">{{ cosecha.fecha_creacion|default_if_none:"-" }}</td>
+            <td data-label="Acciones">
+
+            <div class="d-flex justify-content-center gap-2">
+                  <a href="{% url 'modificar_cosecha' cosecha.id %}"  class="btn btn-sm btn-primary shadow-sm" title="Modificar">
+                    <i class="fas fa-edit"></i>
+                  </a>
+                  <button class="btn btn-sm btn-danger" onclick="eliminarCosecha({{ cosecha.id }})" title="Eliminar">
+                    <i class="fas fa-trash-alt"></i>
+                  </button>
+            </div>
+            
         </tr>
         {% endfor %}
     </tbody>

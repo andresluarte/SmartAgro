@@ -3,60 +3,52 @@
 {% load static %}
 {% load agrosmartiotweb %}
 
-
-
 {% block contenido %}
-{% load static %}
-{% load agrosmartiotweb %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
 
-<style>
-    table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-    th, td {
-        padding: 10px;
-        text-align: left;
-        border-bottom: 1px solid #ddd;
-    }
-    th {
-        background-color: #f2f2f2;
-    }
-    tr:hover {
-        background-color: #f5f5f5;
-    }
-    .btn {
-        padding: 8px 16px;
-        margin: 4px;
-        border: none;
-        background-color: #4CAF50;
-        color: white;
-        cursor: pointer;
-        text-decoration: none;
-        border-radius: 4px;
-    }
-    .btn-danger {
-        background-color: #f44336;
-    }
-</style>
-<h3>Mi Empresa</h3>
-<table>
-    <tr>
-      <th>Nombre</th>
-      <th>Hectáreas</th>
-      <th>Fecha de creación</th>
-    </tr>
-    {% for empresa in empresas %}
-    <tr>
-      <td>{{ empresa.nombre }}</td>
-      <td>{{ empresa.numero_hectareas }}</td>
-      <td>{{ empresa.fecha_creacion }}</td>
-    {% empty %}
-      <tr>
-        <td colspan="3">No tienes empresas registradas.</td>
-      </tr>
-      
-    </tr>
-    {% endfor %}
-</table>
+            <!-- Card de empresa -->
+            <div class="card shadow-lg rounded-4 border-0">
+                <div class="card-body p-5">
+                    <div class="text-center mb-4">
+                        <i class="fa-solid fa-building fa-4x text-primary"></i>
+                        <h3 class="fw-bold text-dark mt-3">Mi Empresa</h3>
+                        <p class="text-muted mb-0">Empresas registradas en tu cuenta</p>
+                    </div>
+                    <hr>
+
+                    {% if empresas %}
+                    <div class="table-responsive mt-4">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead>
+                                <tr class="text-muted small text-uppercase">
+                                    <th><i class="fa-solid fa-building me-1"></i> Nombre</th>
+                                    <th><i class="fa-solid fa-ruler-combined me-1"></i> Hectáreas</th>
+                                    <th><i class="fa-solid fa-calendar-days me-1"></i> Fecha de creación</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for empresa in empresas %}
+                                <tr>
+                                    <td class="fw-semibold text-dark">{{ empresa.nombre }}</td>
+                                    <td>{{ empresa.numero_hectareas }} ha</td>
+                                    <td>{{ empresa.fecha_creacion|date:"d M Y H:i" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center text-muted py-4">
+                        <i class="fa-regular fa-folder-open fa-2x mb-2"></i>
+                        <p class="mb-0">No tienes empresas registradas.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
 {% endblock %}
