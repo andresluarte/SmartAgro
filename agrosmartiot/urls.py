@@ -19,10 +19,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 import agrosmartiotweb
-from agrosmartiotweb.views import FirebaseSWView, custom_404, custom_500
-
-handler404 = custom_404
-handler500 = custom_500
+from agrosmartiotweb.views import FirebaseSWView
 
 urlpatterns = [
     path('admin/', admin.site.urls),

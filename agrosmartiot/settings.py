@@ -27,8 +27,7 @@ SECRET_KEY = 'django-insecure-i+h^ifkudr)+q*__he#@n=#=q*rk17-b!3^ns4vmt+5og7sqz1
 
 
 # SECURITY WARNING: don't run with debug turned on in production!
-from decouple import config as _config_debug
-DEBUG = _config_debug('DEBUG', default=False, cast=bool)
+DEBUG = True
 # settings.py
 
 LOGIN_FORM = 'agrosmartiotweb.forms.CustomLoginForm'
@@ -72,21 +71,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
-    'agrosmartiotweb.middleware.LoginRequiredMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware'
 ]
-
-# Rutas accesibles sin sesión iniciada. Todo lo demás exige login
-# (ver agrosmartiotweb/middleware.py -> LoginRequiredMiddleware).
-LOGIN_EXEMPT_URL_NAMES = {
-    'home',
-    'login', 'my_login', 'password_reset', 'password_reset_done',
-    'password_reset_confirm', 'password_reset_complete',
-    'firebase-sw',
-    # Endpoints que llaman los dispositivos/sensores IoT, no navegadores logueados:
-    'receive_data', 'receive_data_soil', 'device_status_api',
-}
-LOGIN_EXEMPT_PATH_PREFIXES = ('/admin/', '/static/', '/media/')
 
 ROOT_URLCONF = 'agrosmartiot.urls'
 
