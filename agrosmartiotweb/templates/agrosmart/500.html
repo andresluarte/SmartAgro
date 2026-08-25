@@ -1,0 +1,62 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Algo no salió bien · SmartAgro-IoT</title>
+    <link rel="shortcut icon" type="image/x-icon" href="{% static 'app/img/logopequeño.jpg' %}">
+    <style>
+        body{
+            margin:0;
+            min-height:100vh;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            background:#F5F6EF;
+            color:#1D241C;
+            font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+            text-align:center;
+            padding:1.5rem;
+        }
+        .card{
+            max-width:420px;
+        }
+        img{
+            width:56px;
+            height:56px;
+            border-radius:12px;
+            margin-bottom:1.25rem;
+        }
+        h1{
+            font-size:1.4rem;
+            letter-spacing:0.02em;
+            margin:0 0 0.6rem;
+            color:#B8443A;
+        }
+        p{
+            color:#5B6659;
+            margin:0 0 1.5rem;
+            line-height:1.5;
+        }
+        a{
+            display:inline-block;
+            background:#2B5D45;
+            color:#fff;
+            text-decoration:none;
+            padding:0.65rem 1.4rem;
+            border-radius:8px;
+            font-weight:600;
+        }
+        a:hover{ background:#234a38; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <img src="{% static 'app/img/logopequeño.jpg' %}" alt="SmartAgro-IoT">
+        <h1>ERROR: ALGO NO SALIÓ BIEN</h1>
+        <p>Tuvimos un problema inesperado al procesar tu solicitud. Ya quedó registrado — intenta nuevamente en unos minutos.</p>
+        <a href="/">Volver al inicio</a>
+    </div>
+</body>
+</html>

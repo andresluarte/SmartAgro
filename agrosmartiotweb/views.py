@@ -2093,3 +2093,23 @@ def gestiondeproveedores_list(request):
     }
 
     return render(request, 'agrosmart/empresario_proveedor/gestion_empresario_proveedor.html', context=context)
+
+
+def custom_404(request, exception=None):
+    """URL inexistente (fuera de smartagroiot.com/<ruta-real>): vuelve al home
+    en vez de mostrar una página de error."""
+    return redirect('home')
+
+
+def custom_500(request):
+    """Error inesperado (500): pantalla propia en vez de la de depuración de Django."""
+    try:
+        return render(request, 'agrosmart/500.html', status=500)
+    except Exception:
+        # Si hasta la plantilla de error falla (p.ej. un context processor roto),
+        # se devuelve una respuesta mínima que no depende de nada más.
+        return HttpResponse(
+            '<h1>Algo no salió bien</h1><p>Estamos trabajando para solucionarlo. '
+            'Vuelve a intentarlo en unos minutos.</p><p><a href="/">Volver al inicio</a></p>',
+            status=500,
+        )
