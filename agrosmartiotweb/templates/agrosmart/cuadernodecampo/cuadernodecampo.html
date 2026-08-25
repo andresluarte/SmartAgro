@@ -6,71 +6,194 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cuaderno de Campo</title>
-    <br>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@700&display=swap" rel="stylesheet">
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.2/main.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.2/main.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.2/locales-all.min.js"></script>
 
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            color: #333;
-        }
-        h3 {
-            text-align: center;
-            color: #000000;
-            margin-bottom: 20px;
-        }
-        #calendar {
-            max-width: 900px;
-            margin: 20px auto;
-            padding: 10px;
-            background-color: #fff;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-        .fc-toolbar-title {
-            font-family: 'Roboto', sans-serif; /* Cambia 'Roboto' por la fuente que desees */
-            font-size: 1.5em; /* Cambia el tamaño según tus necesidades */
-            color: #000; /* Cambia el color del texto si lo deseas */
+        :root {
+            --green: #1f8a3c;
+            --green-dark: #166b2d;
+            --green-light: #e9f7ed;
+            --ink: #1f2a24;
+            --ink-soft: #5c6b62;
+            --border: #e4e7e2;
+            --bg: #f4f6f4;
         }
 
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', Arial, sans-serif;
+            margin: 0;
+            padding: 28px 16px 50px;
+            color: var(--ink);
+            background: var(--bg);
+        }
+
+        h3 {
+            text-align: center;
+            font-weight: 700;
+            font-size: 1.5em;
+            letter-spacing: -0.01em;
+            color: var(--ink);
+            margin: 0 0 22px;
+        }
+
+        #calendar {
+            max-width: 920px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            box-shadow: 0 4px 18px rgba(20, 30, 20, 0.06);
+        }
+
+        /* --- Barra de herramientas --- */
+        .fc .fc-toolbar-title {
+            font-family: 'Inter', sans-serif;
+            font-weight: 700;
+            font-size: 1.25em;
+            color: var(--ink);
+        }
+
+        .fc .fc-button {
+            background: #fff;
+            border: 1px solid var(--border);
+            color: var(--ink-soft);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.85em;
+            font-weight: 500;
+            text-transform: capitalize;
+            border-radius: 6px;
+            padding: 6px 14px;
+            box-shadow: none;
+            transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+        }
+
+        .fc .fc-button:hover {
+            background: var(--green-light);
+            border-color: var(--green);
+            color: var(--green-dark);
+        }
+
+        .fc .fc-button-primary:not(:disabled).fc-button-active,
+        .fc .fc-button-primary:not(:disabled):active {
+            background: var(--green);
+            border-color: var(--green);
+            color: #fff;
+        }
+
+        .fc-theme-standard th {
+            border-color: var(--border);
+        }
+
+        .fc-col-header-cell-cushion {
+            color: var(--ink-soft);
+            font-weight: 600;
+            font-size: 0.8em;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            padding: 10px 4px;
+            text-decoration: none;
+        }
+
+        .fc-theme-standard td, .fc-theme-standard .fc-scrollgrid {
+            border-color: var(--border);
+        }
+
+        .fc-daygrid-day-number {
+            font-size: 0.85em;
+            color: var(--ink-soft);
+            padding: 6px 8px;
+            text-decoration: none;
+        }
+
+        .fc-day-today {
+            background: var(--green-light) !important;
+        }
+
+        .fc-day-today .fc-daygrid-day-number {
+            color: var(--green-dark);
+            font-weight: 700;
+        }
+
+        /* --- Eventos --- */
         .fc-daygrid-event {
-            background-color: #08b522c0;
-            color: white;
-            border-radius: 5px;
-            padding: 8px;
-            margin: 5px 0;
-            font-size: 0.9em;
-            min-height: 50px;
+            background-color: var(--green);
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 6px 8px;
+            margin: 3px 2px;
+            font-size: 0.82em;
+            line-height: 1.35;
+            min-height: auto;
             overflow: visible;
             white-space: normal;
             overflow-wrap: break-word;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+            transition: background 0.15s ease, transform 0.1s ease;
         }
+
         .fc-daygrid-event:hover {
-            background-color: #218838;
+            background-color: var(--green-dark);
+            transform: translateY(-1px);
         }
+
+        .cc-event-title {
+            font-weight: 600;
+        }
+
+        .cc-event-worker {
+            margin-top: 2px;
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        /* --- Vista lista (móvil) --- */
+        .fc-list {
+            border-color: var(--border);
+        }
+
+        .fc-list-day-cushion {
+            background: var(--green-light) !important;
+            color: var(--green-dark) !important;
+            font-weight: 600;
+        }
+
+        .fc-list-event:hover td {
+            background: var(--green-light);
+        }
+
+        .fc-list-event-dot {
+            border-color: var(--green) !important;
+        }
+
+        .fc-list-empty {
+            color: var(--ink-soft);
+            background: #fff;
+        }
+
         @media (max-width: 768px) {
+            body { padding: 18px 10px 36px; }
+            #calendar { padding: 12px; border-radius: 10px; }
             .fc-daygrid-event {
                 font-size: 0.8em;
-                padding: 10px;
-                min-height: 60px;
-                overflow: visible;
-                white-space: normal;
-                overflow-wrap: break-word;
+                padding: 8px;
             }
-            .fc-toolbar-title {
-                font-size: 1.2em;
-            }
+            .fc .fc-toolbar { flex-direction: column; gap: 8px; }
+            .fc-toolbar-title { font-size: 1.15em; }
         }
     </style>
 </head>
 <body>
-    <h3 id="month-title">Cuaderno de Campo</h3>
+    <h3>Cuaderno de Campo</h3>
     <div id="calendar"></div>
-    <br>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -78,11 +201,13 @@
             var calendar = new FullCalendar.Calendar(calendarEl, {
                 initialView: window.innerWidth < 768 ? 'listWeek' : 'dayGridMonth',
                 locale: 'es',
+                height: 'auto',
                 headerToolbar: {
                     left: 'prev,next today',
                     center: 'title',
                     right: 'dayGridMonth,listWeek'
                 },
+                noEventsText: 'Sin actividades registradas en este rango',
                 events: function(fetchInfo, successCallback, failureCallback) {
                     fetch('/cuadernodecampo/', {
                         method: 'GET',
@@ -101,21 +226,16 @@
                     });
                 },
                 eventContent: function(info) {
-                    let eventoHtml = `
-                        <div><strong>${info.event.title}</strong></div>
-                        
-                    `;
-                    
-                    // Solo mostrar el trabajador si está definido
+                    let eventoHtml = `<div class="cc-event-title">${info.event.title}</div>`;
+
                     if (info.event.extendedProps.trabajador) {
-                        eventoHtml += `<div>Trabajador: ${info.event.extendedProps.trabajador}</div>`;
+                        eventoHtml += `<div class="cc-event-worker">${info.event.extendedProps.trabajador}</div>`;
                     }
 
                     return { html: eventoHtml };
                 },
                 dateClick: function(info) {
                     console.log("Fecha clickeada:", info.dateStr);
-                    // Aquí puedes agregar funcionalidad adicional si es necesario
                 },
                 windowResize: function(view) {
                     var newView = window.innerWidth < 768 ? 'listWeek' : 'dayGridMonth';

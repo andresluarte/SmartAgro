@@ -316,18 +316,17 @@
     <footer id="footer">
     <div class="container">
         <div class="footer-icons" style="text-align: center; margin-bottom: 20px;">
-            <a href="https://www.linkedin.com" style="margin: 0 10px;">
-                <img class="img" src="{% static 'app/img/icono-linkedin.png' %}" alt="LinkedIn" style="width: 40px; height: 40px;">
-            </a>
-            <a href="https://mail.google.com" style="margin: 0 10px;">
-                <img class="img" src="{% static 'app/img/icono-gmail.png' %}" alt="Gmail" style="width: 40px; height: 40px;">
-            </a>
-            <a href="https://mail.google.com" style="margin: 0 10px;">
-                <img class="img" src="{% static 'app/img/icon-whatsapp.png' %}" alt="Whatsapp" style="width: 40px; height: 40px;">
-            </a>
-            <a href="https://mail.google.com" style="margin: 0 10px;">
-                <img class="img" src="{% static 'app/img/icon-instragram.png' %}" alt="Instagram" style="width: 40px; height: 40px;">
-            </a>
+                <a href="https://www.linkedin.com/company/135274637/admin/" style="margin: 0 10px;">
+                    <img class="img" src="{% static 'app/img/icono-linkedin.png' %}" alt="LinkedIn" style="width: 40px; height: 40px;">
+                </a>
+
+                <a href="https://wa.me/56940933821" style="margin: 0 10px;">
+                    <img class="img" src="{% static 'app/img/icon-whatsapp.png' %}" alt="WhatsApp" style="width: 40px; height: 40px;">
+                </a>
+
+                <a href="https://www.instagram.com/luartech.innova/" style="margin: 0 10px;">
+                    <img class="img" src="{% static 'app/img/icon-instragram.png' %}" alt="Instagram" style="width: 40px; height: 40px;">
+                </a>
             {% if user.is_authenticated %}
             <a href="{% url 'user_logout' %}" style="margin: 0 10px;">
                 <img class="img" src="{% static 'app/img/logout.png' %}" alt="Logout" style="width: 40px; height: 40px;">
@@ -339,15 +338,18 @@
         <div class="footer-developed" style="text-align: center; margin-top: 20px;">
             <span style="font-weight: bold; font-size: 16px; color: #333;">Desarrollado por</span>
             <br>
-            <img src="{% static 'app/img/logo1.png' %}" alt="Logo" style="
-                height: 90px;
-                margin-top: 10px;
-                display: inline-block;
-                transition: transform 0.3s, box-shadow 0.3s;
-                border-radius: 8px;
-            "
-            onmouseover="this.style.transform='scale(1.1)'; this.style.boxShadow='0 4px 15px rgba(0,0,0,0.3)';"
-            onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none';">
+
+            <a href="https://www.luartech.cl" target="_blank" rel="noopener noreferrer">
+                <img src="{% static 'app/img/logo1.png' %}" alt="LuarTech" style="
+                    height: 90px;
+                    margin-top: 10px;
+                    display: inline-block;
+                    transition: transform 0.3s, box-shadow 0.3s;
+                    border-radius: 8px;
+                "
+                onmouseover="this.style.transform='scale(1.1)'; this.style.boxShadow='0 4px 15px rgba(0,0,0,0.3)';"
+                onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none';">
+            </a>
         </div>
     </div>
 </footer>
