@@ -1,6 +1,6 @@
 import django_filters
 from django_filters import DateFromToRangeFilter
-from .models import Procesos,Trabajador,Jornada,JornadaPorTrato
+from .models import Empresario_Proveedor, Procesos,Trabajador,Jornada,JornadaPorTrato
 
 
 class ProcesoFilter(django_filters.FilterSet):
@@ -131,4 +131,16 @@ class JornadaPorTratoFilter(django_filters.FilterSet):
             self.filters['huerto'].queryset = Huerto.objects.filter(user=user)
             self.filters['asignado'].queryset = Trabajador.objects.filter(user=user)
 
+
+import django_filters as filters
+
+class empresarioProveedorFilter(filters.FilterSet):
+    class Meta:
+        model = Empresario_Proveedor
+        fields = ['nombre', 'razon_social', 'rut', 'giro', 'correo', 'telefono']
+        # ajusta esta lista a los campos que realmente quieras poder filtrar
+
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user', None)  # saca 'user' antes de llamar a super()
+        super().__init__(*args, **kwargs)
 

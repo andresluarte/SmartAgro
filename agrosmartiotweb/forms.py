@@ -11,7 +11,7 @@ class TimePickerInput(forms.TimeInput):
 from django.contrib.auth import get_user_model
 User = get_user_model()
 from django import forms
-from .models import Procesos,Sector,Empresario
+from .models import Procesos,Sector,Empresario_Proveedor
 from django.forms.widgets import DateInput
 
 class ProcesoForm(forms.ModelForm):
@@ -54,7 +54,7 @@ class ProcesoForm(forms.ModelForm):
                 self.fields['asignado'].queryset = Trabajador.objects.filter(created_by__id__in=ids_validos)
                 # Sectores creados por el admin
                 self.fields['ubicacion'].queryset = Sector.objects.filter(user=user)
-                self.fields['proveedor'].queryset = Empresario.objects.filter(user=user)
+                self.fields['proveedor'].queryset = Empresario_Proveedor.objects.filter(user=user)
 
 
             elif user.user_type == 'colaborador':
@@ -68,7 +68,41 @@ class ProcesoForm(forms.ModelForm):
                 self.fields['asignado'].queryset = Trabajador.objects.none()
 
         
+class EmpresarioProveedorForm(forms.ModelForm):
+    class Meta:
+        model = Empresario_Proveedor
+        fields = [
+            "nombre",
+            "razon_social",
+            "rut",
+            "giro",
+            "correo",
+            "telefono",
+            "direccion",
+        ]
+     
 
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)  # Usuario logueado (no se usa para filtrar querysets aquí,
+        super().__init__(*args, **kwargs)  # pero se mantiene la firma por consistencia con los otros forms)
+        
+        
+class ModificarEmpresarioProveedorForm(forms.ModelForm):
+    class Meta:
+        model = Empresario_Proveedor
+        fields = [
+            "nombre",
+            "razon_social",
+            "rut",
+            "giro",
+            "correo",
+            "telefono",
+            "direccion",
+        ]
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)  # Usuario logueado (no se usa para filtrar querysets aquí,
+        super().__init__(*args, **kwargs)  # pero se mantiene la firma por consistencia con los otros forms)
+        
 class ContactoForm(forms.ModelForm):
 
     class Meta:
@@ -156,7 +190,7 @@ class ProcesoModificarForm(forms.ModelForm):
                 self.fields['asignado'].queryset = Trabajador.objects.filter(created_by__id__in=ids_validos)
                 # Sectores creados por el admin
                 self.fields['ubicacion'].queryset = Sector.objects.filter(user=user)
-                self.fields['proveedor'].queryset = Empresario.objects.filter(user=user)
+                self.fields['proveedor'].queryset = Empresario_Proveedor.objects.filter(user=user)
 
 
             elif user.user_type == 'colaborador':
@@ -179,7 +213,7 @@ class TrabajadorModificarForm(forms.ModelForm):
     
     class Meta:
         model = Trabajador
-        fields =  ["nombre","cobro","trabajo_a_realizar"]
+        fields =  ["foto","nombre","cobro","trabajo_a_realizar"]
         
             
         
@@ -190,6 +224,11 @@ class TrabajadorModificarForm(forms.ModelForm):
 class FiltroEstado(forms.Form):
     estado = forms.CharField()
 
+import re
+from django import forms
+from django.core.exceptions import ValidationError
+from .models import Trabajador
+
 class TrabajadorForm(forms.ModelForm):
     class Meta:
         model = Trabajador
@@ -198,38 +237,75 @@ class TrabajadorForm(forms.ModelForm):
             'fecha_ingreso', 'fecha_termino_contrato', 'cobro', 'trabajo_a_realizar'
         ]
         widgets = {
-            "fecha_ingreso": DateInput(),
-            "fecha_termino_contrato": DateInput(),
+            "fecha_ingreso": forms.DateInput(attrs={'type': 'date'}),
+            "fecha_termino_contrato": forms.DateInput(attrs={'type': 'date'}),
         }
-    labels = {
-            "nombre": "Nombre Completo",
-            "rut": "RUT (sin puntos, con guion)",
+        labels = {
+            "nombre": "Nombre y Apellidos",
+            "rut": "RUT (sin puntos, con guion. Ej: 12345678-9)",
             "tipo_contraro": "Tipo de Contrato",
             "fecha_ingreso": "Fecha de Ingreso",
             "fecha_termino_contrato": "Fecha de Término de Contrato (si aplica)",
             "cobro": "Cobro por Hora (en moneda local)",
             "trabajo_a_realizar": "Trabajo a Realizar",
+            "foto": "Foto del Trabajador",
         }
-    
+
+    def clean_rut(self):
+        rut = self.cleaned_data.get('rut', '').strip().upper()
+
+        # No debe contener puntos
+        if '.' in rut:
+            raise ValidationError("El RUT no debe contener puntos.")
+
+        # Debe tener el formato NUMERO-DV (guion obligatorio)
+        if '-' not in rut:
+            raise ValidationError("El RUT debe incluir guion antes del dígito verificador. Ej: 12345678-9")
+
+        cuerpo, dv = rut.rsplit('-', 1)
+
+        if not cuerpo.isdigit():
+            raise ValidationError("El cuerpo del RUT solo debe contener números.")
+
+        if not re.fullmatch(r'[0-9K]', dv):
+            raise ValidationError("El dígito verificador debe ser un número o 'K'.")
+
+        # Validación del dígito verificador (algoritmo módulo 11)
+        suma = 0
+        multiplicador = 2
+        for digito in reversed(cuerpo):
+            suma += int(digito) * multiplicador
+            multiplicador = 2 if multiplicador == 7 else multiplicador + 1
+
+        resto = 11 - (suma % 11)
+        if resto == 11:
+            dv_esperado = '0'
+        elif resto == 10:
+            dv_esperado = 'K'
+        else:
+            dv_esperado = str(resto)
+
+        if dv != dv_esperado:
+            raise ValidationError("El RUT ingresado no es válido (dígito verificador incorrecto).")
+
+        return rut
+
     def clean(self):
         cleaned_data = super().clean()
         tipo_contraro = cleaned_data.get('tipo_contraro')
         fecha_termino_contrato = cleaned_data.get('fecha_termino_contrato')
 
-        # Validar que 'fecha_termino_contrato' sea obligatorio solo para "Plazo fijo"
         if tipo_contraro == 'Plazo fijo' and not fecha_termino_contrato:
             raise ValidationError({
                 'fecha_termino_contrato': 'Este campo es obligatorio para contratos a plazo fijo.'
             })
 
-        # Asegurarse de que 'fecha_termino_contrato' esté en blanco para otros tipos de contrato
         if tipo_contraro != 'Plazo fijo' and fecha_termino_contrato:
             raise ValidationError({
                 'fecha_termino_contrato': 'Este campo debe estar vacío para contratos que no sean a plazo fijo.'
             })
-        
+
         return cleaned_data
-####formato
 
 FORMAT_CHOICES = (
     ('xls','xls'),
@@ -352,6 +428,9 @@ class JornadaPorTratoForm(forms.ModelForm):
         instance.detalle_gastos_total_extras = sum(filter(None, gastos_extras))
 
         instance.total_gasto_jornada = instance.detalle_gasto_total_tareas + instance.detalle_gastos_total_extras
+        observacion = self.cleaned_data.get('observacion')
+        if observacion:
+            instance.observacion = observacion
 
         if commit:
             instance.save()
@@ -368,9 +447,8 @@ class JornadaModificarForm(forms.ModelForm):
                   'hora_inicio_tarea_1', 'hora_fin_tarea_1', 'cobro_tarea_1', 'nombre_tarea_2',
                   'hora_inicio_tarea_2', 'hora_fin_tarea_2', 'cobro_tarea_2', 'nombre_tarea_3',
                   'hora_inicio_tarea_3', 'hora_fin_tarea_3', 'cobro_tarea_3', 'nombre_extra_1',
-                  'gasto_extra_1', 'nombre_extra_2', 'gasto_extra_2', 'nombre_extra_3', 'gasto_extra_3',
-                  'observacion']
-
+                  'gasto_extra_1', 'nombre_extra_2', 'gasto_extra_2', 'nombre_extra_3', 'gasto_extra_3']
+                  
     def __init__(self, *args, **kwargs):
         user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
@@ -415,9 +493,58 @@ class JornadaModificarForm(forms.ModelForm):
 
         instance.total_gasto_jornada = instance.detalle_gasto_total_tareas + instance.detalle_gastos_total_extras
 
+
         if commit:
             instance.save()
         return instance
+    
+class JornadaPorTratoModificarForm(forms.ModelForm):
+    class Meta:
+        model = Jornada
+        fields = ['asignado', 'sector', 'huerto', 'lote', 'fecha', 'estado', 'nombre_tarea_1',
+                   'cobro_tarea_1', 'nombre_tarea_2',
+    'cobro_tarea_2', 'nombre_tarea_3',
+              'cobro_tarea_3', 'nombre_extra_1',
+                  'gasto_extra_1', 'nombre_extra_2', 'gasto_extra_2', 'nombre_extra_3', 'gasto_extra_3']
+
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+
+        if user:
+            # Filtrar sectores
+            self.fields['sector'].queryset = Sector.objects.filter(user=user)
+            # Filtrar huertos
+            self.fields['huerto'].queryset = Huerto.objects.filter(user=user)
+            # Filtrar trabajadores
+            self.fields['asignado'].queryset = Trabajador.objects.filter(user=user)
+
+            if self.instance and self.instance.huerto:
+                self.fields['lote'].queryset = Lote.objects.filter(huerto=self.instance.huerto, user=user)
+            else:
+                self.fields['lote'].queryset = Lote.objects.none()
+
+        for field_name in ['cobro_tarea_1', 'cobro_tarea_2', 'cobro_tarea_3']:
+            self.fields[field_name].widget.attrs['readonly'] = False
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        cobro_por_hora = instance.asignado.cobro if instance.asignado else None
+
+
+
+        cobros_tareas = [instance.cobro_tarea_1, instance.cobro_tarea_2, instance.cobro_tarea_3]
+        instance.detalle_gasto_total_tareas = sum(filter(None, cobros_tareas))
+
+        gastos_extras = [instance.gasto_extra_1, instance.gasto_extra_2, instance.gasto_extra_3]
+        instance.detalle_gastos_total_extras = sum(filter(None, gastos_extras))
+
+        instance.total_gasto_jornada = instance.detalle_gasto_total_tareas + instance.detalle_gastos_total_extras
+
+        if commit:
+            instance.save()
+        return instance
+
 
 from django import forms
 from .models import Sector, Huerto, Lote,HuertoPoligon

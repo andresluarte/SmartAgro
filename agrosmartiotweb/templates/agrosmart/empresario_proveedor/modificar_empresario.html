@@ -1,0 +1,90 @@
+{% extends 'agrosmart/base.html' %}
+
+{% block contenido %}
+{% load static %}
+{% load crispy_forms_tags %}
+<br>
+
+
+
+<div class="row">
+
+    <hr>
+
+    <div class="col-12 col-md-6 offset-md-3">
+
+        <div class="card">
+            <div class="card-body">
+                <h3> Modificar Empresario/Proveedor</h3>
+
+                <a href="{% url 'gestion_proveedores' %}">
+                    <button class="btn btn-success">Volver Atrás</button>
+                </a>
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {{ form.non_field_errors }}
+                    </div>
+                    {% endif %}
+                    {% if form.errors %}
+                    <div class="alert alert-danger">
+                        <strong>Revisa estos campos:</strong>
+                        {{ form.errors }}
+                    </div>
+                    {% endif %}
+
+                    <label for="{{ form.nombre.id_for_label }}">Nombre</label>
+                    {{ form.nombre }}
+                    <br>
+                    <br>
+
+                    <label for="{{ form.razon_social.id_for_label }}">Razón Social</label>
+                    {{ form.razon_social }}
+                    <br>
+                    <br>
+
+                    <label for="{{ form.rut.id_for_label }}">RUT</label>
+                    {{ form.rut }}
+                    <br>
+                    <br>
+
+                    <label for="{{ form.giro.id_for_label }}">Giro</label>
+                    {{ form.giro }}
+                    <br>
+                    <br>
+
+                    <label for="{{ form.correo.id_for_label }}">Correo</label>
+                    {{ form.correo }}
+                    <br>
+                    <br>
+
+                    <label for="{{ form.telefono.id_for_label }}">Teléfono</label>
+                    {{ form.telefono }}
+                    <br>
+                    <br>
+
+                    <label for="{{ form.direccion.id_for_label }}">Dirección</label>
+                    {{ form.direccion }}
+                    <br>
+                    <br>
+
+
+                    <button class="btn btn-success" type="submit">Guardar</button>
+                </form>
+
+                <br>
+
+                <a href="{% url 'gestion_proveedores' %}">
+                    <button class="btn btn-success">Volver Atrás</button>
+                </a>
+
+            </div>
+            <br>
+
+        </div>
+    </div>
+</div>
+
+{% endblock %}

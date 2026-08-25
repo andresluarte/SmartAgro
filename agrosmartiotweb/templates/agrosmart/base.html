@@ -236,10 +236,14 @@
             <div id="gestionSubMenu" class="submenu">
                 <a href="{% url 'gestiondetareas' %}"><i class="fa-solid fa-tractor"></i> Insumos</a>
                 <a href="{% url 'gestion_jornadas' %}"><i class="fa-solid fa-calendar-check"></i> Jornadas</a>
-                <a href="{% url 'gestion_finanzas' %}"><i class="fa-solid fa-dollar-sign"></i> Finanzas</a>
                 <a href="{% url 'gestion_zona' %}"><i class="fa-solid fa-map"></i> Sectores</a>
+                <a href="{% url 'gestion_proveedores' %}"><i class="fa-solid fa-truck"></i> Proveedores</a>
+                <a href="{% url 'gestion_finanzas' %}"><i class="fa-solid fa-dollar-sign"></i> Finanzas</a>
+                
+
                 <a href="{% url 'cuadernodecampo' %}"><i class="fa-solid fa-book"></i> Campo</a>
                 <a href="{% url 'cosechas_list' %}"><i class="fa-solid fa-apple-whole"></i> Cosechas</a>
+
 
                 {% if request.user.user_type == 'superuser' %}
                     <a href="{% url 'register' %}"><i class="fa-solid fa-user-plus"></i> Registrar</a>

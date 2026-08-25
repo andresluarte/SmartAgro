@@ -138,7 +138,7 @@ class Trabajador(models.Model):
     class Meta:
         ordering = ['-fecha_ingreso']
 
-class Empresario(models.Model):
+class Empresario_Proveedor(models.Model):
     nombre = models.CharField(max_length=255)  # Nombre del empresario
     razon_social = models.CharField(max_length=255, null=True, blank=True)  # Nombre legal de la empresa
     rut = models.CharField(max_length=20, unique=True)  # RUT o identificación tributaria
@@ -248,7 +248,7 @@ class Procesos(models.Model):
     cantidad = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     ubicacion = models.ForeignKey(Sector, on_delete=models.CASCADE, max_length=50, null=True, blank=True)
     proveedor = models.ForeignKey(
-        Empresario,
+        Empresario_Proveedor,
         on_delete=models.SET_NULL,  # Si eliminas el proveedor, no borra el proceso
         null=True,
         blank=True,

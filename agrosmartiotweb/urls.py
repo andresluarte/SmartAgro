@@ -65,8 +65,13 @@ urlpatterns = [
     path('gestion_jornadas/', views.JornadaList, name='gestion_jornadas'),
     path('gestion_jornadas_por_trato/', views.jornada_por_trato_list, name='gestion_jornadas_por_trato'),
     
-    
+    path('gestion_proveedores/', views.gestiondeproveedores_list, name='gestion_proveedores'),
+    path('modificar_empresario/<id>', views.modificar_empresario_proveedor, name='modificar_empresario'),
+    path('agregar_empresario/', views.agregar_empresario_proveedor, name='agregar_empresario'),
+    path('eliminar_empresario/<int:id>/', views.eliminarempresario, name='eliminar_empresario'),
+
     path('modificarjornada/<id>', views.modificarjornada, name = "modificarjornada"),
+    path('modificarjornadaportrato/<id>', views.modificarjornadaportrato, name = "modificarjornadaportrato"),
     path('eliminarjornada/<int:id>/', views.eliminarjornada, name = "eliminarjornada"),
     path('eliminarjornadaPorTrato/<int:id>/', views.eliminarjornadaPorTrato, name = "eliminarjornadaPorTrato"),
 

@@ -1,7 +1,7 @@
 from typing import Any, Dict
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Procesos ,Trabajador,Jornada,Sector,Huerto,Lote,JornadaPorTrato
-from .forms import ContactoForm,ProcesoForm,ProcesoModificarForm,TrabajadorForm,FormatoForm,TrabajadorModificarForm,JornadaModificarForm,SectorModificarForm,HuertoModificarForm,LoteModificarForm
+from .models import Procesos ,Trabajador,Jornada,Sector,Huerto,Lote,JornadaPorTrato,Empresario_Proveedor
+from .forms import ContactoForm,ProcesoForm,ProcesoModificarForm,TrabajadorForm,FormatoForm,TrabajadorModificarForm,JornadaModificarForm,SectorModificarForm,HuertoModificarForm,LoteModificarForm,EmpresarioProveedorForm,JornadaPorTratoModificarForm,ModificarEmpresarioProveedorForm
 from django.contrib import messages
 from .serializers import ProcesoSerializer
 from rest_framework.generics import ListAPIView
@@ -12,7 +12,7 @@ from django.contrib.auth.decorators import user_passes_test
 
 #llamada de filtros
 from .forms import FiltroEstado
-from .filters import ProcesoFilter,TrabajadorFilter,JornadaFilter,JornadaPorTratoFilter
+from .filters import ProcesoFilter,TrabajadorFilter,JornadaFilter,JornadaPorTratoFilter,empresarioProveedorFilter
 #List view
 from django.views.generic.list import ListView
 from django.views import View
@@ -243,7 +243,7 @@ def modificartrabajadores(request,id):
         if formulario.is_valid():
             formulario.save()
             messages.success(request,"Modificado Correctamente")
-            
+            return redirect('gestiondetrabajadores')
         data["form"] = formulario
 
     return render(request, 'agrosmart/trabajadores/modificartrabajadores.html',data)
@@ -261,21 +261,48 @@ def eliminartarea(request, id):
 #AGREGAR filtros
 #AGREGAR TRABAJADOR 
 
+import base64
+
 @login_required(login_url="my_login")
 def agregartrabajador(request):
+    temp_photo_b64 = None
+    temp_photo_name = None
+
     if request.method == "POST":
-        form = TrabajadorForm(request.POST, request.FILES) 
+        form = TrabajadorForm(request.POST, request.FILES)
         if form.is_valid():
             trabajador = form.save(commit=False)
             trabajador.created_by = request.user  # Asignar el usuario logueado al campo 'created_by'
             trabajador.user = request.user  # Asignar el usuario logueado al campo 'user'
             trabajador.save()
+
+            # Limpiar la foto temporal de la sesión, ya no se necesita
+            request.session.pop('temp_photo_b64', None)
+            request.session.pop('temp_photo_name', None)
+            request.session.pop('temp_photo_type', None)
+
             return redirect('gestiondetrabajadores')  # Redirigir a la vista de gestión de trabajadores
+        else:
+            # Si el formulario falló, guardamos la foto en sesión para no perderla
+            if 'foto' in request.FILES:
+                foto = request.FILES['foto']
+                foto.seek(0)
+                request.session['temp_photo_b64'] = base64.b64encode(foto.read()).decode('utf-8')
+                request.session['temp_photo_name'] = foto.name
+                request.session['temp_photo_type'] = foto.content_type
+
+            temp_photo_b64 = request.session.get('temp_photo_b64')
+            temp_photo_name = request.session.get('temp_photo_name')
     else:
         form = TrabajadorForm()
+        temp_photo_b64 = request.session.get('temp_photo_b64')
+        temp_photo_name = request.session.get('temp_photo_name')
 
-    return render(request, 'agrosmart/trabajadores/agregartrabajador.html', {'form': form})
-
+    return render(request, 'agrosmart/trabajadores/agregartrabajador.html', {
+        'form': form,
+        'temp_photo_b64': temp_photo_b64,
+        'temp_photo_name': temp_photo_name,
+    })
 
 
 
@@ -318,6 +345,27 @@ def modificarjornada(request, id):
 
     return render(request, 'agrosmart/jornada/modificarjornada.html', data)
 
+
+@login_required(login_url="my_login")
+def modificarjornadaportrato(request, id):
+    jornada = get_object_or_404(JornadaPorTrato, id=id)
+    user = request.user
+
+    if request.method == 'POST':
+        formulario = JornadaPorTratoModificarForm(data=request.POST, instance=jornada, files=request.FILES, user=user)
+        if formulario.is_valid():
+            formulario.save()
+            messages.success(request, "Jornada por trato Modificada Correctamente")
+            return redirect('gestion_jornadas_por_trato')
+    else:
+        formulario = JornadaPorTratoModificarForm(instance=jornada, user=user)
+
+    data = {
+        'form': formulario
+    }
+
+    return render(request, 'agrosmart/jornada/modificarjornadaportrato.html', data)
+
 def cargar_lotes(request):
     huerto_id = request.GET.get('huerto_id')
     lotes = Lote.objects.filter(huerto_id=huerto_id).values('id', 'nombre')
@@ -341,6 +389,12 @@ def eliminartrabajador(request, id):
     proceso.delete()
     messages.success(request, "Trabajador Eliminado Correctamente")
     return redirect('gestiondetrabajadores')
+
+def eliminarempresario(request, id):
+    empresario = get_object_or_404(Empresario_Proveedor, id=id)
+    empresario.delete()
+    messages.success(request, "Empresario/Proveedor Eliminado Correctamente")
+    return redirect('gestion_proveedores')
 
 ##sensor
 from django.views.decorators.csrf import csrf_exempt
@@ -1947,3 +2001,75 @@ def detalle_notificacion(request, pk):
 def marcar_todas_leidas(request):
     request.user.notificaciones.filter(leida=False).update(leida=True)
     return redirect('lista_notificaciones')
+
+
+
+@login_required(login_url="my_login")
+def agregar_empresario_proveedor(request):
+    if request.method == 'POST':
+        form = EmpresarioProveedorForm(request.POST, user=request.user)
+        if form.is_valid():
+            proveedor = form.save(commit=False)
+            proveedor.user = request.user  # Asignar el usuario logueado al campo 'user'
+            proveedor.created_by = request.user  # Asignar el usuario logueado al campo 'created_by'
+            proveedor.save()  # Ahora sí guardar el proveedor con el usuario asignado
+            return redirect('gestion_proveedores')
+    else:
+        form = EmpresarioProveedorForm(user=request.user)
+
+    return render(request, 'agrosmart/empresario_proveedor/crear_empresario.html', {'form': form})
+
+@login_required(login_url="my_login")
+def modificar_empresario_proveedor(request, id):
+    proveedor = get_object_or_404(Empresario_Proveedor, pk=id)
+
+    # Verificar si el usuario tiene permiso para editar este proveedor
+    if request.user != proveedor.user and request.user != proveedor.created_by:
+        return redirect('gestion_proveedores')  # Redirigir si no tiene permiso
+
+    if request.method == 'POST':
+        form = EmpresarioProveedorForm(request.POST, instance=proveedor, user=request.user)
+        if form.is_valid():
+            form.save()
+            return redirect('gestion_proveedores')
+    else:
+        form = EmpresarioProveedorForm(instance=proveedor, user=request.user)
+
+    return render(request, 'agrosmart/empresario_proveedor/modificar_empresario.html', {'form': form})
+
+@login_required(login_url="my_login")
+def gestiondeproveedores_list(request):
+    user = request.user
+
+    # Filtramos las jornadas según el tipo de usuario
+    if user.is_superuser:
+        queryset = Empresario_Proveedor.objects.all()
+    elif user.user_type == 'admin':
+        queryset = Empresario_Proveedor.objects.filter(user=user)
+    elif user.user_type == 'colaborador':
+        admin_user = user.created_by
+        queryset = Empresario_Proveedor.objects.filter(user__in=[user, admin_user])
+    elif user.user_type == 'agricultor':
+        colaborador_user = user.created_by
+        admin_user = colaborador_user.created_by if colaborador_user else None
+        queryset = Empresario_Proveedor.objects.filter(user__in=[user, colaborador_user, admin_user])
+    else:
+        queryset = Empresario_Proveedor.objects.none()
+
+    # Aquí puedes aplicar cualquier filtrado adicional relacionado con 'trato'
+    filtered_empresarios = empresarioProveedorFilter(request.GET, queryset=queryset,user=user)
+
+    # Configuramos la paginación
+    paginated_filtered_jornadas = Paginator(filtered_empresarios.qs,3)
+    page_number = request.GET.get('page')
+    jornada_page_obj = paginated_filtered_jornadas.get_page(page_number)
+
+
+
+    # Pasamos el contexto a la plantilla
+    context = {
+        'filtered_empresarios': filtered_empresarios,
+        'empresario_page_obj': jornada_page_obj,
+    }
+
+    return render(request, 'agrosmart/empresario_proveedor/gestion_empresario_proveedor.html', context=context)

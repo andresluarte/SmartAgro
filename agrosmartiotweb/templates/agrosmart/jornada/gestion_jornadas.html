@@ -269,16 +269,16 @@
               </td>
               <td class="text-center" data-label="Huerto">
                 {% if jornada.huerto %}
-                  <span class="badge bg-success text-dark px-3 py-2">{{ jornada.huerto }}</span>
+                  <span class="badge bg-secondary text-dark px-3 py-2">{{ jornada.huerto }}</span>
                 {% else %}
-                  <span class="badge bg-success text-dark px-3 py-2">Sin Huerto Asignado</span>
+                  <span class="badge bg-secondary text-dark px-3 py-2">Sin Huerto Asignado</span>
                 {% endif %}
               </td>
               <td class="text-center" data-label="Lote">
                 {% if jornada.lote %}
-                  <span class="badge bg-success text-dark px-3 py-2">{{ jornada.lote }}</span>
+                  <span class="badge bg-secondary text-dark px-3 py-2">{{ jornada.lote }}</span>
                 {% else %}
-                  <span class="badge bg-success text-dark px-3 py-2">Sin Lote Asignado</span>
+                  <span class="badge bg-secondary text-dark px-3 py-2">Sin Lote Asignado</span>
                 {% endif %}
               </td>
               <td class="text-center text-nowrap" data-label="Fecha">{{ jornada.fecha|date:"d/m/Y" }}</td>
@@ -349,21 +349,24 @@
               </td>
 
               <td class="text-center" data-label="Opciones">
-                <div class="d-flex justify-content-center gap-2">
-                  <a href="{% url 'modificarjornada' jornada.id %}" class="btn btn-warning btn-sm d-flex align-items-center" title="Modificar">
-                    <i class="fas fa-edit me-1"></i> <span class="d-none d-md-inline">Modificar</span>
-                  </a>
-                  {% if request.path == '/gestion_jornadas_por_trato/' %}
-                  <a href="#" onclick="eliminarjornadaPorTrato({{ jornada.id }})" class="btn btn-danger btn-sm d-flex align-items-center" title="Eliminar">
-                    <i class="fas fa-trash me-1"></i> <span class="d-none d-md-inline">Eliminar</span>
-                  </a>
-                  {% else %}
-                  <a href="#" onclick="eliminarJornada({{ jornada.id }})" class="btn btn-danger btn-sm d-flex align-items-center" title="Eliminar">
-                    <i class="fas fa-trash me-1"></i> <span class="d-none d-md-inline">Eliminar</span>
-                  </a>
-                  {% endif %}
-                </div>
-              </td>
+                  <div class="d-flex justify-content-center gap-2">
+                    {% if request.path == '/gestion_jornadas_por_trato/' %}
+                    <a href="{% url 'modificarjornadaportrato' jornada.id %}" class="btn btn-warning btn-sm d-flex align-items-center" title="Modificar">
+                      <i class="fas fa-edit me-1"></i> <span class="d-none d-md-inline">Modificar</span>
+                    </a>
+                    <a href="#" onclick="eliminarjornadaPorTrato({{ jornada.id }})" class="btn btn-danger btn-sm d-flex align-items-center" title="Eliminar">
+                      <i class="fas fa-trash me-1"></i> <span class="d-none d-md-inline">Eliminar</span>
+                    </a>
+                    {% else %}
+                    <a href="{% url 'modificarjornada' jornada.id %}" class="btn btn-warning btn-sm d-flex align-items-center" title="Modificar">
+                      <i class="fas fa-edit me-1"></i> <span class="d-none d-md-inline">Modificar</span>
+                    </a>
+                    <a href="#" onclick="eliminarJornada({{ jornada.id }})" class="btn btn-danger btn-sm d-flex align-items-center" title="Eliminar">
+                      <i class="fas fa-trash me-1"></i> <span class="d-none d-md-inline">Eliminar</span>
+                    </a>
+                    {% endif %}
+                  </div>
+            </td>
             </tr>
             {% empty %}
             <tr>
