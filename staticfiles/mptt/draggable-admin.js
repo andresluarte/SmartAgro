@@ -145,7 +145,7 @@ django.jQuery(function ($) {
               $("body").append('<div id="drag-line"><span></span></div>')
             }
 
-            // loop trough all rows
+            // loop through all rows
             $("tr", originalRow.parent()).each(function (index, el) {
               var element = $(el),
                 top = element.offset().top,
@@ -257,7 +257,7 @@ django.jQuery(function ($) {
                 },
                 headers: {
                   "X-CSRFToken": $(
-                    "input[type=hidden][name=csrfmiddlewaretoken]"
+                    "input[type=hidden][name=csrfmiddlewaretoken]",
                   ).val(),
                 },
                 method: "POST",
@@ -276,7 +276,7 @@ django.jQuery(function ($) {
       })
 
       return this
-    })
+    }),
   )
 
   /* Every time the user expands or collapses a part of the tree, we remember
@@ -285,14 +285,14 @@ django.jQuery(function ($) {
     window.localStorage &&
       window.localStorage.setItem(
         DraggableMPTTAdmin.storageName,
-        JSON.stringify(nodes)
+        JSON.stringify(nodes),
       )
   }
 
   function retrieveCollapsedNodes() {
     try {
       return JSON.parse(
-        window.localStorage.getItem(DraggableMPTTAdmin.storageName)
+        window.localStorage.getItem(DraggableMPTTAdmin.storageName),
       )
     } catch (e) {
       return null
@@ -409,7 +409,7 @@ django.jQuery(function ($) {
   DraggableMPTTAdmin = jsonParse(
     document
       .getElementById("draggable-admin-context")
-      .getAttribute("data-context")
+      .getAttribute("data-context"),
   )
 
   addObjectTool(DraggableMPTTAdmin.messages.collapseTree, collapseTree)

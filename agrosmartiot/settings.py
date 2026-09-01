@@ -27,7 +27,7 @@ SECRET_KEY = 'django-insecure-i+h^ifkudr)+q*__he#@n=#=q*rk17-b!3^ns4vmt+5og7sqz1
 
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 # settings.py
 
 LOGIN_FORM = 'agrosmartiotweb.forms.CustomLoginForm'
@@ -191,6 +191,11 @@ CSRF_TRUSTED_ORIGINS = [
     'https://www.smartagroiot.com',
 ]
 #import os
+
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {"BACKEND": "whitenoise.storage.CompressedStaticFilesStorage"},
+}
 
 import ssl
 import os
